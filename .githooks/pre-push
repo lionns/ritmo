@@ -1,0 +1,13 @@
+#!/bin/sh
+# Refuses a push whose harness records are invalid (D-027).
+#
+# Vendor-neutral by construction: git runs this for every agent, and for a human using none. Enable
+# it once per clone with `git config core.hooksPath .githooks`. Bypass with `git push --no-verify`,
+# which is a decision to record, not a habit.
+lint="$(git rev-parse --show-toplevel)/scripts/harness-lint.mjs"
+[ -f "$lint" ] || exit 0
+node "$lint" || {
+  echo "" >&2
+  echo "The harness records are not valid. Fix them, or push with --no-verify and record why." >&2
+  exit 1
+}

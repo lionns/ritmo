@@ -1,0 +1,21 @@
+{
+  "harness": "0.7.1",
+  "profile": "solo",
+  "project": "ritmo",
+  "foundation": [
+    "runtime",
+    "data",
+    "boundaries",
+    "identity",
+    "deploy",
+    "tests",
+    "interface"
+  ],
+  "budgets": {
+    "taskFileLines": 120,
+    "traceBlockLines": 25,
+    "decisionFileLines": 40,
+    "journalEntryLines": 1,
+    "sddDocsTotalLines": 650
+  }
+}
