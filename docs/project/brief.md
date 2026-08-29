@@ -22,8 +22,10 @@ accumulated progress rather than accumulated debt, and therefore keeps opening i
 
 ### In Scope
 
-- **Life portfolio.** Areas → objectives → projects, spanning professional, personal, study,
-  relationships, and travel. One structure for all of them; no separate "work" and "life" modes.
+- **Life portfolio.** Areas → objectives → projects, spanning professional, personal, study, and
+  travel. One structure for all of them; no separate "work" and "life" modes. The fixed job is an
+  area like any other, with **its own quota and no cap** — its hours are already bounded from
+  outside, and it must never compete for the slots meant for everything else.
 - **Objectives carry no target.** An objective stores a horizon, a type, and a short "why this is
   mine" — no target, no schedule, no reserve. Every target lives on a short-horizon project beneath
   it. An objective's state is derived: whether a live project sits under it, and when it was last
@@ -32,6 +34,10 @@ accumulated progress rather than accumulated debt, and therefore keeps opening i
   (§10, §13, §15, §18)
 - **Progress log.** The central write path: a timestamped entry against a project or objective —
   what happened, optional effort, optional note. Cheap enough to use in seconds. (`research.md` §3)
+- **One entry, two goals.** An entry may additionally credit an objective in another area: work done
+  in the fixed job on Docker, servers, or AI counts toward a learning objective. This is inter-goal
+  facilitation, and it is the only mechanism in the design that creates time rather than spending
+  it. (§11)
 - **Next action per active project.** Exactly one, written in if–then form with an optional obstacle
   field. (§5, §6)
 - **Flexible weekly commitments.** Frequency or volume over a week, expressed as `target + reserve`.
@@ -44,19 +50,37 @@ accumulated progress rather than accumulated debt, and therefore keeps opening i
   to describe a bad day while having one. A week closed without a label still trains on inference.
   (§9, §17)
 - **Adaptive weekly proposal.** Next week's targets derived from logged history, not from a target
-  set once. (§9)
-- **Weekly close and review.** A short written reflection; the week ends and the next opens clean,
-  with no rollover of missed work as debt. (§16, §17)
+  set once, and always editable. What was proposed is retained beside what the owner accepted: cutting
+  the proposal week after week is the only evidence that the model reads capacity too high, and
+  without it the system would look calibrated while it is not. Internal signal — never rendered as a
+  comparison the owner has to answer for. (§9, §14)
+- **Weekly close and review.** Three fields, two of them optional: the capacity label, what took the
+  week, and a short written reflection. The week ends and the next opens clean, with no rollover of
+  missed work as debt. (§16, §17)
+- **Week attribution.** At close, one optional tap names what took the week, from tags the owner
+  defines (work, leisure, the unexpected, people, health). **No hours, no percentages, no per-entry
+  leisure logging.** The picture is the pattern across roughly eight weeks — "six of the last eight
+  went the same way" — which the owner sees only because they named it. Its guardrails are in
+  Constraints and are not optional. (§14, §15)
 - **Portfolio and progress views.** Accumulated progress first, remaining second; consistency shown
   as a period ratio. (§4, §19)
-- **Shelving and an active cap.** `Active` means the owner commits to touching it every week, so
-  the cap is whatever fits a *bad* week, not an average one. Ritmo asks for that number at first
-  setup rather than shipping a constant, then audits it against **stale rate** — the share of active
-  projects with zero entries in a period. Shelving is reversible, carries no penalty language, and
-  shelved items stay visible in the portfolio. (§11, §12)
+- **Shelving, an active cap, and weekly rotation.** `Active` means the owner commits to touching it
+  every week, so the cap is whatever fits a *bad* week, not an average one. Ritmo asks for that
+  number at first setup rather than shipping a constant, then audits it against **stale rate** — the
+  share of active projects with zero entries in a period. What is active can be changed **every
+  Monday, at no cost, and is fixed within the week**: a seven-day commitment, not a permanent one,
+  which is what keeps the shelf a queue instead of a graveyard while the cap still bites. Shelving is
+  reversible, carries no penalty language, and shelved items stay visible in the portfolio. The
+  first-run choice is presented without softening — seeing the real number of unfinished things is
+  itself the information. (§11, §12)
+- **Externally imposed deadlines.** A project may carry a hard date *only when the owner did not set
+  it* — a wedding, a flight, a visa window. It orders priority and protects the project's slot. It
+  never schedules hours and never generates a reminder. Self-imposed dates remain forbidden. (§1)
 - **Objective typing.** An objective is `learning` or `outcome`, and is measured accordingly. (§18)
-- **Estimate calibration.** Estimated vs. actual captured on decomposed work and fed back as a
-  personal calibration signal. (§10)
+- **Estimate calibration.** An estimate is captured on each next action — which is exactly the "next
+  stretch" §10 says to decompose, so no subtask tree is needed. The actual is *derived* from the
+  effort logged on that project while the action was open, rather than typed a second time, and the
+  ratio comes back as a personal calibration signal, never as a failure. (§10)
 
 ### Out of Scope
 
@@ -71,6 +95,12 @@ accumulated progress rather than accumulated debt, and therefore keeps opening i
 - **Task management for its own sake:** subtask trees, dependencies, Gantt charts, kanban boards.
 - **Native mobile applications.** Web, responsive, in this phase.
 - **Notifications that chase the owner** — push, email nags, or "you missed X" prompts. (§15)
+- **Counting leisure hours.** Ritmo never records how long anything outside a project took, and never
+  computes a gap between hours available and hours logged. Counting hours is where guilt lives; the
+  week-attribution tag deliberately names a cause without quantifying it.
+- **A people or relationships area with objectives of its own.** Time with friends matters, but a
+  project for it would be heavier than the thing it tracks. The week-attribution tag covers it.
+- **Any cap on the fixed-job area.** The owner does not choose how much work there is.
 - **AI-generated plans presented as authority.** Any derived proposal is a proposal the owner edits.
 
 ## Constraints
@@ -87,6 +117,10 @@ accumulated progress rather than accumulated debt, and therefore keeps opening i
 - **Built and maintained by one person with agent assistance**, in uneven time — which is itself an
   argument for a small surface area and a boring stack.
 - **No third-party analytics or telemetry.**
+- **Guardrails on week attribution.** The feature is the closest Ritmo comes to the guilt accounting
+  the evidence rejects, so three rules bind it: it appears **only in the weekly close**, never on the
+  landing surface · it is **never rendered in red and never accumulated as a debt across weeks** ·
+  and the word "lost" is never used. A week closed without a tag is as complete as one with it.
 - **Single owner today, extensible tomorrow.** *Owner's call, against the recommendation to close
   this permanently.* Sharing is not built, but the data model must not assume a single owner so
   deeply that adding a second party later means a migration: ownership is modelled explicitly even
@@ -119,14 +153,19 @@ Blocking task one — the foundation:
 
 Still open, but not blocking:
 
+- **Is an objective required between an area and a project?** The brief says areas → objectives →
+  projects, but a fixed-job project such as a server migration has no objective above it. Surfaced by
+  drawing the structure, not by writing it. Decides whether `Project.objectiveId` is nullable.
 - **The reserve tuning band.** `research.md` §8 establishes that reserves work, not the ratio. The
   starting reserve is settled above; the spend range at which the adaptive proposal should move the
   target has not been chosen, and no value for it is assumed anywhere.
-- **Do estimates get captured on every decomposed item, or only where the owner asks?** §10 says
-  decomposition helps and that its benefit fades on easy or distant items; where the line sits is
-  a use question, not a design-time one.
+- **Is the estimate on a next action required or optional?** The field exists now; whether writing an
+  action without one is allowed is a use question. §10 notes the benefit of decomposing fades on easy
+  or distant work, which argues for optional.
 
-Settled by the owner on 2026-08-28, recorded in Scope and Constraints above rather than in
-`docs/decisions/`: objectives carry no target; capacity is inferred and labelled at close; reserves
-default to 30% of target; the active cap is asked for at setup and audited by stale rate; and
-sharing stays unbuilt but must remain addable without a migration.
+Settled by the owner and recorded in Scope and Constraints above rather than in `docs/decisions/`:
+objectives carry no target; capacity is inferred and labelled at close; reserves default to 30% of
+target; the active cap is asked for at setup and audited by stale rate; sharing stays unbuilt but
+must remain addable without a migration (2026-08-28). The estimate lives on the next action and the
+actual is derived from its open window; the proposed target is retained beside the accepted one
+(2026-08-29).

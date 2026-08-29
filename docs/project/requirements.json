@@ -1,4 +1,186 @@
 {
-  "functional": [],
-  "nonFunctional": []
+  "functional": [
+    {
+      "id": "FR-1",
+      "title": "Life portfolio",
+      "statement": "The system shall hold areas, objectives and projects in one structure covering professional, personal, study and travel work, with no separate work and life modes.",
+      "source": "brief.md § Scope"
+    },
+    {
+      "id": "FR-2",
+      "title": "Objectives carry no target",
+      "statement": "An objective shall store a horizon, a type and a short why-this-is-mine, and shall not store a target, a schedule or a reserve.",
+      "source": "research.md §10, §13, §18"
+    },
+    {
+      "id": "FR-3",
+      "title": "Derived objective state",
+      "statement": "The system shall derive an objective's state from whether a live project sits under it and when it was last touched, and shall read it as dormant after four weeks with nothing active, offering shelve or revive in neutral language.",
+      "source": "research.md §15"
+    },
+    {
+      "id": "FR-4",
+      "title": "Progress log",
+      "statement": "The system shall record a timestamped entry against a project or objective carrying what happened, optional effort and an optional note.",
+      "source": "research.md §3"
+    },
+    {
+      "id": "FR-5",
+      "title": "One entry, two goals",
+      "statement": "An entry shall be able to additionally credit an objective belonging to a different area, so that work done in the fixed job counts toward a learning objective.",
+      "source": "research.md §11"
+    },
+    {
+      "id": "FR-6",
+      "title": "Next action per active project",
+      "statement": "Each active project shall carry exactly one next action written as a trigger and an act, with an optional obstacle field.",
+      "source": "research.md §5, §6"
+    },
+    {
+      "id": "FR-7",
+      "title": "Weekly commitment with reserve",
+      "statement": "A commitment shall be expressed as a frequency or volume over a week as target plus reserve, where the reserve defaults to ceil(0.30 x target) with a minimum of 1, and shall never be expressed as a recurring clock slot.",
+      "source": "research.md §2, §8"
+    },
+    {
+      "id": "FR-8",
+      "title": "Reserve spend is an event",
+      "statement": "Spending a reserve shall be recorded as an event and shall not be a silently decremented counter, and shall carry no penalty language.",
+      "source": "research.md §8"
+    },
+    {
+      "id": "FR-9",
+      "title": "Inferred capacity",
+      "statement": "The system shall infer capacity from the log, shall never block on it, and shall accept a light, normal or heavy label applied retroactively at weekly close as the authoritative correction.",
+      "source": "research.md §9, §17"
+    },
+    {
+      "id": "FR-10",
+      "title": "Adaptive weekly proposal",
+      "statement": "The system shall derive the next week's targets from logged history rather than from a target set once, shall present them as an editable proposal, and shall retain what was proposed alongside what the owner accepted as an internal calibration signal.",
+      "source": "research.md §9"
+    },
+    {
+      "id": "FR-11",
+      "title": "Weekly close",
+      "statement": "The weekly close shall offer three fields, of which two are optional: the capacity label, what took the week, and a short written reflection.",
+      "source": "research.md §16, §17"
+    },
+    {
+      "id": "FR-12",
+      "title": "Week attribution",
+      "statement": "At close the system shall accept one optional tag naming what took the week, from tags the owner defines, and shall surface the pattern across roughly eight weeks without recording any duration.",
+      "source": "research.md §14, §15"
+    },
+    {
+      "id": "FR-13",
+      "title": "Active cap asked, not shipped",
+      "statement": "The system shall ask at first setup how many projects fit a bad week and use that as the active cap, rather than shipping a constant, and shall audit it against stale rate.",
+      "source": "research.md §11, §12"
+    },
+    {
+      "id": "FR-14",
+      "title": "Weekly rotation",
+      "statement": "What is active shall be changeable every Monday at no cost and shall be fixed within the week.",
+      "source": "brief.md § Scope"
+    },
+    {
+      "id": "FR-15",
+      "title": "Fixed-job area",
+      "statement": "The fixed job shall be an area whose projects have their own quota with no cap and never compete for the active cap.",
+      "source": "brief.md § Scope"
+    },
+    {
+      "id": "FR-16",
+      "title": "External deadlines only",
+      "statement": "A project shall be able to carry a hard date only when the owner did not set it; the date shall order priority and protect the project's slot, and shall never schedule hours or raise a reminder.",
+      "source": "research.md §1"
+    },
+    {
+      "id": "FR-17",
+      "title": "Shelving",
+      "statement": "Shelving a project or objective shall be reversible, shall carry no penalty language, and shelved items shall stay visible in the portfolio.",
+      "source": "research.md §11"
+    },
+    {
+      "id": "FR-18",
+      "title": "Progress before remainder",
+      "statement": "Every progress surface shall render accumulated progress before remaining work, and shall express consistency as a ratio over a period rather than as a consecutive-day count.",
+      "source": "research.md §4, §7, §19"
+    },
+    {
+      "id": "FR-19",
+      "title": "Clean week boundary",
+      "statement": "A closed week shall not roll any missed work forward as debt, and the next week shall open with no carried state.",
+      "source": "research.md §16"
+    },
+    {
+      "id": "FR-20",
+      "title": "Estimate calibration",
+      "statement": "The system shall capture an estimate on each next action and compare it against the effort actually logged while that action was open, feeding the ratio back as a personal calibration signal rather than as a failure.",
+      "source": "research.md §10"
+    }
+  ],
+  "nonFunctional": [
+    {
+      "id": "NFR-1",
+      "title": "Logging cost",
+      "statement": "The median time from opening the application to a saved progress entry shall be under 20 seconds, and no flow shall make recording progress slower than planning it.",
+      "source": "brief.md § Success Measures"
+    },
+    {
+      "id": "NFR-2",
+      "title": "Single user",
+      "statement": "The system shall serve exactly one owner and shall build no accounts, sharing, teams, permissions or comments.",
+      "source": "brief.md § Out of Scope"
+    },
+    {
+      "id": "NFR-3",
+      "title": "Ownership modelled explicitly",
+      "statement": "The data model shall model ownership explicitly even while there is one owner, so that adding a second party later is additive rather than a migration.",
+      "source": "brief.md § Constraints"
+    },
+    {
+      "id": "NFR-4",
+      "title": "Private deployment",
+      "statement": "The data shall not leave infrastructure the owner controls without an explicit recorded decision, and no third-party analytics or telemetry shall be included.",
+      "source": "brief.md § Constraints"
+    },
+    {
+      "id": "NFR-5",
+      "title": "Responsive web",
+      "statement": "The interface shall be a responsive web application usable one-handed in a phone browser.",
+      "source": "brief.md § Constraints"
+    },
+    {
+      "id": "NFR-6",
+      "title": "Offline-tolerant reads",
+      "statement": "The portfolio shall open without waiting on a network round trip.",
+      "source": "brief.md § Constraints"
+    },
+    {
+      "id": "NFR-7",
+      "title": "Informational feedback only",
+      "statement": "Feedback shall be informational rather than evaluative or competitive, with no points, badges, levels, leaderboards, red debt states or accumulated-failure counters.",
+      "source": "research.md §14, §15"
+    },
+    {
+      "id": "NFR-8",
+      "title": "Week attribution guardrails",
+      "statement": "Week attribution shall appear only in the weekly close and never on the landing surface, shall never be rendered in red or accumulated as debt across weeks, and shall never use the word lost; a week closed without a tag shall be as complete as one with it.",
+      "source": "brief.md § Constraints"
+    },
+    {
+      "id": "NFR-9",
+      "title": "No chasing notifications",
+      "statement": "The system shall send no push notifications, no reminder email and no you-missed-X prompt.",
+      "source": "research.md §15"
+    },
+    {
+      "id": "NFR-10",
+      "title": "Evidence-bound design",
+      "statement": "A behaviour that contradicts a rule in research.md shall require a decision file naming the finding it overrides and why.",
+      "source": "brief.md § Constraints"
+    }
+  ]
 }

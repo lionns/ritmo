@@ -1,1 +1,125 @@
-[]
+[
+  {
+    "id": "US-1",
+    "title": "Setting the active cap at first run",
+    "story": "As the owner, I want Ritmo to ask how many projects I can touch in a bad week, so that the cap comes from my real capacity instead of a number someone picked.",
+    "implements": ["FR-13"],
+    "criteria": [
+      "First setup asks for the bad-week number and uses the answer as the cap.",
+      "No constant cap is shipped in the product.",
+      "The question names a bad week explicitly, not an average one."
+    ]
+  },
+  {
+    "id": "US-2",
+    "title": "Choosing what is active, without softening",
+    "story": "As the owner, I want to be made to choose only what fits the cap and shelve the rest, so that I stop carrying eight half-finished things.",
+    "implements": ["FR-13", "FR-17"],
+    "criteria": [
+      "Everything beyond the cap is shelved, and the count is shown plainly.",
+      "Shelved items stay visible in the portfolio with their why-this-is-mine.",
+      "No copy softens, congratulates or apologises for the number."
+    ]
+  },
+  {
+    "id": "US-3",
+    "title": "Opening on Monday",
+    "story": "As the owner, I want the week to open showing what moved rather than what is outstanding, so that opening Ritmo is not an accounting of failure.",
+    "implements": ["FR-18", "FR-19"],
+    "criteria": [
+      "The landing surface renders recent progress before any backlog.",
+      "Nothing from the previous week is carried as debt.",
+      "Monday is the only point at which the active set can change, and changing it costs nothing."
+    ]
+  },
+  {
+    "id": "US-4",
+    "title": "Logging on a twenty-minute day",
+    "story": "As the owner with twenty minutes between a deploy and dinner, I want the next action already written so that I spend the time working rather than deciding.",
+    "implements": ["FR-4", "FR-6", "NFR-1"],
+    "criteria": [
+      "Each active project shows exactly one next action, written as trigger and act.",
+      "A progress entry can be saved in under 20 seconds from opening the app.",
+      "Effort and note are optional on the entry."
+    ]
+  },
+  {
+    "id": "US-5",
+    "title": "Work in the fixed job that also teaches me something",
+    "story": "As the owner, I want an entry logged against a fixed-job project to also credit a learning objective in another area, so that one action advances two things.",
+    "implements": ["FR-5", "FR-15"],
+    "criteria": [
+      "An entry can name one additional objective from a different area.",
+      "The objective's derived state counts that entry as a touch.",
+      "Fixed-job projects never consume a slot from the active cap."
+    ]
+  },
+  {
+    "id": "US-6",
+    "title": "Spending a reserve instead of failing",
+    "story": "As the owner whose week broke, I want to spend a declared reserve so that the commitment stays intact and I come back next week.",
+    "implements": ["FR-7", "FR-8"],
+    "criteria": [
+      "Every recurring commitment carries a reserve of ceil(0.30 x target), minimum 1.",
+      "Spending a reserve is recorded as an event with an optional note.",
+      "The commitment is not marked failed while reserve remains, and no penalty language appears."
+    ]
+  },
+  {
+    "id": "US-7",
+    "title": "The week that went to nothing",
+    "story": "As the owner who lost a week to leisure rather than to an emergency, I want to name what took it in one tap and see the pattern over time, without any hours being counted.",
+    "implements": ["FR-11", "FR-12", "NFR-8"],
+    "criteria": [
+      "The close accepts one optional tag from tags the owner defines.",
+      "No duration is recorded for anything outside a project, and no gap between available and logged hours is computed.",
+      "The pattern is shown across roughly eight weeks, only in the close, never in red and never accumulated as debt.",
+      "A week closed without a tag is as complete as one with it."
+    ]
+  },
+  {
+    "id": "US-8",
+    "title": "Closing the week",
+    "story": "As the owner, I want to label how the week actually went after it happened and write a short reflection, so that the next proposal fits my real capacity.",
+    "implements": ["FR-9", "FR-10", "FR-11"],
+    "criteria": [
+      "The capacity label is applied retroactively at close and is optional.",
+      "No flow asks the owner to describe a bad day while having one.",
+      "A week closed without a label still trains the proposal from inference alone.",
+      "The next week's proposal derives from logged history and is editable."
+    ]
+  },
+  {
+    "id": "US-9",
+    "title": "An objective that has gone quiet",
+    "story": "As the owner, I want an objective with nothing live under it to read as dormant rather than as failing, so that pausing a trip or a visa is a decision instead of a defeat.",
+    "implements": ["FR-2", "FR-3", "FR-17"],
+    "criteria": [
+      "An objective with no active project for four weeks reads as dormant.",
+      "Shelve and revive are both offered, in neutral language.",
+      "No percentage of progress toward the objective is shown, and no date is invented for it."
+    ]
+  },
+  {
+    "id": "US-10",
+    "title": "Advancing something I am still learning",
+    "story": "As the owner learning three.js, I want progress measured by strategies tried and evidence gathered rather than by units delivered, so that a failed attempt still counts.",
+    "implements": ["FR-2", "FR-4"],
+    "criteria": [
+      "An objective can be typed as learning or as outcome.",
+      "A learning objective is scored on entries describing attempts, including unsuccessful ones.",
+      "A learning objective still requires a project beneath it, or it goes dormant."
+    ]
+  },
+  {
+    "id": "US-11",
+    "title": "A date I did not choose",
+    "story": "As the owner building a site for my sister's wedding, I want the real date to order priority and protect the project's slot without Ritmo scheduling my hours.",
+    "implements": ["FR-16"],
+    "criteria": [
+      "A hard date can be set only when marked as externally imposed.",
+      "The date affects ordering and slot protection only.",
+      "No hour, block or reminder is generated from it."
+    ]
+  }
+]
