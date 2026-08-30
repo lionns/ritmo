@@ -16,3 +16,4 @@ rather than editing. Template in `../sdd/TEMPLATES.md`.
 | [D-007](D-007-interface-server-rendered.md) | 2026-08-29 | Server-rendered HTML, and NFR-6 narrowed | `superseded` | none |
 | [D-008](D-008-interface-astro-tailwind.md) | 2026-08-29 | Astro and Tailwind, islands only where earned | `accepted` | D-007 |
 | [D-009](D-009-boundaries-front-back-split.md) | 2026-08-29 | Three layers, and no data reaches a template | `accepted` | D-003 |
+| [D-010](D-010-profile-team.md) | 2026-08-29 | Switch the profile to `team` | `accepted` | none |

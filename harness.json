@@ -1,6 +1,6 @@
 {
   "harness": "0.7.1",
-  "profile": "solo",
+  "profile": "team",
   "project": "ritmo",
   "foundation": [
     "runtime",

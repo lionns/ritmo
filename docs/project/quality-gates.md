@@ -47,7 +47,9 @@ pass a check that runs it together with what already exists.
 
 ## Manual Validation
 
-Profile is `solo`: accepting the change is the validation. Two things are checked by hand because no
+Profile is `team` (`D-010`): validation is an explicit gate with a named validator, and the validator
+is **the owner, on every task**. Before it, the Reviewer runs `/code-review` on work it did not
+write (`agent-config.md`). Two things are checked by hand because no
 command can, and both come from requirements rather than taste — that a progress entry can be saved
 in under 20 seconds on a phone (`NFR-1`), and that no copy added by the change puts the owner in
 debt, red, or arrears after a missed period (`NFR-7`, research §15).
