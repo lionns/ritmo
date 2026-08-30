@@ -8,6 +8,7 @@ something, this file records it as **open** rather than giving it a default in p
 ```mermaid
 erDiagram
     OWNER     ||--o{ AREA        : owns
+    OWNER     ||--o{ CREDENTIAL  : "authenticates with"
     AREA      ||--o{ OBJECTIVE   : contains
     AREA      ||--o{ PROJECT     : "contains directly (OPEN)"
     OBJECTIVE ||--o{ PROJECT     : contains
@@ -16,7 +17,7 @@ erDiagram
     PROJECT   ||--o{ ENTRY       : receives
     OBJECTIVE ||--o{ ENTRY       : "also credited by"
     WEEK      ||--o{ COMMITMENT  : scopes
-    WEEK      ||--o{ ENTRY       : groups
+    WEEK      ||--o{ ENTRY       : "groups (derived, no FK)"
     TAG       ||--o{ WEEK        : "attributes (optional)"
 ```
 
@@ -48,6 +49,22 @@ so that adding a second party later is additive instead of a migration.
 | id | string | yes | Stable identifier. |
 | activeCap | integer | yes | Answered at first setup (FR-13). Never a shipped constant. |
 | capRaises | list | yes | Each raise recorded with a date. The record is itself the signal. |
+
+### Credential
+
+*One WebAuthn passkey per device — phone, laptop, a spare. Stored because passkeys require it:
+`D-004` keeps sessions stateless, but the credential itself has to persist somewhere.*
+
+| Field | Type | Required | Notes |
+| --- | --- | --- | --- |
+| id | string | yes | |
+| ownerId | string | yes | |
+| label | string | yes | "iPhone", "laptop" — so a lost device can be revoked by name. |
+| credentialId | string | yes | The WebAuthn credential identifier. Unique. |
+| publicKey | string | yes | Verifies the signature. No secret is stored: the private key never leaves the device. |
+| signCount | integer | yes | WebAuthn counter, checked to detect a cloned authenticator. |
+| createdAt | timestamp | yes | |
+| lastUsedAt | timestamp | no | |
 
 ### Area
 
@@ -141,7 +158,7 @@ The central write path (FR-4). Must cost seconds (NFR-1).
 | kind | enum | yes | `progress` \| `reserve_spend`. Spending a reserve is an event, not a decremented counter (FR-8). |
 | projectId | string | yes | |
 | creditsObjectiveId | string | no | An objective in **any** area, including another one (FR-5). |
-| occurredAt | timestamp | yes | |
+| occurredAt | timestamp | yes | Also decides which week the entry belongs to — the week is derived from the date, and there is deliberately **no `weekId` column** to drift out of step with it. Requires an index on `(projectId, occurredAt)`. |
 | what | text | yes | |
 | effortMinutes | integer | no | For calibration only, never for billing. |
 | note | text | no | |
@@ -187,7 +204,9 @@ Never stored, always computed, so they cannot drift from the log.
   `Entry.effortMinutes` on its project between `createdAt` and `closedAt`. *Assumption:* effort
   logged on the project in that window belongs to that next action. It is an approximation, taken
   deliberately so that no extra field has to be filled at logging time (NFR-1). The calibration
-  factor is actual ÷ estimate across closed actions (FR-20).
+  factor is actual ÷ estimate across the **last 20 closed actions**, not the whole history. Bounded
+  for two reasons: the 10 ms CPU ceiling of `D-001` applies to every render, and how you estimated
+  two years ago says nothing about how you estimate now. Twenty is a starting value.
 - **Proposal drift** — `target` against `proposedTarget` across weeks. Systematically cutting the
   proposal means the model is reading capacity too high, which it cannot otherwise learn because it
   only ever sees the accepted number (FR-10).
@@ -202,6 +221,9 @@ Never stored, always computed, so they cannot drift from the log.
 - `reserve >= 1` on every commitment.
 - No entity stores a duration for anything that is not an `Entry` on a project.
 - No entity stores a start time, a clock slot, or a calendar event.
+- Referential actions: `NextAction` and `Commitment` cascade from `Project` — neither means anything
+  without it. `Entry` **restricts**: a project carrying history cannot be deleted, which is the
+  retention rule below expressed as a constraint rather than as a convention.
 
 ## Data lifecycle
 

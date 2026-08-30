@@ -119,6 +119,12 @@
       "title": "Estimate calibration",
       "statement": "The system shall capture an estimate on each next action and compare it against the effort actually logged while that action was open, feeding the ratio back as a personal calibration signal rather than as a failure.",
       "source": "research.md §10"
+    },
+    {
+      "id": "FR-21",
+      "title": "Full export",
+      "statement": "The system shall export the owner's entire database to a downloadable SQLite file on demand, so that the owner always holds a complete copy of their own record.",
+      "source": "D-005 — the mitigation the privacy reversal is conditional on"
     }
   ],
   "nonFunctional": [
@@ -142,9 +148,9 @@
     },
     {
       "id": "NFR-4",
-      "title": "Private deployment",
-      "statement": "The data shall not leave infrastructure the owner controls without an explicit recorded decision, and no third-party analytics or telemetry shall be included.",
-      "source": "brief.md § Constraints"
+      "title": "Managed hosting, with an exit",
+      "statement": "The data lives on Cloudflare's managed infrastructure rather than on infrastructure the owner controls — a deliberate reversal recorded in D-005, taken for zero cost and zero maintenance. Cloudflare holds the encryption keys and can technically read the data. The owner shall never be locked in: FR-21 guarantees a full local copy. No third-party analytics or telemetry.",
+      "source": "brief.md § Constraints · D-005"
     },
     {
       "id": "NFR-5",
@@ -154,9 +160,9 @@
     },
     {
       "id": "NFR-6",
-      "title": "Offline-tolerant reads",
-      "statement": "The portfolio shall open without waiting on a network round trip.",
-      "source": "brief.md § Constraints"
+      "title": "Fast first render",
+      "statement": "The portfolio shall render quickly on a phone browser. Offline reads are explicitly not required: narrowed from offline-tolerant reads when the interface was settled as server-rendered HTML, a loss taken deliberately rather than overlooked.",
+      "source": "brief.md § Constraints · D-007"
     },
     {
       "id": "NFR-7",

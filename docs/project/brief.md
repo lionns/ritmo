@@ -77,6 +77,9 @@ accumulated progress rather than accumulated debt, and therefore keeps opening i
   it* — a wedding, a flight, a visa window. It orders priority and protects the project's slot. It
   never schedules hours and never generates a reminder. Self-imposed dates remain forbidden. (§1)
 - **Objective typing.** An objective is `learning` or `outcome`, and is measured accordingly. (§18)
+- **Full export.** The owner can download their entire database as a SQLite file at any time. This
+  is the condition the privacy reversal rests on: the data lives on Cloudflare, but the owner always
+  holds a complete copy, so losing account access never means losing the record. (`D-005`, FR-21)
 - **Estimate calibration.** An estimate is captured on each next action — which is exactly the "next
   stretch" §10 says to decompose, so no subtask tree is needed. The actual is *derived* from the
   effort logged on that project while the action was open, rather than typed a second time, and the
@@ -105,15 +108,21 @@ accumulated progress rather than accumulated debt, and therefore keeps opening i
 
 ## Constraints
 
-- **Single user, self-hosted or privately deployed.** The data is a full record of one person's life;
-  it does not leave infrastructure the owner controls without an explicit decision.
+- **Single user, on managed infrastructure — a recorded reversal.** The data is a full record of one
+  person's life, and it now lives on Cloudflare rather than on infrastructure the owner controls.
+  This constraint always permitted that "with an explicit decision"; `D-005` is that decision, taken
+  for zero cost and zero recurring maintenance. What is ceded is control over access, not security:
+  a VPS patched in uneven time would have been more exposed, not less. Cloudflare holds the keys and
+  can technically read the data. The condition attached is that the owner is never locked in.
 - **Web application, responsive.** Usable one-handed on a phone browser, because most logging will
   happen away from a desk.
 - **Logging must cost seconds, not minutes.** Any flow that makes recording progress slower than
   planning it is a defect, not a feature.
 - **Evidence-bound design.** A behavior that contradicts a rule in `research.md` requires a decision
   file that names the finding it overrides and why. Product intuition does not silently win.
-- **Offline-tolerant reads at minimum**; the portfolio must open without a round trip being fast.
+- **Fast first render on a phone.** The portfolio must open quickly on a mobile browser. Offline
+  reads are *not* required — narrowed when the interface was settled as server-rendered HTML
+  (`D-007`), a loss taken deliberately: Ritmo does not work without a connection.
 - **Built and maintained by one person with agent assistance**, in uneven time — which is itself an
   argument for a small surface area and a boring stack.
 - **No third-party analytics or telemetry.**
