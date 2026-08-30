@@ -153,21 +153,11 @@ accumulated progress rather than accumulated debt, and therefore keeps opening i
 
 ## Open Questions
 
-Blocking task one — the foundation:
+Nothing blocks task one. All seven foundation topics are settled (`D-001` through `D-010`), and the
+four questions the data model carried are settled too (2026-08-30).
 
-- **Deployment and data ownership.** Self-hosted, private cloud, or local-first with sync? Decides
-  the `deploy`, `data`, and `identity` foundation topics and constrains the whole stack.
-- **Stack.** Unsettled. `runtime`, `data`, `boundaries`, `identity`, `deploy`, `tests`, and
-  `interface` are all open and must each be settled by an accepted decision before task one.
+Still open:
 
-Still open, but not blocking:
-
-- **Is an objective required between an area and a project?** The brief says areas → objectives →
-  projects, but a fixed-job project such as a server migration has no objective above it. Surfaced by
-  drawing the structure, not by writing it. Decides whether `Project.objectiveId` is nullable.
-- **The reserve tuning band.** `research.md` §8 establishes that reserves work, not the ratio. The
-  starting reserve is settled above; the spend range at which the adaptive proposal should move the
-  target has not been chosen, and no value for it is assumed anywhere.
 - **Is the estimate on a next action required or optional?** The field exists now; whether writing an
   action without one is allowed is a use question. §10 notes the benefit of decomposing fades on easy
   or distant work, which argues for optional.
@@ -177,4 +167,9 @@ objectives carry no target; capacity is inferred and labelled at close; reserves
 target; the active cap is asked for at setup and audited by stale rate; sharing stays unbuilt but
 must remain addable without a migration (2026-08-28). The estimate lives on the next action and the
 actual is derived from its open window; the proposed target is retained beside the accepted one
-(2026-08-29).
+(2026-08-29). An objective is **not** required between an area and a project, so
+`Project.objectiveId` is nullable while `areaId` stays required; a commitment is stored per week and
+pre-filled from the week before rather than defined once; and the proposed target moves only when the
+reserve reads the same way across two closed weeks — untouched in both raises it by one, exhausted in
+both lowers it by one, never below one (2026-08-30). Id strategy went to `docs/decisions/` as
+`D-011` because it introduces a port.

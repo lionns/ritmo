@@ -3,6 +3,8 @@
 Derived from `brief.md` and traced to `requirements.json`. Where the brief does not settle
 something, this file records it as **open** rather than giving it a default in passing.
 
+Every `id` below is a ULID stored as `TEXT`, generated through the `IdGen` port (`D-011`).
+
 ## Structure
 
 ```mermaid
@@ -10,7 +12,7 @@ erDiagram
     OWNER     ||--o{ AREA        : owns
     OWNER     ||--o{ CREDENTIAL  : "authenticates with"
     AREA      ||--o{ OBJECTIVE   : contains
-    AREA      ||--o{ PROJECT     : "contains directly (OPEN)"
+    AREA      ||--o{ PROJECT     : "contains directly"
     OBJECTIVE ||--o{ PROJECT     : contains
     PROJECT   ||--o| NEXT_ACTION : "one while active"
     PROJECT   ||--o{ COMMITMENT  : "one per week"
@@ -103,7 +105,7 @@ Every commitment hangs here, never off an objective.*
 | --- | --- | --- | --- |
 | id | string | yes | |
 | areaId | string | yes | |
-| objectiveId | string | **open** | Nullable or not — see Open decisions. |
+| objectiveId | string | no | **Nullable** (2026-08-30). A fixed-job project such as a server migration has no objective above it; `areaId` stays required, so the area is the mandatory grouping and the objective is optional. A synthetic "no objective" row was rejected: it is the over-organizing the product exists to avoid, and it would sit permanently `dormant` and pollute the objective view. Independent of FR-5 — a project with no objective can still credit one through `Entry.creditsObjectiveId`. |
 | title | string | yes | |
 | state | enum | yes | `active` \| `shelved` (FR-17). Mutable only on the week boundary (FR-14). |
 | externalDeadline | date | no | Settable **only** when externally imposed (FR-16). Orders priority and protects the slot; generates no hour and no reminder. |
@@ -114,8 +116,13 @@ Every commitment hangs here, never off an objective.*
 *What you promise for one specific week on one project. Always a frequency or a volume over the
 week; never a slot on a clock.*
 
-One per project per week. Whether it is stored per week or as a standing definition that
-instantiates weekly is an open decision.
+One per project per week — **stored per week, presented as standing** (2026-08-30). A standing
+definition cannot carry FR-10: `proposedTarget` sits beside `target`, and that is a pair *per week*,
+so a single standing row has nowhere to keep what was proposed each week and proposal drift becomes
+uncomputable. It would also break the freeze — closing a week freezes it, and editing a standing
+commitment in March would retroactively change what January meant. The "less to re-enter" argument
+is met in the interface instead: opening a week pre-fills from the week before, which FR-10 already
+requires.
 
 | Field | Type | Required | Notes |
 | --- | --- | --- | --- |
@@ -207,6 +214,12 @@ Never stored, always computed, so they cannot drift from the log.
   factor is actual ÷ estimate across the **last 20 closed actions**, not the whole history. Bounded
   for two reasons: the 10 ms CPU ceiling of `D-001` applies to every render, and how you estimated
   two years ago says nothing about how you estimate now. Twenty is a starting value.
+- **Proposed target** — over the **last two closed weeks**: reserve untouched in both proposes
+  `target + 1`; reserve exhausted in both proposes `target - 1`; anything else proposes the same
+  target. Never below 1. *Chosen by the assistant, confirmed by the owner 2026-08-30.* A percentage
+  band was rejected because it collapses on small integers: at `target = 3` the reserve is 1, so the
+  fraction spent can only be 0 or 1 and the target would oscillate every week. Requiring the signal
+  to repeat across two weeks is what makes it stable. Always a proposal, always editable (FR-10).
 - **Proposal drift** — `target` against `proposedTarget` across weeks. Systematically cutting the
   proposal means the model is reading capacity too high, which it cannot otherwise learn because it
   only ever sees the accepted number (FR-10).
@@ -231,19 +244,24 @@ Never stored, always computed, so they cannot drift from the log.
   exists to copy it into (FR-19).
 - **Shelving.** Reversible, keeps history and stays visible in the portfolio. Distinct from deleting.
 - **Retention.** The log is the product; entries are never pruned automatically.
-- **Export.** A plain-text weekly summary the owner can copy out is the only sharing affordance, and
-  it is a rendering over existing data, not stored state.
+- **Sharing.** A plain-text weekly summary the owner can copy out is the only sharing affordance,
+  and it is a rendering over existing data, not stored state.
+- **Export.** Separately, FR-21 hands the owner the whole database as a downloadable SQLite file —
+  the condition on which the privacy constraint was reversed (`D-005`). Also a rendering, not stored
+  state, but of everything rather than of one week.
 
-## Open decisions
+## Settled decisions
 
-1. **Is `Project.objectiveId` nullable?** A fixed-job project such as a server migration has no
-   objective above it. Surfaced by drawing the structure. Also in `brief.md` § Open Questions.
-2. **Is a commitment stored per week, or as a standing definition instantiated weekly?** Per week is
-   simpler to reason about; standing is less to re-enter. Undecided.
-3. **The reserve tuning band.** The spend range at which the adaptive proposal should move the target
-   is not chosen, and no value is assumed anywhere.
-4. **Identity and storage.** `id` types, primary keys and persistence all wait on the `runtime`,
-   `data` and `identity` foundation decisions, which are still unsettled.
+All four decisions this file carried as open were settled with the owner on 2026-08-30.
+
+1. **`Project.objectiveId` is nullable.** See the `Project` table.
+2. **A commitment is stored per week and presented as standing.** See the `Commitment` table.
+3. **The proposed target moves on a two-week signal, not a percentage band.** See Derived values.
+4. **Ids are ULIDs stored as `TEXT`, generated behind a port.** `D-011`.
+
+One question in `brief.md` § Open Questions still touches this file: whether `estimateMinutes` on a
+next action is required. It is modelled here as optional, which is an assumption until the brief
+records it.
 
 ## Requirement coverage
 
