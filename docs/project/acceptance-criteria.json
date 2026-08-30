@@ -1,4 +1,22 @@
 {
-  "global": [],
-  "crossCutting": []
+  "global": [
+    { "id": "AC-G1", "criterion": "WHEN the owner opens Ritmo THE SYSTEM SHALL render recent progress before any backlog or outstanding work.", "source": "FR-18 · research.md §4" },
+    { "id": "AC-G2", "criterion": "WHEN a week is closed THE SYSTEM SHALL carry no missed work into the next week in any form, because no field exists to carry it in.", "source": "FR-19 · research.md §16" },
+    { "id": "AC-G3", "criterion": "WHEN a commitment is missed and reserve remains THE SYSTEM SHALL leave the commitment intact and record the reserve spend as an event.", "source": "FR-8 · research.md §8" },
+    { "id": "AC-G4", "criterion": "WHEN an objective has had no active project for four weeks THE SYSTEM SHALL report it as dormant, offering shelve or revive, and SHALL NOT describe it as failed or behind.", "source": "FR-3 · research.md §15" },
+    { "id": "AC-G5", "criterion": "WHEN the owner requests an export THE SYSTEM SHALL produce a downloadable SQLite file containing the complete database.", "source": "FR-21 · D-005" },
+    { "id": "AC-G6", "criterion": "The median time from opening the application to a saved progress entry is under 20 seconds on a phone browser.", "source": "NFR-1 · brief.md § Success Measures" }
+  ],
+  "crossCutting": [
+    { "id": "AC-X1", "criterion": "No file in the core imports from `@cloudflare/*` or `cloudflare:*`, names the `Env` binding type, or calls a platform API. Enforced by `npm run check:core` in the baseline.", "source": "D-003" },
+    { "id": "AC-X2", "criterion": "No derived value is stored. Objective state, stale rate, consistency ratio, week attribution pattern and estimate calibration are computed from the log on read.", "source": "D-003 · data-model.md § Derived values" },
+    { "id": "AC-X3", "criterion": "Every derived computation runs over a bounded window, because the runtime allows 10 ms of CPU per invocation.", "source": "D-001 · D-003" },
+    { "id": "AC-X4", "criterion": "No surface renders a consecutive-day counter, a streak, points, badges, levels or a leaderboard.", "source": "NFR-7 · research.md §7, §14" },
+    { "id": "AC-X5", "criterion": "No copy shown after a missed period uses debt, arrears, failure or red states, and the word \"lost\" is never used of the owner's time.", "source": "NFR-7, NFR-8 · research.md §15" },
+    { "id": "AC-X6", "criterion": "No entity stores a start time, a clock slot or a calendar event, and no flow asks the owner what time of day something will happen.", "source": "FR-16 · research.md §1" },
+    { "id": "AC-X7", "criterion": "No duration is recorded for anything that is not an entry on a project. Leisure time is never counted.", "source": "NFR-8 · brief.md § Out of Scope" },
+    { "id": "AC-X8", "criterion": "Week attribution appears only in the weekly close, never on the landing surface, and is never accumulated across weeks.", "source": "NFR-8" },
+    { "id": "AC-X9", "criterion": "Every owned row carries an owner id rather than relying on there being exactly one owner.", "source": "NFR-3 · D-004" },
+    { "id": "AC-X10", "criterion": "A behaviour that contradicts a rule in `research.md` requires a decision file naming the finding it overrides and why.", "source": "brief.md § Constraints" }
+  ]
 }

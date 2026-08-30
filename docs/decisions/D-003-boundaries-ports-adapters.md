@@ -1,6 +1,6 @@
 # D-003 — A pure core behind ports, enforced by a check
 
-- Status: accepted
+- Status: superseded
 - Date: 2026-08-29
 - Supersedes: none
 - Tasks: none

@@ -1,6 +1,6 @@
 # D-007 — Server-rendered HTML, and NFR-6 narrowed
 
-- Status: accepted
+- Status: superseded
 - Date: 2026-08-29
 - Supersedes: none
 - Tasks: none
