@@ -1,43 +1,257 @@
 # Design Handoff
 
+Tokens and rules for the Ritmo interface. Non-normative like `research.md`: it records what the
+design is and why, it does not create requirements. Where a rule here exists because a requirement
+demands it, the requirement is named.
+
 ## Visual References
 
-<!-- Link or describe approved references and design sources. -->
+- **Approved canvas** — five artboards, light and dark, at
+  `https://claude.ai/code/artifact/c21822cb-584e-4600-8f31-0b9afbc8d629`. Screens: portfolio
+  (desktop + mobile), log-progress, weekly close, dormant project.
+- **Navigation canvas** — the route map and both navigation options drawn side by side, at
+  `https://claude.ai/code/artifact/bd48460c-5385-4894-aa86-d9ba288d4a34`. Option B is the one settled;
+  the artboards there are the only drawing of it.
+- **Awwwards, *Best Free Fonts*** and ***Gradients in Web Design***  — sources for the typeface
+  shortlist and for the blurred-gradient ground. Owner picked the pairing and the magenta→cyan move
+  from these.
+- **Laws of UX** (`lawsofux.com`) — Fitts, Doherty, Von Restorff, Selective Attention, Peak-End and
+  Miller each changed something concrete; each is cited at the rule it produced.
+- **Fontshare** (`fontshare.com`, Indian Type Foundry) — all three typefaces. Free for commercial
+  use under the ITF Free Font Licence; **fonts are not vendored in this repo and must be downloaded
+  from Fontshare at build time.** Re-check the licence before any redistribution.
 
 ## Design Tokens
 
+Two complete palettes, not one inverted. Dark is the default; light is a first-class peer. Values
+below are the ones running in the approved canvas.
+
 ### Color
 
-- 
+| Token | Dark | Light | Role |
+|---|---|---|---|
+| `bg` | `#07090A` | `#F2F0EA` | Page ground. Never pure black or pure white. |
+| `ink` | `#EDE9DF` | `#121110` | Primary text. |
+| `dim` | `#93908A` | `#56524A` | Secondary text, labels, captions. |
+| `faint` | `#4A4F52` | `#A9A396` | **Decorative only** — hairlines, empty-day marks. See Accessibility. |
+| `faint-text` | `#6B7276` | `#827C6D` | The text-safe grade of `faint`. Use wherever `faint` carries words or numbers. |
+| `hair` | `rgba(237,233,223,0.10)` | `rgba(18,17,16,0.14)` | Row dividers inside glass. |
+| `accent` | `#00E0FF` | `#00707F` | The single accent. Light is **not** the same cyan — see below. |
+| `accent-ink` | `#07090A` | `#FFFFFF` | Text on an accent fill. |
+| `glass` | `rgba(12,18,20,0.42)` | `rgba(255,255,255,0.55)` | Panel fill behind `backdrop-filter`. |
+| `glass-border` | `rgba(237,233,223,0.10)` | `rgba(18,17,16,0.10)` | 1px panel edge. |
+| `glow` | `0,224,255` | `0,112,127` | RGB triplet for the ground gradient. |
+| `sleep` | `#7E7565` | `#8A7E68` | Dormant projects. Warm, not grey — a paused project is not a dead one. |
+
+**Light accent is a different hue on purpose.** `#00E0FF` on `#F2F0EA` measures **1.41:1** — it is
+invisible. `#00707F` measures **5.08:1** and holds the same cyan family. Do not "just reuse" the
+dark accent in light mode.
+
+**The 2% rule.** Accent covers roughly 2% of any screen: the primary button, the one live metric,
+the filled progress dots. Nothing else. Von Restorff — the mark that differs is the mark that is
+remembered; spreading it kills it. The dormant screen carries **no accent at all**, and that absence
+is the message.
+
+**Never red.** NFR-8 forbids rendering week attribution as loss. There is no error-red in the
+palette and no debt accumulates across weeks. A missed week is stated in `dim` and drops.
 
 ### Typography
 
-- 
+Three faces, each with one job.
+
+| Family | Weights | Job |
+|---|---|---|
+| **Clash Display** | 600 | Display only — the one headline per screen. |
+| **Switzer** | 400 / 500 / 600 | Everything read as language: body, labels, buttons, project names. |
+| **Martian Mono** | 300 / 400 | Numbers and machine labels only. Loaded from Google Fonts. |
+
+Scale, as used (px):
+
+| Step | Desktop | Mobile | Applied to |
+|---|---|---|---|
+| Display | 132 | 40–54 | Screen headline. Clash Display 600, `line-height:0.84`, `letter-spacing:-0.04em`. |
+| Metric | 64 | 46–50 | The live number. Martian Mono 300, `line-height:0.8`, `letter-spacing:-0.06em`. |
+| Title | 20 | 17–19 | Project name. Switzer 600, `letter-spacing:-0.02em`. |
+| Body | 15 | 14–15 | Commitment sentence. Switzer 400, `line-height:1.45`. |
+| Button | 16 | 17 | Switzer 600. |
+| Label | 9 | 8 | Martian Mono, `letter-spacing:0.20–0.22em`, uppercase, colour `dim`. |
+
+Two rules that carry the look: display type is set **tight** (negative tracking, sub-1 leading) and
+mono labels are set **wide** (0.2em+). The contrast between them is the typographic identity.
 
 ### Spacing
 
-- 
+4px grid throughout — the same grid the ER diagrams use.
+
+| Token | px | Use |
+|---|---|---|
+| `2xs` | 4 | Icon gaps. |
+| `xs` | 8 | Inside a row. |
+| `sm` | 14 | Between a title and its sentence. |
+| `md` | 16 | Row padding inside glass. |
+| `lg` | 22 | Glass horizontal padding. |
+| `xl` | 38 | Between blocks in a column. |
+| `2xl` | 56–64 | Column gap, page padding, header-to-content. |
+
+Page padding: `44px 64px` desktop, `32px 20px 24px` mobile.
 
 ### Radius
 
-- 
+| Token | px | Use |
+|---|---|---|
+| `field` | 18 | Inputs, list rows. |
+| `panel` | 20–22 | Glass panels. |
+| `pill` | 26–29 | Buttons — always exactly half the height, so a 58px button uses 29. |
+| `dot` | 50% | Progress dots, 12px. |
 
 ### Elevation
 
-- 
+There are no drop shadows. Depth comes from three stacked layers, in this order:
+
+1. **Ground glow** — a `radial-gradient` from `rgba(glow,0.5)` to transparent at 72%, blurred
+   `86px`, anchored bottom-centre and bled past every edge.
+2. **The hero chart** — see below.
+3. **Glass** — `background: glass`, `backdrop-filter: blur(22px) saturate(1.3)` (ship the
+   `-webkit-` prefix too), `1px solid glass-border`.
+
+**Performance risk:** `backdrop-filter` is expensive on low-end mobile GPUs and can cost frames on
+scroll. Cap it at **two glass surfaces per screen** and measure against NFR-6 before adding a third.
+Fallback where unsupported: raise `glass` alpha to opaque and drop the blur.
+
+**Grain** sits above everything at `z-index:9`, `pointer-events:none`: an inline
+`feTurbulence` SVG, `baseFrequency 0.8`, `numOctaves 4`, 160×160 tile. `mix-blend-mode: screen` at
+`0.10` in dark, `multiply` at `0.16` in light. It is what stops the gradients banding.
+
+## The Hero Chart
+
+The bars behind every screen are data, not texture. **Settled with the owner on 2026-08-30.**
+
+- **X axis** — one mark per day, most recent at the right. **28 days on desktop, 14 on mobile.**
+  Miller: 28 marks at 390px is noise wearing the costume of a chart.
+- **Y axis** — mark height encodes **minutes logged that day** (`Entry.effortMinutes`).
+- **Three states, because `effortMinutes` is optional** (`data-model.md`, Entry):
+  1. **Nothing logged** → a 9px stub at the baseline in `faint-text`, no accent.
+  2. **Entries logged, no minutes given** → accent mark at a **fixed 12px floor**.
+  3. **Minutes logged** → accent mark, height proportional.
+  Without state 2, a day with three untimed entries would render identical to an empty day — the
+  chart would lie about exactly the thing the product exists to protect.
+- **Always labelled.** `28 DIAS · ALTURA = MINUTOS REGISTRADOS` / `14 DIAS · MINUTOS`, in the mono
+  label style. An unlabelled height is not a datum.
+- **Opacity 0.30** on landing surfaces.
+
+## Navigation Map
+
+Six routes, three levels deep. Settled with the owner on 2026-08-30 after drawing both options.
+
+| Route | What it is | How you reach it |
+|---|---|---|
+| `/` | **Portfolio.** What moved, before what is outstanding (US-3). The landing. | The wordmark, from anywhere. |
+| `/p/:id` | **Project.** History, next action, dormant state, log form inline. | Tapping a project. |
+| `/semana` | **The ritual.** One route, two states: proposal when the week opens (FR-10), close when it ends (US-7, US-8). | A strip below the header on `/`, shown only when the week is due. |
+| `/archivo` | **Shelved, dormant, closed.** The backlog that may never be the landing. | A footer link at the end of the portfolio list. |
+| `/ajustes` | Capacity cap (US-1), areas, tags, **export** (FR-21), passkey. | A footer link beside the archive. |
+| `/entrar` | Passkey sign-in (D-004). | Only without a session. |
+
+**`/semana` is one route with two states, not two routes.** Opening the week and closing it are the
+same ritual at different moments; splitting them creates two places the owner has to remember to
+visit.
+
+**No persistent navigation chrome.** No tab bar, no top nav. The wordmark returns to `/`; everything
+else is reached from where it is relevant. Two reasons this beat a persistent bar, both of which only
+became visible once both were drawn:
+
+1. **On mobile a tab bar and the primary CTA fight over the same thumb band.** The CTA is a 58px
+   target at the bottom of the screen (Fitts); a 72px tab bar under it either pushes the CTA up or
+   crowds it.
+2. **A tab bar needs an active state, and the active state wants the accent.** That pushes accent
+   coverage from ~2% to ~4% and puts it twice on one screen — Von Restorff says two highlighted
+   things are none.
+
+The cost is discoverability in the first week. It is small here and only here: there is one user,
+four destinations, and no onboarding funnel to lose people in.
+
+**Settings is a footer link, not a gesture.** An earlier proposal hid it behind a long-press on the
+wordmark. Drawing it showed a hidden affordance with nothing announcing it, so it sits beside the
+archive link at the end of the list.
 
 ## Responsive Behavior
 
-<!-- Document layout behavior across relevant viewport ranges. -->
+Mobile-first; desktop is where the owner actually spends the day, so both are designed, not derived.
+
+| Range | Layout |
+|---|---|
+| **390px** (base) | Single column. Full-bleed hero. Full-width CTA pinned low. 14-day chart. |
+| **≥ 768px** | Single column, wider gutters, chart to 28 days. |
+| **≥ 1200px** | Two columns, `minmax(0,1fr) 400px`, 64px gap. Headline left, glass panel right. |
+
+Artboards are drawn at 390×844 and 1440×900.
 
 ## Interaction States
 
-<!-- Document hover, focus, active, loading, empty, error, and success states. -->
+| State | Rule |
+|---|---|
+| **Focus** | 2px `accent` outline, 2px offset. Visible in both themes; never removed. |
+| **Hover** | Buttons lift `accent` ~6% and nothing moves. No transforms on hover. |
+| **Active** | Fill drops ~10%. No scale. |
+| **Loading** | The layout is already drawn; only the value swaps. No spinner over a known layout. |
+| **Empty** | A sentence, never an illustration: "Aún no hay nada aquí. Escribe la primera línea." |
+| **Error** | `ink` on `glass`, stated as a fact, with the action to fix it. Never red (NFR-8). |
+| **Success** | The chart mark grows. That is the whole confirmation — no toast. |
+
+**Targets are 56px desktop / 58px mobile, minimum.** Fitts: the earlier mobile CTA had a glass ring
+around the button, which made the real target smaller than the thing the eye read as the target.
+The button **is** the target now — no decorative wrapper may extend past a hit area.
+
+**Form screens veil the hero.** A `bg` overlay at **0.78–0.82** sits over the chart on the log and
+close screens. Selective Attention: on a screen with one field, the field wins.
+
+**Peak-End on the weekly close.** The close is the end of the cycle, so it summarises before it
+asks: "Cuatro de siete días con algo escrito." then the button. The last screen of a week decides
+how the week is remembered.
 
 ## Motion
 
-<!-- Document animation purpose, timing, easing, and reduced-motion behavior. -->
+| Property | Value |
+|---|---|
+| Keyframe | `rise` — `scaleY(0) → scaleY(1)`, `transform-origin: 50% 100%`. |
+| Duration | `0.22s`. |
+| Easing | `cubic-bezier(.16, .9, .24, 1)`. |
+| Stagger | `6ms × index`. |
+| **Worst case** | 28 × 6 ms + 220 ms = **388 ms**. |
+
+**388ms is not arbitrary.** Doherty puts the attention threshold at 400ms. The first build of this
+animation ran **730ms** and had to be cut. Any future motion is measured against 400ms end-to-end,
+not per element.
+
+`@media (prefers-reduced-motion: reduce)` sets `animation: none` — bars appear at final height. This
+is already in the canvas and is not optional.
 
 ## Accessibility Notes
 
-- 
+Measured contrast (WCAG 2.1), dark / light:
+
+- `ink` on `bg` — **16.46** / **16.55**. Passes AAA.
+- `dim` on `bg` — **6.27** / **6.82**. Passes AA at any size.
+- `accent` on `bg` — **12.45** / **5.08**. Passes AA.
+- `accent-ink` on `accent` — **12.45** / **5.79**. Passes AA.
+- `faint` on `bg` — **2.41** / **2.20**. **Fails.**
+
+**Known issue, carried from the canvas.** The approved artboards use `faint` for two pieces of text
+— the `/4` in the `3/4` metric and the mono sub-labels. At 2.41:1 that fails even the 3:1 large-text
+floor. `faint-text` (`#6B7276` dark = 4.08, `#827C6D` light = 3.65) is the fix and both clear the
+bar. **The canvas has not been re-rendered with it; the token table above is authoritative and the
+implementation must follow the table, not the artboards.** `faint` stays legal for hairlines only.
+
+Also binding:
+
+- **Colour is never the only channel.** Progress dots pair fill with an outline shape; the dormant
+  state pairs `sleep` with the absence of any accent, plus its own copy.
+- **Every chart mark needs its label.** See The Hero Chart.
+- **Grain and glass are `pointer-events:none`** and must never sit between a finger and a target.
+- Target minimum 56/58px, above the 44px floor, per Fitts.
+
+## Open Items
+
+- [ ] Re-render the canvas artboards with `faint-text` so artboards and tokens agree.
+- [ ] Measure `backdrop-filter` cost on a real phone against NFR-6 before the interface task closes.
+- [ ] Confirm the Fontshare licence text at build time and record it in the repo.

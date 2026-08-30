@@ -95,6 +95,24 @@ ritmo/
 └── docs/          the harness and the specification
 ```
 
+### Routes
+
+Six routes, three levels deep, plus the API. The map, the reachability rules and the reasoning are in
+`design-handoff.md` § Navigation Map.
+
+| Route | Renders |
+|---|---|
+| `/` | Portfolio — what moved before what is outstanding (US-3). The landing. |
+| `/p/:id` | One project: history, next action, dormant state, inline log form. |
+| `/semana` | One route, two states — the week's proposal (FR-10) and its close (US-7, US-8). |
+| `/archivo` | Shelved, dormant and closed work. Never the landing. |
+| `/ajustes` | Capacity cap (US-1), areas, tags, export (FR-21), passkey. |
+| `/entrar` | Passkey sign-in (D-004). |
+| `/api/*` | The back. Never navigated to. |
+
+There is no persistent navigation chrome: the wordmark returns to `/` and every other route is
+reached from the surface where it is relevant.
+
 **The arrows only point inward, and there are three of them** (`D-009`, superseding `D-003`):
 
 | Layer | May import | Enforced |
