@@ -6,11 +6,13 @@ Harness `0.7.1` · profile `team`
 
 ## Tasks
 
-No tasks yet. Create one from `docs/sdd/TEMPLATES.md` in `docs/tasks/`.
+| Task | State | Goal |
+|---|---|---|
+| [T-001](docs/tasks/T-001-skeleton-and-next-action.md) | `ready` | Stand up the three-layer tree with every quality-gate command real and green, and prove it by |
 
 ## Next
 
-Nothing open. Plan the next task before implementing anything.
+**T-001** (`ready`) — Stand up the three-layer tree with every quality-gate command real and green, and prove it by
 
 ## Open decisions
 
