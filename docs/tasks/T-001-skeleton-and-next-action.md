@@ -7,7 +7,7 @@ harness: 0.7.1
 role: Backend Implementer
 goal: Stand up the three-layer tree with every quality-gate command real and green, and prove it by
   storing and reading a project's single open next action through the D1 adapter.
-decisions: [D-001, D-002, D-006, D-008, D-009, D-011]
+decisions: [D-001, D-002, D-008, D-009, D-011, D-012]
 implements: [FR-6, NFR-3]
 ---
 
@@ -42,7 +42,6 @@ implements: [FR-6, NFR-3]
 - **The interface.** The portfolio surface, navigation and the hero chart are the front's own task.
 - **Identity.** Passkey registration and the session cookie of `D-004`.
 - **The `Store` beyond two tables.** The migration creates ten; the adapter implements two.
-- **Superseding `D-006`** over its dependency count — see Assumptions.
 
 ## Acceptance Criteria
 
@@ -85,10 +84,8 @@ implements: [FR-6, NFR-3]
 - **TypeScript is pinned at 6.0.3 and not at the current `latest`, 7.0.2.** `@astrojs/check@0.9.10`
   declares `peerDependencies: typescript ^5.0.0 || ^6.0.0`, so `astro check` — half of the
   `typecheck` gate — cannot be green on 7. Revisit when `@astrojs/check` admits 7.
-- **`D-006` says one dev dependency; the real count is five.** `@cloudflare/vitest-pool-workers`
-  declares `vitest` as a peer, and `@astrojs/cloudflare` declares `wrangler` as one, so the
-  integration test and the build each cost more than the decision assumed. The decision itself
-  holds — the core stays testable with nothing installed. Correcting the count is follow-up.
+- **The five dev dependencies are named in `D-012`**, which supersedes `D-006` over its count.
+  `package.json` must match that list exactly; a sixth needs a decision, not a commit.
 - **The ten-table migration ships before nine of those tables have rules.** The schema is settled
   in `data-model.md`, and one migration is cheaper to read later than ten.
 
