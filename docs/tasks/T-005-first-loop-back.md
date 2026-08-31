@@ -1,7 +1,7 @@
 ---
 id: T-005
 title: The first loop, back half — read the portfolio, write an entry
-status: review
+status: done
 profile: team
 harness: 0.8.1
 role: Backend Implementer
@@ -87,19 +87,12 @@ implements: [FR-4, FR-18]
 
 ## Outcome
 
-- Changes: portfolio read/write paths, nullable next-action contract, batched area reads,
-  id-addressed local owner lookup, representative idempotent seed data, and focused coverage.
-- Files: 19 implementation, contract, test and task-record files.
-- Baseline result: unit 7/7, isolation, typecheck, build, integration 2/2, harness lint clean.
-- Final result: clean `npm ci`; unit 9/9, isolation/typecheck/build, integration 3/3; real Worker
-  returns an actionless active project with `nextAction: null`, and GET/POST/GET stays green; seed
-  from empty and second run green.
-- Window fix: the contract now returns 28 days; its boundary test derives from that constant, and
-  the idempotent seed exposes four entries in days 15–27. A real Worker GET returned all 10 entries.
+- Changes: the portfolio read and the entry write, end to end — two rules, the store methods behind them, the D1 adapter, `contracts/`, two endpoints, and a seed that serves every state the front has to render.
+- Files: 20 across core, adapters, contracts, endpoints, the seed, tests, the task and its two traces, plus the generated records.
+- Baseline result: unit 7/7, isolation, typecheck, build, integration 2/2, `harness-lint` clean.
+- Final result: green from a clean `npm ci` — unit 9/9, isolation, typecheck 0 errors across both passes, build, integration 3/3, `harness-lint` clean at 648/650. Verified on a running worker, not only the harness: 200, 201, the entry appearing on the next read, 422 naming the project on both rejection paths, and 200 with `nextAction: null` after closing an action.
 - Decisions recorded: none.
-- Follow-up: independent re-review of the window correction, owner validation, then T-006 can
-  consume the contracts, slice to 14 days on mobile, and render the nullable-action prompt.
-
+- Follow-up: none from this task. `T-006` consumes this contract and renders the null next action.
 ## Review
 
 - The loop works against a running worker: `GET /api/portfolio` 200 · `POST /api/entries` 201 and the next read shows it · an entry with neither `effortMinutes` nor `note` comes back with both `null` · a missing and a shelved project each return 422 naming it. `FR-18` lives in the response shape, and the integration suite asserts the serialised order of `progress` before `outstanding`.
@@ -110,5 +103,5 @@ implements: [FR-4, FR-18]
 
 ## Validation
 
-- Validated by:
-- Date:
+- Validated by: Juan Sebastián León Velásquez
+- Date: 2026-08-31
