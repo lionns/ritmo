@@ -42,6 +42,8 @@ implements: [US-3, NFR-1]
 
 - [ ] WHEN the owner opens `/`, THE SYSTEM SHALL render recent progress above any outstanding work
       (`AC-G1`), with no streak, counter, badge or debt anywhere on the page (`AC-X4`, `NFR-7`).
+- [ ] WHEN an active project has no open next action, THE SYSTEM SHALL render the project with a
+      prompt to write one, in `dim` and without evaluative or debt language (`NFR-7`, `NFR-8`).
 - [ ] The hero chart renders the three states of `design-handoff.md` — nothing logged, logged
       without minutes, logged with minutes — and carries its legend naming days and unit.
 - [ ] 28 marks at desktop widths and 14 below 768px.
