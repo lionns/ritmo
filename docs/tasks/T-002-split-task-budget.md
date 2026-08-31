@@ -1,7 +1,7 @@
 ---
 id: T-002
 title: Enforce the task plan and record budgets separately
-status: review
+status: done
 profile: team
 harness: 0.8.1
 role: Backend Implementer
@@ -59,13 +59,12 @@ decisions: [D-015, D-016]
 
 ## Outcome
 
-- Changes: split task plan/record limits, made budget contract drift fail, and derived enforced keys from all script readers; added regression tests, docs, and the `0.8.0`/`0.8.1` changelog.
-- Files: 13 across harness config/code/test, docs/version/decisions, generated indexes, task, and traces.
-- Baseline result: unit 3/3, isolation, typecheck, build, and `harness-lint` green before implementation.
-- Final result: unit 7/7, isolation, 17-file typecheck, build, lint at 648/650, and integration 1/1 green; threshold, contract, and separate-script reader probes named the right budgets or keys, then were reverted.
-- Decisions recorded: implemented accepted `D-015` and review fix `D-016`.
-- Follow-up: independent Reviewer / Tester re-review, then named owner validation and closure.
-
+- Changes: the task budget is now a plan limit and a record limit enforced separately, and the set of budgets the linter enforces is derived from the source rather than declared, so a stale `harness.json` fails instead of silently switching a gate off.
+- Files: 15 across harness config, scripts, tests, `docs/sdd/`, two decisions, the task and its two traces, plus the generated indexes.
+- Baseline result: unit 3/3, isolation, typecheck, build and `harness-lint` green before implementation.
+- Final result: green from a clean `npm ci` — unit 7/7, isolation, typecheck 0 errors over 17 files, build, integration 1/1, `harness-lint` clean at 648/650.
+- Decisions recorded: `D-015` and `D-016`, both accepted before implementation.
+- Follow-up: three Low items go to `T-004` as harness work, deliberately not to `T-003`, which is product. `docs/sdd/` has two lines left.
 ## Review
 
 - Resolved: the enforced set is derived by scanning `scripts/` instead of listed. Verified with the exact probe that reported clean last round — a check reading `budgets.exampleLines` with the key undeclared now fails naming it — and with both traps: a reader added to `harness-status.mjs` is caught, and `enforcedBudgetKeys()` returns exactly the five real keys, so the scanner does not match the regex literal in its own source.
@@ -76,5 +75,5 @@ decisions: [D-015, D-016]
 
 ## Validation
 
-- Validated by:
-- Date:
+- Validated by: Juan Sebastián León Velásquez
+- Date: 2026-08-31
