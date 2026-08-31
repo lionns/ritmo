@@ -9,6 +9,7 @@ Harness `0.7.1` · profile `team`
 | Task | State | Goal |
 |---|---|---|
 | [T-002](docs/tasks/T-002-split-task-budget.md) | `ready` | Replace the single task-file budget with a plan budget and a record budget, enforced by |
+| [T-003](docs/tasks/T-003-loose-ends.md) | `ready` | Close the six low-severity findings the T-001 review left open, so the schema states the |
 | [T-001](docs/tasks/T-001-skeleton-and-next-action.md) | `done` | Stand up the three-layer tree with every quality-gate command real and green, and prove it by |
 
 ## Next
