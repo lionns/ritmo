@@ -99,21 +99,19 @@ implements: [FR-6, NFR-3]
 
 ## Outcome
 
-- Changes: three-layer skeleton, ten-table D1 schema, Project/NextAction store, rule, ULID, gates/tests.
-- Files: 23 new implementation/config files; `.gitignore`, this task, and `quality-gates.md` updated.
+- Changes: skeleton plus review fixes for test typing, D1 types/close results, and owner integrity.
+- Files: 24 new implementation/config files; task, lockfile, schema, core, adapter, and tests updated.
 - Baseline result: `node scripts/harness-lint.mjs` clean before implementation.
-- Final result: clean install; unit 3/3, isolation, typecheck, build, integration 1/1, local migration green.
-- Decisions recorded: none.
-- Follow-up: independent Claude review, then owner validation and task closure.
+- Final result: clean install; unit 3/3, isolation, 16-file typecheck, build, integration 1/1, migration green.
+- Decisions recorded: D-014.
+- Follow-up: independent re-review of resolved findings, then owner validation and closure.
 
 ## Review
 
-- Medium · `tsconfig.json:17` · `test/core/**` is outside `include`, so `npm run typecheck` never sees the core unit tests · verified: a deliberate type error in `test/core/ulid.test.ts` still leaves `tsc --noEmit` at exit 0 · widen to `test/**/*.ts`, which needs `@types/node` — a sixth dev dependency, so it needs a decision under `D-012`, not a commit.
-- Medium · `test/integration/env.d.ts:1` · the `cloudflare:test` module and `env.DB` are hand-declared against the adapter own `D1Database` interface rather than the types the pool ships · the integration test is typechecked against our own narrowing, so platform API drift cannot fail the gate · generate `worker-configuration.d.ts` with `wrangler types` and declare `ProvidedEnv` from it.
-- Medium · `adapters/d1/store.ts:109` · `closeNextAction` returns void and its UPDATE is filtered by `closed_at IS NULL`, so closing a missing or already-closed action is indistinguishable from success · a caller cannot detect a lost update · return `meta.changes` and let the rule decide.
-- Low · `migrations/0001_initial_schema.sql:29` · every table carries `owner_id` beside a parent FK with nothing tying the two · verified: an objective owned by `o2` inserts into an area owned by `o1` · add composite foreign keys, or drop `owner_id` and reach ownership through the parent — harmless at one owner, silent corruption at two (`NFR-3`).
-- Assessment: every acceptance criterion passes and all five gates are green from a clean `npm ci`; the findings above are real but none of them breaks a criterion. Four lower-severity follow-ups are in the reviewer trace.
-
+- Resolved 2026-08-31, each re-verified rather than taken on report: a type error in `test/core` now fails `tsc` at file:line · the platform types come from `wrangler types` and the typecheck covers 16 files instead of 14 · `closeNextAction` returns whether a row changed and the rule throws on a lost update, asserted in both suites · a cross-owner objective is now rejected by the composite foreign key.
+- Medium · `migrations/0001_initial_schema.sql:1` · an already-applied migration was edited in place instead of adding `0002` · verified: a local D1 carrying 0001 answers `No migrations to apply!` and still holds the old schema with no composite keys — the integration test hides this because vitest rebuilds the database from the file every run · add `0002_owner_composite_keys.sql`, or record in the task that 0001 may change until first deploy and name the reset step.
+- Medium · `package.json:9` · `worker-configuration.d.ts` is 15278 generated lines that `tsconfig.compilerOptions.types` requires, with no script to regenerate it · verified: removing it fails typecheck with `TS2688`, so it must be committed and it drifts silently whenever `wrangler.jsonc` changes · add a `types` script running `wrangler types` and run it before the typecheck gate.
+- Assessment: all nine acceptance criteria still pass and the five gates are green from a clean `npm ci`. The two findings above are new, neither breaks a criterion, and two low-severity notes are in the reviewer trace.
 ## Validation
 
 - Validated by:

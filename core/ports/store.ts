@@ -6,5 +6,5 @@ export interface Store {
   createNextAction(action: NextAction): Promise<void>;
   getNextAction(id: string): Promise<NextAction | null>;
   findOpenNextAction(projectId: string): Promise<NextAction | null>;
-  closeNextAction(id: string, closedAt: string): Promise<void>;
+  closeNextAction(id: string, closedAt: string): Promise<boolean>;
 }

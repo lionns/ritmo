@@ -7,6 +7,11 @@
     "moduleResolution": "Bundler",
     "noEmit": true,
     "target": "ES2022",
+    "types": [
+      "./worker-configuration.d.ts",
+      "@cloudflare/vitest-pool-workers/types",
+      "node"
+    ],
     "verbatimModuleSyntax": true
   },
   "include": [
@@ -14,7 +19,7 @@
     "adapters/**/*.ts",
     "core/**/*.ts",
     "src/**/*.astro",
-    "test/integration/**/*.ts",
+    "test/**/*.ts",
     "vitest.config.ts"
   ]
 }

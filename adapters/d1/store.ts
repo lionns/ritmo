@@ -1,16 +1,6 @@
 import type { NextAction, Project } from "../../core/model/entities.ts";
 import type { Store } from "../../core/ports/store.ts";
 
-interface D1PreparedStatement {
-  bind(...values: unknown[]): D1PreparedStatement;
-  first<T>(): Promise<T | null>;
-  run(): Promise<unknown>;
-}
-
-export interface D1Database {
-  prepare(query: string): D1PreparedStatement;
-}
-
 interface ProjectRow {
   id: string;
   owner_id: string;
@@ -106,11 +96,12 @@ export class D1Store implements Store {
     return row === null ? null : toNextAction(row);
   }
 
-  async closeNextAction(id: string, closedAt: string): Promise<void> {
-    await this.#database
+  async closeNextAction(id: string, closedAt: string): Promise<boolean> {
+    const result = await this.#database
       .prepare("UPDATE next_actions SET closed_at = ? WHERE id = ? AND closed_at IS NULL")
       .bind(closedAt, id)
       .run();
+    return result.meta.changes === 1;
   }
 }
 

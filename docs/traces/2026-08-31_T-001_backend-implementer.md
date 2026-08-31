@@ -13,3 +13,13 @@
   - blockers: none
   - decisions: none
   - follow-up: independent review and named owner validation
+
+- 2026-08-31 — role: Backend Implementer, review fixes
+  - read: updated `T-001`, reviewer trace, `D-014`, Cloudflare/Wrangler type-generation guidance
+  - did: covered Node tests in `tsc`; generated runtime/binding types; surfaced close conflicts; tied owner FKs
+  - files: package/lock/tsconfig/types, D1 adapter/schema, core port/rule, unit and integration tests
+  - baseline: unit, isolation, harness, typecheck and build green before fixes
+  - checks: clean `npm ci`; unit 3/3; isolation/typecheck/build green; integration 1/1; types current
+  - probes: core test type error failed at file/line; revised migration applied 14 commands to empty D1
+  - assumptions/blockers: none
+  - decisions/follow-up: D-014; independent re-review, then owner validation

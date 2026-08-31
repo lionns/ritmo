@@ -1,9 +1,9 @@
-import { env } from "cloudflare:test";
+import { env } from "cloudflare:workers";
 import { beforeEach, describe, expect, it } from "vitest";
 
 import { D1Store } from "../../adapters/d1/store.ts";
 import type { NextAction, Project } from "../../core/model/entities.ts";
-import { createNextAction } from "../../core/rules/next-action.ts";
+import { closeNextAction, createNextAction } from "../../core/rules/next-action.ts";
 
 describe("D1Store with the next-action rule", () => {
   const store = new D1Store(env.DB);
@@ -20,6 +20,13 @@ describe("D1Store with the next-action rule", () => {
   });
 
   it("stores and reads a project and its sole open next action", async () => {
+    await env.DB.prepare("INSERT INTO owners (id, active_cap) VALUES (?, ?)")
+      .bind("owner-2", 3)
+      .run();
+    await expect(
+      store.createProject({ ...project, id: "cross-owner-project", ownerId: "owner-2" }),
+    ).rejects.toThrow();
+
     await store.createProject(project);
     await createNextAction(store, action);
 
@@ -29,7 +36,10 @@ describe("D1Store with the next-action rule", () => {
       createNextAction(store, { ...action, id: "action-2" }),
     ).rejects.toThrow(action.id);
 
-    await store.closeNextAction(action.id, "2026-09-01T11:00:00.000Z");
+    await closeNextAction(store, action.id, "2026-09-01T11:00:00.000Z");
+    await expect(
+      closeNextAction(store, action.id, "2026-09-01T11:00:00.500Z"),
+    ).rejects.toThrow(action.id);
     const replacement = { ...action, id: "action-2", createdAt: "2026-09-01T11:00:01.000Z" };
     await createNextAction(store, replacement);
 

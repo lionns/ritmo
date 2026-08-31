@@ -23,3 +23,14 @@ export async function createNextAction(store: Store, action: NextAction): Promis
 
   await store.createNextAction(action);
 }
+
+export async function closeNextAction(
+  store: Store,
+  actionId: string,
+  closedAt: string,
+): Promise<void> {
+  const closed = await store.closeNextAction(actionId, closedAt);
+  if (!closed) {
+    throw new NextActionRuleError(`Next action ${actionId} does not exist or is already closed`);
+  }
+}

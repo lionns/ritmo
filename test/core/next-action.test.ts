@@ -3,7 +3,7 @@ import { describe, it } from "node:test";
 
 import type { NextAction, Project } from "../../core/model/entities.ts";
 import type { Store } from "../../core/ports/store.ts";
-import { createNextAction } from "../../core/rules/next-action.ts";
+import { closeNextAction, createNextAction } from "../../core/rules/next-action.ts";
 
 describe("the open next-action rule", () => {
   it("rejects a second open action and names the existing id", async () => {
@@ -21,13 +21,17 @@ describe("the open next-action rule", () => {
     const store = new MemoryStore();
     await store.createProject(project);
     await createNextAction(store, firstAction);
-    await store.closeNextAction(firstAction.id, "2026-09-01T12:00:00.000Z");
+    await closeNextAction(store, firstAction.id, "2026-09-01T12:00:00.000Z");
     const replacement = { ...firstAction, id: "action-2", createdAt: "2026-09-01T12:00:01.000Z" };
 
     await createNextAction(store, replacement);
 
     assert.equal((await store.getNextAction(firstAction.id))?.closedAt, "2026-09-01T12:00:00.000Z");
     assert.deepEqual(await store.findOpenNextAction(project.id), replacement);
+    await assert.rejects(
+      closeNextAction(store, firstAction.id, "2026-09-01T12:00:02.000Z"),
+      /action-1/,
+    );
   });
 });
 
@@ -67,6 +71,8 @@ class MemoryStore implements Store {
   }
   async closeNextAction(id: string, closedAt: string) {
     const value = this.actions.get(id);
-    if (value !== undefined) this.actions.set(id, { ...value, closedAt });
+    if (value === undefined || value.closedAt !== null) return false;
+    this.actions.set(id, { ...value, closedAt });
+    return true;
   }
 }
