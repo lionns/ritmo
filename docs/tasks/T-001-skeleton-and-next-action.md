@@ -16,13 +16,13 @@ implements: [FR-6, NFR-3]
 - `docs/project/architecture.md` § Layout — the tree and the three inward arrows
 - `docs/project/data-model.md` § Entities, § Validation rules — the ten tables and the one-open rule
 - `docs/project/quality-gates.md` § Baseline Checks, § Known Exceptions
-- `docs/decisions/` — `D-001`, `D-002`, `D-006`, `D-008`, `D-009`, `D-011`
+- `docs/decisions/` — the seven decisions listed in the front-matter above
 
 ## Scope
 
 - `package.json` with the pinned versions under Assumptions, and a script for every gate command.
 - `tsconfig.json`, `astro.config.mjs` (`@astrojs/cloudflare` + `@tailwindcss/vite`), `wrangler.jsonc`
-  with the D1 binding.
+  with the D1 binding, and `.nvmrc` pinning the Node line.
 - `core/model/` — the ten entities of `data-model.md` as types. Types only; rules come per task.
 - `core/ports/` — `Store`, `Clock`, `IdGen`.
 - `core/rules/` — one rule: an active project carries exactly one `NextAction` with `closedAt` null.
@@ -32,8 +32,7 @@ implements: [FR-6, NFR-3]
 - `scripts/check-core-isolation.mjs` — zero dependencies, wired to `npm run check:core`.
 - `src/pages/index.astro` — the minimum that makes `npm run build` real; a build proof, not the
   landing surface, which is the front's own task.
-- Tests: `node --test` over the core rule and the id generator; one integration test through the
-  adapter against a local D1.
+- Tests: `node --test` over the core rule and the id generator, plus one integration test.
 
 ## Out of Scope
 
@@ -47,9 +46,8 @@ implements: [FR-6, NFR-3]
 
 - [ ] `npm test`, `npm run check:core`, `npm run typecheck`, `npm run build` and
       `npm run test:integration` exist in `package.json` and each exits zero after a clean `npm ci`.
-- [ ] WHEN a file under `core/` imports `@cloudflare/*` or `cloudflare:*`, names the `Env` type, or
-      touches a platform global, THE SYSTEM SHALL exit non-zero from `npm run check:core` naming
-      that file and its offending line.
+- [ ] WHEN a file under `core/` imports `@cloudflare/*` or `cloudflare:*`, names the `Env` type or
+      touches a platform global, THE SYSTEM SHALL fail `npm run check:core` naming file and line.
 - [ ] `npm test` runs on `node --test` with nothing installed beyond the pinned dev dependencies,
       and no import inside `core/` resolves outside `core/`.
 - [ ] WHEN a next action is created for a project that already carries one with `closedAt` null,
@@ -61,10 +59,10 @@ implements: [FR-6, NFR-3]
 - [ ] `wrangler d1 migrations apply --local` succeeds against an empty database and creates all ten
       tables of `data-model.md`, every one carrying its ownership foreign key (NFR-3).
 - [ ] The integration test creates a project and its next action through the D1 adapter against a
-      local D1, reads both back, and asserts the rejection above — exercising the core rule and the
-      adapter together rather than either alone.
-- [ ] `package.json` pins exact versions with no range operators, `package-lock.json` is committed,
-      and every script installs with `npm ci` (`D-013`).
+      local D1, reads both back, and asserts the rejection above — core rule and adapter together.
+- [ ] `package.json` pins exact versions with no range operators and declares `engines.node`,
+      `.nvmrc` names that same version, `package-lock.json` is committed, and every script installs
+      with `npm ci` (`D-013`).
 
 ## Verification
 
@@ -73,15 +71,18 @@ implements: [FR-6, NFR-3]
 - Final: `npm test && npm run check:core && npm run typecheck && npm run build`, then
   `node scripts/harness-status.mjs && node scripts/harness-lint.mjs`.
 - Task-specific: `npm run test:integration` is the composition check.
-- Task-specific: delete the Known Exceptions entry in `quality-gates.md` as part of closing, since
-  it expires here and every row above must then run for real.
+- Task-specific: delete the Known Exceptions entry in `quality-gates.md` when closing — it expires
+  here, and every row of that table must then run for real.
 
 ## Assumptions
 
-- **Versions were read from the npm registry on 2026-08-30, not from memory.** Pins: `astro@7.2.9`,
-  `@astrojs/cloudflare@14.2.5`, `wrangler@4.127.1`, `tailwindcss@4.3.3`, `@tailwindcss/vite@4.3.3`,
-  `typescript@6.0.3`, `@astrojs/check@0.9.10`, `vitest@4.1.11`, `@cloudflare/vitest-pool-workers@0.22.0`.
-  Node >= 22.12.0 is required by `astro@7`.
+- **Versions came from the npm registry, re-checked 2026-08-31, never from memory.** Pins:
+  `astro@7.2.9`, `@astrojs/cloudflare@14.2.5`, `wrangler@4.127.1`, `tailwindcss@4.3.3`,
+  `@tailwindcss/vite@4.3.3`, `typescript@6.0.3`, `@astrojs/check@0.9.10`, `vitest@4.1.11`,
+  `@cloudflare/vitest-pool-workers@0.22.0`.
+- **Node is pinned at 24.20.0 — the active LTS line (Krypton), not the newer 26.8.1, which is not
+  LTS.** `astro@7` needs >= 22.12, so the constraint is met with margin. *Chosen by the assistant.*
+  The owner runs 24.16.0, so this asks for a patch bump rather than a line change.
 - **TypeScript is pinned at 6.0.3 and not at the current `latest`, 7.0.2.** `@astrojs/check@0.9.10`
   declares `peerDependencies: typescript ^5.0.0 || ^6.0.0`, so `astro check` — half of the
   `typecheck` gate — cannot be green on 7. Revisit when `@astrojs/check` admits 7.
@@ -94,8 +95,7 @@ implements: [FR-6, NFR-3]
 
 ## Risks
 
-- `@astrojs/cloudflare@14.2.5` peers `wrangler ^4.125.0`. A wrangler major breaks the build, and
-  wrangler is not optional here.
+- `@astrojs/cloudflare@14.2.5` peers `wrangler ^4.125.0`, so a wrangler major breaks the build.
 - The ULID generator is hand-written, so its correctness is ours. The monotonic-within-a-millisecond
   clause is absent (`D-011`): two ids minted in one millisecond have undefined relative order.
 - `npm ci` on a fresh clone is the first thing that has ever exercised these pins together.
