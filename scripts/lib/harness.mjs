@@ -42,6 +42,25 @@ export function taskBudgetSections(text) {
   return { plan: text.slice(0, outcome.index), record: text.slice(outcome.index) };
 }
 
+const ENFORCED_BUDGETS = [
+  "taskPlanLines",
+  "taskRecordLines",
+  "traceBlockLines",
+  "decisionFileLines",
+  "sddDocsTotalLines",
+];
+
+/** Reports drift between configured budget keys and the checks harness-lint implements. */
+export function budgetContractProblems(budgets) {
+  const declared = Object.keys(budgets);
+  return [
+    ...ENFORCED_BUDGETS.filter((key) => !declared.includes(key))
+      .map((key) => `missing \`${key}\`, which harness-lint enforces`),
+    ...declared.filter((key) => !ENFORCED_BUDGETS.includes(key))
+      .map((key) => `declares \`${key}\`, which harness-lint does not enforce`),
+  ];
+}
+
 export function config(root = ROOT) {
   return JSON.parse(readFileSync(join(root, "harness.json"), "utf8"));
 }

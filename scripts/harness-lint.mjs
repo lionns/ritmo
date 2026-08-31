@@ -7,7 +7,7 @@ import { readFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import {
   ROOT, config, tasks, decisions, journal, traces, knownVersions, specIds, section, sddDocLines, lineCount,
-  taskBudgetSections,
+  budgetContractProblems, taskBudgetSections,
   TASK_STATES, DECISION_STATES,
 } from "./lib/harness.mjs";
 import { renderStatus, renderDecisionIndex } from "./harness-status.mjs";
@@ -19,6 +19,10 @@ const cfg = config();
 const budgets = cfg.budgets ?? {};
 const PROFILES = ["solo", "team"];
 const REQUIRED_META = ["id", "title", "status", "profile", "harness", "goal"];
+
+for (const message of budgetContractProblems(budgets)) {
+  fail("harness.json", `budget contract ${message}`);
+}
 
 if (!PROFILES.includes(cfg.profile)) {
   fail("harness.json", `profile must be one of ${PROFILES.join(" | ")}, got "${cfg.profile}"`);

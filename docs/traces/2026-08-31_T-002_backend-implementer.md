@@ -9,3 +9,12 @@
   - integration: sandbox denied local listen (`EPERM`); permitted rerun passed 1/1
   - assumptions/blockers: task assignment supplied governance approval; independent review/validation remain
   - decisions: implemented accepted `D-015`; no new decision
+
+- 2026-08-31 — role: Backend Implementer, review fix
+  - read: independent review, `D-016`, quality gates, current budget code/config
+  - did: required the exact enforced key set; removed `journalEntryLines`; documented `0.8.1` migration
+  - files: harness config/linter/library/test, version/task/status, this trace
+  - baseline: unit 5/5, isolation, typecheck, build, and harness lint clean
+  - checks: unit 6/6; isolation/typecheck/build/lint; integration 1/1; both contract probes failed by key
+  - assumptions/blockers: unrelated Low findings left for re-review; owner validation remains
+  - decisions: implemented accepted `D-016`

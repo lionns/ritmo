@@ -2,7 +2,7 @@
 
 # Status — ritmo
 
-Harness `0.8.0` · profile `team`
+Harness `0.8.1` · profile `team`
 
 ## Tasks
 

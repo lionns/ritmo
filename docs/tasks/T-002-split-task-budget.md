@@ -3,16 +3,17 @@ id: T-002
 title: Enforce the task plan and record budgets separately
 status: review
 profile: team
-harness: 0.8.0
+harness: 0.8.1
 role: Backend Implementer
 goal: Replace the single task-file budget with a plan budget and a record budget, enforced by
   harness-lint, so review findings and task scope stop competing for one number.
-decisions: [D-015]
+decisions: [D-015, D-016]
 ---
 
 ## Sources
 
 - `docs/decisions/D-015-task-budget-plan-and-record.md` — the proposal this implements
+- `docs/decisions/D-016-budget-contract-both-ways.md` — the accepted review fix
 - `docs/sdd/VERSION.md` § Change Rules, § Versioning Rules
 - `docs/sdd/PROTOCOLS.md` § Budgets · `docs/sdd/TEMPLATES.md` § Task File
 
@@ -58,21 +59,21 @@ decisions: [D-015]
 
 ## Outcome
 
-- Changes: replaced the whole-task limit with independently enforced 120-line plan and 60-line record budgets; added the structural split helper, regression tests, docs, and `0.8.0` changelog.
-- Files: 10 across harness config/code/test, harness docs/version, generated status, task, and implementer trace.
+- Changes: split the task budget into plan/record limits, then made missing or unenforced budget keys fail the contract; added regression tests, docs, and the `0.8.0`/`0.8.1` changelog.
+- Files: 13 across harness config/code/test, docs/version/decisions, generated indexes, task, and traces.
 - Baseline result: unit 3/3, isolation, typecheck, build, and `harness-lint` green before implementation.
-- Final result: unit 5/5, isolation, 17-file typecheck, build, harness lint at 643/650, and integration 1/1 green; negative 121/120 plan and 61/60 record probes named the right budgets and were reverted.
-- Decisions recorded: implemented accepted `D-015`; no new decision.
-- Follow-up: independent Reviewer / Tester review, then named owner validation and closure.
+- Final result: unit 6/6, isolation, 17-file typecheck, build, lint at 648/650, and integration 1/1 green; plan/record thresholds and missing/extra contract probes named the right budgets or keys, then were reverted.
+- Decisions recorded: implemented accepted `D-015` and review fix `D-016`.
+- Follow-up: independent Reviewer / Tester re-review, then named owner validation and closure.
 
 ## Review
 
-- Verified sound, not taken on report: both budgets fire at exactly 121 and 61 and each names which one · `plan + record` equals the file total on all three tasks, so the split loses no line and double-counts none · a task with no `## Outcome` is entirely plan · no `taskFileLines` reference survives in code, only in the two prose passages that deliberately name the old key.
-- Medium · `scripts/harness-lint.mjs:64` · a budget key missing from `harness.json` silently disables its check, because `n > undefined` is false · verified: with `taskPlanLines` deleted, a 280-line plan passes as `harness-lint: clean` · this task performs the rename that makes a stale `harness.json` possible, and the `0.8.0` entry describes the new semantics without naming the migration · `D-016` carries the fix, the mirror-image finding below, and the `0.8.1` bump.
-- Low · `scripts/lib/harness.mjs:40` · the `## Outcome` regex matches inside fenced code · verified: a task quoting the template splits at the fenced heading — plan 15, record 89 — and a harness task quoting `TEMPLATES.md` is a real case, not a hypothetical · it fails loudly on the record budget rather than silently, so this is noise rather than a hole · skip fenced regions when locating the heading.
-- Low · `harness.json:19` · `journalEntryLines: 1` is declared and read by no script · verified by grep: it appears in that file and nowhere else, so the config names a rule that does not exist — the mirror image of the Medium above · folded into `D-016`; the one-line rule already holds by construction, so the key goes rather than gains a check.
-- Low · `test/core/task-budget.test.ts:4` · harness tooling is tested from `test/core/`, the directory that mirrors the product core and that `npm test` globs · nothing breaks; the directory now means two things.
-- Assessment: all five acceptance criteria pass and the five gates are green from a clean `npm ci`. The Medium is an enforcement gap inside enforcement code and is worth closing before this task does. `docs/sdd` now sits at 643 of 650, so the next prose change has 7 lines.
+- Round two verified sound: both directions of the contract fire and name the key — `budget contract missing \`taskPlanLines\`` and `budget contract declares \`inventadoLines\`` · `journalEntryLines` is gone and the one-line rule still holds by construction · the `0.8.1` entry carries the migration from 0.7.1 that `0.8.0` omitted · unit 6/6 and all five gates green from a clean `npm ci`.
+- Medium · `scripts/lib/harness.mjs:45` · `ENFORCED_BUDGETS` is a hand-written list, so the contract covers only the five names that exist today · verified: I added a check reading `budgets.exampleLines`, left the key undeclared, and `harness-lint` reported clean while the new check silently no-opped — the same defect `D-016` exists to remove, one layer up · `D-016` says a budget the linter reads and the config omits is an error; the code says one of these five names is · derive the set from the source with `/\bbudgets\.([A-Za-z][A-Za-z0-9]*)/g` over the lint script, and test that the derived set matches.
+- Low · `docs/tasks/T-002-split-task-budget.md:26` · Scope still says the version bump is `0.8.0`, though the task shipped `0.8.0` and `0.8.1` once `D-016` extended it · the plan now understates what was agreed.
+- Fixed in review: both `T-001` and `T-002` had lost the blank line before `## Validation`. My own review edit script dropped it; `T-003`, which it never touched, was intact. Restored in both.
+- Assessment: the five acceptance criteria pass and every gate is green. One Medium remains and is worth a round, because it is the same class of defect this task exists to remove — narrower now, since it only reaches budgets added from here on. `docs/sdd` is at 648 of 650: the next governance prose change has two lines.
+
 ## Validation
 
 - Validated by:
