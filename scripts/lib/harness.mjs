@@ -1,5 +1,5 @@
 import { readFileSync, readdirSync, existsSync, realpathSync } from "node:fs";
-import { join } from "node:path";
+import { extname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 // fileURLToPath, not URL.pathname: the latter leaves percent-encoding in place, so a repo under a
@@ -42,21 +42,34 @@ export function taskBudgetSections(text) {
   return { plan: text.slice(0, outcome.index), record: text.slice(outcome.index) };
 }
 
-const ENFORCED_BUDGETS = [
-  "taskPlanLines",
-  "taskRecordLines",
-  "traceBlockLines",
-  "decisionFileLines",
-  "sddDocsTotalLines",
-];
+const SCRIPT_EXTENSIONS = new Set([".cjs", ".js", ".mjs", ".ts", ".tsx"]);
+
+/** Finds every configured budget property read by source under scripts/, including nested readers. */
+export function enforcedBudgetKeys(root = ROOT) {
+  const keys = new Set();
+  const scan = (directory) => {
+    if (!existsSync(directory)) return;
+    for (const entry of readdirSync(directory, { withFileTypes: true })) {
+      const path = join(directory, entry.name);
+      if (entry.isDirectory()) {
+        scan(path);
+      } else if (entry.isFile() && SCRIPT_EXTENSIONS.has(extname(entry.name))) {
+        const source = readFileSync(path, "utf8");
+        for (const match of source.matchAll(/\bbudgets\.([A-Za-z_$][\w$]*)/g)) keys.add(match[1]);
+      }
+    }
+  };
+  scan(join(root, "scripts"));
+  return [...keys].sort();
+}
 
 /** Reports drift between configured budget keys and the checks harness-lint implements. */
-export function budgetContractProblems(budgets) {
+export function budgetContractProblems(budgets, enforced = enforcedBudgetKeys()) {
   const declared = Object.keys(budgets);
   return [
-    ...ENFORCED_BUDGETS.filter((key) => !declared.includes(key))
+    ...enforced.filter((key) => !declared.includes(key))
       .map((key) => `missing \`${key}\`, which harness-lint enforces`),
-    ...declared.filter((key) => !ENFORCED_BUDGETS.includes(key))
+    ...declared.filter((key) => !enforced.includes(key))
       .map((key) => `declares \`${key}\`, which harness-lint does not enforce`),
   ];
 }

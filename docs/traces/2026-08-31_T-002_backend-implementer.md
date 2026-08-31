@@ -18,3 +18,8 @@
   - checks: unit 6/6; isolation/typecheck/build/lint; integration 1/1; both contract probes failed by key
   - assumptions/blockers: unrelated Low findings left for re-review; owner validation remains
   - decisions: implemented accepted `D-016`
+
+- 2026-08-31 — role: Backend Implementer, round-three review fix
+  - read: round-two review/`D-016` · did/files: derived keys recursively in harness library; added fixture test
+  - checks: baseline green; unit 7/7; scanner-regex fixture excluded; separate `exampleLines` reader failed by key
+  - assumptions/blockers: none · decisions: no new decision/version · follow-up: independent re-review

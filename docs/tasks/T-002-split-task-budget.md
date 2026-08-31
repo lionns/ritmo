@@ -59,20 +59,20 @@ decisions: [D-015, D-016]
 
 ## Outcome
 
-- Changes: split the task budget into plan/record limits, then made missing or unenforced budget keys fail the contract; added regression tests, docs, and the `0.8.0`/`0.8.1` changelog.
+- Changes: split task plan/record limits, made budget contract drift fail, and derived enforced keys from all script readers; added regression tests, docs, and the `0.8.0`/`0.8.1` changelog.
 - Files: 13 across harness config/code/test, docs/version/decisions, generated indexes, task, and traces.
 - Baseline result: unit 3/3, isolation, typecheck, build, and `harness-lint` green before implementation.
-- Final result: unit 6/6, isolation, 17-file typecheck, build, lint at 648/650, and integration 1/1 green; plan/record thresholds and missing/extra contract probes named the right budgets or keys, then were reverted.
+- Final result: unit 7/7, isolation, 17-file typecheck, build, lint at 648/650, and integration 1/1 green; threshold, contract, and separate-script reader probes named the right budgets or keys, then were reverted.
 - Decisions recorded: implemented accepted `D-015` and review fix `D-016`.
 - Follow-up: independent Reviewer / Tester re-review, then named owner validation and closure.
 
 ## Review
 
-- Round two verified sound: both directions of the contract fire and name the key — `budget contract missing \`taskPlanLines\`` and `budget contract declares \`inventadoLines\`` · `journalEntryLines` is gone and the one-line rule still holds by construction · the `0.8.1` entry carries the migration from 0.7.1 that `0.8.0` omitted · unit 6/6 and all five gates green from a clean `npm ci`.
-- Medium · `scripts/lib/harness.mjs:45` · `ENFORCED_BUDGETS` is a hand-written list, so the contract covers only the five names that exist today · verified: I added a check reading `budgets.exampleLines`, left the key undeclared, and `harness-lint` reported clean while the new check silently no-opped — the same defect `D-016` exists to remove, one layer up · `D-016` says a budget the linter reads and the config omits is an error; the code says one of these five names is · derive the enforced set by scanning `scripts/` for `budgets.<key>` reads rather than listing names, and unit-test the derived set. Two traps: the scanner must not match the regex literal in its own source, and `harness-lint.mjs` is the only reader today but the scan should not assume that. No version bump and no changelog line — the `0.8.1` entry already claims budget keys fail when missing or unenforced, so this makes the code match a claim already shipped, and `docs/sdd` keeps its last two lines.
-- Fixed in review: Scope said the bump was `0.8.0` when the task shipped `0.8.0` and `0.8.1`. The plan understated what `D-016` added to it; corrected in place.
-- Fixed in review: both `T-001` and `T-002` had lost the blank line before `## Validation`. My own review edit script dropped it; `T-003`, which it never touched, was intact. Restored in both.
-- Assessment: the five acceptance criteria pass and every gate is green. One Medium remains and is worth a round, because it is the same class of defect this task exists to remove — narrower now, since it only reaches budgets added from here on. `docs/sdd` is at 648 of 650: the next governance prose change has two lines.
+- Resolved: the enforced set is derived by scanning `scripts/` instead of listed. Verified with the exact probe that reported clean last round — a check reading `budgets.exampleLines` with the key undeclared now fails naming it — and with both traps: a reader added to `harness-status.mjs` is caught, and `enforcedBudgetKeys()` returns exactly the five real keys, so the scanner does not match the regex literal in its own source.
+- Low · `scripts/lib/harness.mjs:52` · the scan is textual, so any `budgets.<name>` in a comment or string under `scripts/` becomes a required key · verified: a comment reading `budgets.fantasmaLines` made the linter demand that key be declared · recommend leaving it. It fails toward more enforcement, never less, and parsing instead of matching is disproportionate for a lint script — a comment near the scanner saying not to write the pattern in prose costs one line and is enough.
+- Low, open from round one · `scripts/lib/harness.mjs:40` · the `## Outcome` regex matches inside fenced code, so a task quoting `TEMPLATES.md` mis-splits · loudly, on the record budget, so noise rather than a hole.
+- Low, open from round one · `test/core/task-budget.test.ts` · harness tooling is tested from the directory that mirrors the product core and that `npm test` globs.
+- Assessment: no finding remains above Low, the five acceptance criteria pass, and every gate is green from a clean `npm ci` with unit 7/7. Recommended for owner validation and closure; the three Low items belong with `T-003`, not in another round here.
 
 ## Validation
 

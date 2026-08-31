@@ -1,7 +1,10 @@
 import assert from "node:assert/strict";
+import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { test } from "node:test";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 
-import { budgetContractProblems, taskBudgetSections } from "../../scripts/lib/harness.mjs";
+import { budgetContractProblems, enforcedBudgetKeys, taskBudgetSections } from "../../scripts/lib/harness.mjs";
 
 test("task budget sections split at the first Outcome heading", () => {
   const text = ["---", "id: T-001", "---", "", "## Risks", "", "- None", "", "## Outcome", "", "- Changes:", "", "## Outcome", "ignored"].join("\n");
@@ -31,4 +34,21 @@ test("the budget contract reports missing and unenforced keys", () => {
     "missing `taskPlanLines`, which harness-lint enforces",
     "declares `journalEntryLines`, which harness-lint does not enforce",
   ]);
+});
+
+test("enforced budget keys are derived from readers across scripts", () => {
+  const root = mkdtempSync(join(tmpdir(), "ritmo-budget-readers-"));
+  try {
+    mkdirSync(join(root, "scripts", "nested"), { recursive: true });
+    writeFileSync(join(root, "scripts", "first.mjs"), "void budgets.alphaLines;\n");
+    writeFileSync(join(root, "scripts", "nested", "second.ts"), "void budgets.betaLines;\n");
+    writeFileSync(
+      join(root, "scripts", "scanner.mjs"),
+      "const budgetRead = /\\bbudgets\\.([A-Za-z_$][\\w$]*)/g;\n",
+    );
+
+    assert.deepEqual(enforcedBudgetKeys(root), ["alphaLines", "betaLines"]);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
 });
