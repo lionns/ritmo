@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
-import type { NextAction, Project } from "../../core/model/entities.ts";
+import type { Area, Entry, NextAction, Owner, Project } from "../../core/model/entities.ts";
 import type { Store } from "../../core/ports/store.ts";
 import { closeNextAction, createNextAction } from "../../core/rules/next-action.ts";
 
@@ -62,12 +62,26 @@ class MemoryStore implements Store {
   readonly projects = new Map<string, Project>();
   readonly actions = new Map<string, NextAction>();
 
+  async createOwner(_value: Owner) { throw new Error("not used"); }
+  async getOwner() { return null; }
+  async createArea(_value: Area) { throw new Error("not used"); }
+  async getArea(_id: string) { return null; }
   async createProject(value: Project) { this.projects.set(value.id, value); }
   async getProject(id: string) { return this.projects.get(id) ?? null; }
+  async listActiveProjects(ownerId: string) {
+    return [...this.projects.values()].filter(
+      (value) => value.ownerId === ownerId && value.state === "active",
+    );
+  }
   async createNextAction(value: NextAction) { this.actions.set(value.id, value); }
   async getNextAction(id: string) { return this.actions.get(id) ?? null; }
   async findOpenNextAction(projectId: string) {
     return [...this.actions.values()].find((value) => value.projectId === projectId && value.closedAt === null) ?? null;
+  }
+  async readOpenNextActions(projectIds: string[]) {
+    return [...this.actions.values()].filter(
+      (value) => projectIds.includes(value.projectId) && value.closedAt === null,
+    );
   }
   async closeNextAction(id: string, closedAt: string) {
     const value = this.actions.get(id);
@@ -75,4 +89,6 @@ class MemoryStore implements Store {
     this.actions.set(id, { ...value, closedAt });
     return true;
   }
+  async createEntry(_value: Entry) { throw new Error("not used"); }
+  async readRecentEntries(_projectIds: string[], _occurredSince: string) { return []; }
 }

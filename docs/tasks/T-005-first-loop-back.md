@@ -1,7 +1,7 @@
 ---
 id: T-005
 title: The first loop, back half — read the portfolio, write an entry
-status: ready
+status: review
 profile: team
 harness: 0.8.1
 role: Backend Implementer
@@ -45,22 +45,22 @@ implements: [FR-4, FR-18]
 
 ## Acceptance Criteria
 
-- [ ] WHEN `GET /api/portfolio` is called, THE SYSTEM SHALL return every active project of the
+- [x] WHEN `GET /api/portfolio` is called, THE SYSTEM SHALL return every active project of the
       seeded owner, each with its open next action and its recent entries, and SHALL place progress
       before outstanding work in the response shape itself (`FR-18`, `AC-G1`).
-- [ ] WHEN `POST /api/entries` receives a valid entry, THE SYSTEM SHALL store it and return its id,
+- [x] WHEN `POST /api/entries` receives a valid entry, THE SYSTEM SHALL store it and return its id,
       and a following `GET /api/portfolio` SHALL show it.
-- [ ] WHEN `POST /api/entries` names a project that does not exist or is shelved, THE SYSTEM SHALL
+- [x] WHEN `POST /api/entries` names a project that does not exist or is shelved, THE SYSTEM SHALL
       reject it with a 4xx and a message naming the project, and SHALL write nothing.
-- [ ] `effortMinutes` and `note` are optional: an entry carrying neither is accepted (`FR-4`).
-- [ ] No response field is a streak, a consecutive-day count, a point, a badge or a debt (`AC-X4`,
+- [x] `effortMinutes` and `note` are optional: an entry carrying neither is accepted (`FR-4`).
+- [x] No response field is a streak, a consecutive-day count, a point, a badge or a debt (`AC-X4`,
       `NFR-7`), and consistency, where present, is a ratio over a period.
-- [ ] WHEN a file under `src/pages/api/` imports from `core/` or `adapters/`, that is allowed; WHEN
+- [x] WHEN a file under `src/pages/api/` imports from `core/` or `adapters/`, that is allowed; WHEN
       any `.astro` file does, THE SYSTEM SHALL fail `npm run check:core`.
-- [ ] `npm run seed` populates a local D1 from empty and is safe to run twice.
-- [ ] Integration tests drive both endpoints against a local D1 through the real adapter, including
+- [x] `npm run seed` populates a local D1 from empty and is safe to run twice.
+- [x] Integration tests drive both endpoints against a local D1 through the real adapter, including
       the rejection above.
-- [ ] All five gates stay green from a clean `npm ci`, and `harness-lint` stays clean.
+- [x] All five gates stay green from a clean `npm ci`, and `harness-lint` stays clean.
 
 ## Verification
 
@@ -86,16 +86,23 @@ implements: [FR-4, FR-18]
 
 ## Outcome
 
-- Changes:
-- Files:
-- Baseline result:
-- Final result:
-- Decisions recorded:
-- Follow-up:
+- Changes: portfolio read rule and contract, progress-entry write rule and contract, D1 methods,
+  two Astro API endpoints, idempotent local seed data, and core/integration coverage.
+- Files: 17 implementation, contract, test and task-record files.
+- Baseline result: unit 7/7, isolation, typecheck, build, integration 2/2, harness lint clean.
+- Final result: clean `npm ci`; unit 9/9, isolation/typecheck/build, integration 3/3; real Worker
+  GET/POST/GET and shelved rejection green; seed from empty and second run green.
+- Decisions recorded: none.
+- Follow-up: independent Claude review, owner validation, then T-006 can consume the contracts.
 
 ## Review
 
-- Severity · `file:line` · issue · impact · recommendation
+- Verified against a running worker, not only the harness: `GET /api/portfolio` 200 · `POST /api/entries` 201 with the id, and the next `GET` shows it · an entry with neither `effortMinutes` nor `note` is accepted and comes back with both `null` · a missing project and a shelved project each return 422 naming the project · `check:core` green. `FR-18` lives in the shape — `progress` and `outstanding` are separate arrays, and `d1-store.test.ts:77` asserts the serialised order, so the front cannot render backlog first by restyling.
+- High · `core/rules/portfolio.ts:88` · closing a next action takes the whole landing surface down · verified on the running worker: closing the open action of one active project made `GET /api/portfolio` return **500 `Portfolio could not be read`** — not a degraded card, the entire response, so the other projects and the log form go with it · the partial unique index enforces at most one open action, never at least one, and `closeNextAction` needs no replacement, so this is the ordinary flow of `US-4`, not an edge case · make `nextAction` nullable in the contract and let `T-006` render a prompt to write one; forcing a replacement at close time would mean you cannot close an action until you know the next one, which is the opposite of what the product is for.
+- Low · `core/rules/portfolio.ts:40` · areas are read one query per area while entries and open actions are batched · `D-001` gives each render 10 ms of CPU and the risk this task recorded named only the entries case · add a `readAreas(areaIds)` and read them in one.
+- Low · `scripts/seed-local.mjs` · every seeded active project has recent entries, so `outstanding` is always empty · both test suites cover that branch, but the seed is what `T-006` will develop against, and a branch nobody ever sees on screen gets built blind · seed one quiet project.
+- Low · `core/ports/store.ts:5` · `getOwner()` takes no id, so the single owner is now in the port rather than only in the data · `NFR-3` asks that a second party be additive; this is the one place it would not be.
+- Assessment: the loop works and the contract is well shaped. The High must be fixed before `T-006` starts — this task's own risk says getting the response shape wrong is cheap now and expensive after the front consumes it, and this is exactly that.
 
 ## Validation
 

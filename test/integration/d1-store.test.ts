@@ -2,27 +2,22 @@ import { env } from "cloudflare:workers";
 import { beforeEach, describe, expect, it } from "vitest";
 
 import { D1Store } from "../../adapters/d1/store.ts";
-import type { NextAction, Project } from "../../core/model/entities.ts";
+import type { Area, NextAction, Owner, Project } from "../../core/model/entities.ts";
 import { closeNextAction, createNextAction } from "../../core/rules/next-action.ts";
+import type { CreateEntryErrorResponse, CreateEntryResponse } from "../../contracts/entries.ts";
+import type { PortfolioResponse } from "../../contracts/portfolio.ts";
+import worker from "./worker.ts";
 
 describe("D1Store with the next-action rule", () => {
   const store = new D1Store(env.DB);
 
   beforeEach(async () => {
-    await env.DB.prepare("INSERT INTO owners (id, active_cap) VALUES (?, ?)")
-      .bind("owner-1", 3)
-      .run();
-    await env.DB.prepare(
-      "INSERT INTO areas (id, owner_id, name, counts_against_cap) VALUES (?, ?, ?, ?)",
-    )
-      .bind("area-1", "owner-1", "Studio", 1)
-      .run();
+    await store.createOwner(owner);
+    await store.createArea(area);
   });
 
   it("stores and reads a project and its sole open next action", async () => {
-    await env.DB.prepare("INSERT INTO owners (id, active_cap) VALUES (?, ?)")
-      .bind("owner-2", 3)
-      .run();
+    await store.createOwner({ ...owner, id: "owner-2" });
     await expect(
       store.createProject({ ...project, id: "cross-owner-project", ownerId: "owner-2" }),
     ).rejects.toThrow();
@@ -30,6 +25,8 @@ describe("D1Store with the next-action rule", () => {
     await store.createProject(project);
     await createNextAction(store, action);
 
+    expect(await store.getOwner()).toEqual(owner);
+    expect(await store.getArea(area.id)).toEqual(area);
     expect(await store.getProject(project.id)).toEqual(project);
     expect(await store.getNextAction(action.id)).toEqual(action);
     await expect(
@@ -45,6 +42,68 @@ describe("D1Store with the next-action rule", () => {
 
     expect((await store.getNextAction(action.id))?.closedAt).toBe("2026-09-01T11:00:00.000Z");
     expect(await store.findOpenNextAction(project.id)).toEqual(replacement);
+  });
+
+  it("drives POST entries and GET portfolio through the real D1 adapter", async () => {
+    const quietProject: Project = { ...project, id: "project-quiet", title: "Quiet project" };
+    const shelvedProject: Project = {
+      ...project,
+      id: "project-shelved",
+      title: "Shelved project",
+      state: "shelved",
+    };
+    await store.createProject(project);
+    await store.createProject(quietProject);
+    await store.createProject(shelvedProject);
+    await createNextAction(store, action);
+    await createNextAction(store, {
+      ...action,
+      id: "action-quiet",
+      projectId: quietProject.id,
+    });
+
+    const createdResponse = await postEntry({
+      projectId: project.id,
+      what: "Stored without effort or note",
+    });
+    expect(createdResponse.status).toBe(201);
+    const created = await createdResponse.json<CreateEntryResponse>();
+    expect(created.id).toMatch(/^[0-9A-HJKMNP-TV-Z]{26}$/);
+
+    const portfolioResponse = await fetchWorker("/api/portfolio");
+    expect(portfolioResponse.status).toBe(200);
+    const portfolioText = await portfolioResponse.clone().text();
+    expect(portfolioText.indexOf('"progress"')).toBeLessThan(
+      portfolioText.indexOf('"outstanding"'),
+    );
+    const portfolio = await portfolioResponse.json<PortfolioResponse>();
+    expect(portfolio.progress.map(({ id }) => id)).toEqual([project.id]);
+    expect(portfolio.progress[0].recentEntries).toEqual([
+      expect.objectContaining({
+        id: created.id,
+        what: "Stored without effort or note",
+        effortMinutes: null,
+        note: null,
+      }),
+    ]);
+    expect(portfolio.progress[0].nextAction.id).toBe(action.id);
+    expect(portfolio.outstanding.map(({ id }) => id)).toEqual([quietProject.id]);
+    expect(portfolio.outstanding[0].nextAction.id).toBe("action-quiet");
+    expect(
+      [...portfolio.progress, ...portfolio.outstanding].some(
+        ({ id }) => id === shelvedProject.id,
+      ),
+    ).toBe(false);
+
+    const countBeforeRejections = await entryCount();
+    for (const projectId of ["missing-project", shelvedProject.id]) {
+      const rejectedResponse = await postEntry({ projectId, what: "Must not be stored" });
+      expect(rejectedResponse.status).toBeGreaterThanOrEqual(400);
+      expect(rejectedResponse.status).toBeLessThan(500);
+      const rejected = await rejectedResponse.json<CreateEntryErrorResponse>();
+      expect(rejected.error).toContain(projectId);
+      expect(await entryCount()).toBe(countBeforeRejections);
+    }
   });
 
   it("enforces foreign keys and one week per owner and start date", async () => {
@@ -65,6 +124,32 @@ describe("D1Store with the next-action rule", () => {
     ).rejects.toThrow();
   });
 });
+
+async function postEntry(body: Record<string, unknown>): Promise<Response> {
+  return fetchWorker("/api/entries", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+}
+
+async function fetchWorker(path: string, init?: RequestInit): Promise<Response> {
+  return worker.fetch(new Request(`http://example.test${path}`, init));
+}
+
+async function entryCount(): Promise<number> {
+  return (
+    (await env.DB.prepare("SELECT COUNT(*) AS count FROM entries").first<number>("count")) ?? 0
+  );
+}
+
+const owner: Owner = { id: "owner-1", activeCap: 3, capRaises: [] };
+const area: Area = {
+  id: "area-1",
+  ownerId: owner.id,
+  name: "Studio",
+  countsAgainstCap: true,
+};
 
 const project: Project = {
   id: "project-1",

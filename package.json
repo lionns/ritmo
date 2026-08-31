@@ -14,7 +14,8 @@
     "typecheck": "WRANGLER_WRITE_LOGS=false astro check && tsc --noEmit && tsc --noEmit -p tsconfig.core.json",
     "build": "WRANGLER_WRITE_LOGS=false astro build",
     "test:integration": "WRANGLER_WRITE_LOGS=false vitest run --config vitest.config.ts",
-    "db:reset": "node -e \"require('node:fs').rmSync('.wrangler/state/v3/d1', { recursive: true, force: true })\" && WRANGLER_WRITE_LOGS=false wrangler d1 migrations apply ritmo --local"
+    "db:reset": "node -e \"require('node:fs').rmSync('.wrangler/state/v3/d1', { recursive: true, force: true })\" && WRANGLER_WRITE_LOGS=false wrangler d1 migrations apply ritmo --local",
+    "seed": "node scripts/seed-local.mjs"
   },
   "dependencies": {
     "@astrojs/cloudflare": "14.2.5",
