@@ -8,11 +8,11 @@ Harness `0.7.1` · profile `team`
 
 | Task | State | Goal |
 |---|---|---|
-| [T-001](docs/tasks/T-001-skeleton-and-next-action.md) | `ready` | Stand up the three-layer tree with every quality-gate command real and green, and prove it by |
+| [T-001](docs/tasks/T-001-skeleton-and-next-action.md) | `review` | Stand up the three-layer tree with every quality-gate command real and green, and prove it by |
 
 ## Next
 
-**T-001** (`ready`) — Stand up the three-layer tree with every quality-gate command real and green, and prove it by
+**T-001** (`review`) — Stand up the three-layer tree with every quality-gate command real and green, and prove it by
 
 ## Open decisions
 

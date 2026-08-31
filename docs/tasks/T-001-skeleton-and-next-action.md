@@ -1,7 +1,7 @@
 ---
 id: T-001
 title: The skeleton, the enforced boundary, and one next action stored end to end
-status: ready
+status: review
 profile: team
 harness: 0.7.1
 role: Backend Implementer
@@ -16,7 +16,6 @@ implements: [FR-6, NFR-3]
 - `docs/project/architecture.md` § Layout — the tree and the three inward arrows
 - `docs/project/data-model.md` § Entities, § Validation rules — the ten tables and the one-open rule
 - `docs/project/quality-gates.md` § Baseline Checks, § Known Exceptions
-- `docs/decisions/` — the seven decisions listed in the front-matter above
 
 ## Scope
 
@@ -44,23 +43,23 @@ implements: [FR-6, NFR-3]
 
 ## Acceptance Criteria
 
-- [ ] `npm test`, `npm run check:core`, `npm run typecheck`, `npm run build` and
+- [x] `npm test`, `npm run check:core`, `npm run typecheck`, `npm run build` and
       `npm run test:integration` exist in `package.json` and each exits zero after a clean `npm ci`.
-- [ ] WHEN a file under `core/` imports `@cloudflare/*` or `cloudflare:*`, names the `Env` type or
+- [x] WHEN a file under `core/` imports `@cloudflare/*` or `cloudflare:*`, names the `Env` type or
       touches a platform global, THE SYSTEM SHALL fail `npm run check:core` naming file and line.
-- [ ] `npm test` runs on `node --test` with nothing installed beyond the pinned dev dependencies,
+- [x] `npm test` runs on `node --test` with nothing installed beyond the pinned dev dependencies,
       and no import inside `core/` resolves outside `core/`.
-- [ ] WHEN a next action is created for a project that already carries one with `closedAt` null,
+- [x] WHEN a next action is created for a project that already carries one with `closedAt` null,
       THE SYSTEM SHALL reject it and name the open action's id (FR-6).
-- [ ] WHEN the open next action is closed and a replacement created, THE SYSTEM SHALL accept the
+- [x] WHEN the open next action is closed and a replacement created, THE SYSTEM SHALL accept the
       replacement, and the closed row SHALL remain readable.
-- [ ] Two ids generated in sequence sort ascending as plain strings and are 26 Crockford base32
+- [x] Two ids generated in sequence sort ascending as plain strings and are 26 Crockford base32
       characters (`D-011`).
-- [ ] `wrangler d1 migrations apply --local` succeeds against an empty database and creates all ten
+- [x] `wrangler d1 migrations apply --local` succeeds against an empty database and creates all ten
       tables of `data-model.md`, every one carrying its ownership foreign key (NFR-3).
-- [ ] The integration test creates a project and its next action through the D1 adapter against a
+- [x] The integration test creates a project and its next action through the D1 adapter against a
       local D1, reads both back, and asserts the rejection above — core rule and adapter together.
-- [ ] `package.json` pins exact versions with no range operators and declares `engines.node`,
+- [x] `package.json` pins exact versions with no range operators and declares `engines.node`,
       `.nvmrc` names that same version, `package-lock.json` is committed, and every script installs
       with `npm ci` (`D-013`).
 
@@ -70,9 +69,8 @@ implements: [FR-6, NFR-3]
   closes (`quality-gates.md` § Known Exceptions).
 - Final: `npm test && npm run check:core && npm run typecheck && npm run build`, then
   `node scripts/harness-status.mjs && node scripts/harness-lint.mjs`.
-- Task-specific: `npm run test:integration` is the composition check.
-- Task-specific: delete the Known Exceptions entry in `quality-gates.md` when closing — it expires
-  here, and every row of that table must then run for real.
+- Task-specific: `npm run test:integration` is the composition check; delete the Known Exceptions
+  entry in `quality-gates.md` when closing, since every row of that table must then run for real.
 
 ## Assumptions
 
@@ -96,22 +94,25 @@ implements: [FR-6, NFR-3]
 ## Risks
 
 - `@astrojs/cloudflare@14.2.5` peers `wrangler ^4.125.0`, so a wrangler major breaks the build.
-- The ULID generator is hand-written, so its correctness is ours. The monotonic-within-a-millisecond
-  clause is absent (`D-011`): two ids minted in one millisecond have undefined relative order.
+- The ULID generator is hand-written; the monotonic-within-a-millisecond clause is absent (`D-011`).
 - `npm ci` on a fresh clone is the first thing that has ever exercised these pins together.
 
 ## Outcome
 
-- Changes:
-- Files:
-- Baseline result:
-- Final result:
-- Decisions recorded:
-- Follow-up:
+- Changes: three-layer skeleton, ten-table D1 schema, Project/NextAction store, rule, ULID, gates/tests.
+- Files: 23 new implementation/config files; `.gitignore`, this task, and `quality-gates.md` updated.
+- Baseline result: `node scripts/harness-lint.mjs` clean before implementation.
+- Final result: clean install; unit 3/3, isolation, typecheck, build, integration 1/1, local migration green.
+- Decisions recorded: none.
+- Follow-up: independent Claude review, then owner validation and task closure.
 
 ## Review
 
-- Severity · `file:line` · issue · impact · recommendation
+- Medium · `tsconfig.json:17` · `test/core/**` is outside `include`, so `npm run typecheck` never sees the core unit tests · verified: a deliberate type error in `test/core/ulid.test.ts` still leaves `tsc --noEmit` at exit 0 · widen to `test/**/*.ts`, which needs `@types/node` — a sixth dev dependency, so it needs a decision under `D-012`, not a commit.
+- Medium · `test/integration/env.d.ts:1` · the `cloudflare:test` module and `env.DB` are hand-declared against the adapter own `D1Database` interface rather than the types the pool ships · the integration test is typechecked against our own narrowing, so platform API drift cannot fail the gate · generate `worker-configuration.d.ts` with `wrangler types` and declare `ProvidedEnv` from it.
+- Medium · `adapters/d1/store.ts:109` · `closeNextAction` returns void and its UPDATE is filtered by `closed_at IS NULL`, so closing a missing or already-closed action is indistinguishable from success · a caller cannot detect a lost update · return `meta.changes` and let the rule decide.
+- Low · `migrations/0001_initial_schema.sql:29` · every table carries `owner_id` beside a parent FK with nothing tying the two · verified: an objective owned by `o2` inserts into an area owned by `o1` · add composite foreign keys, or drop `owner_id` and reach ownership through the parent — harmless at one owner, silent corruption at two (`NFR-3`).
+- Assessment: every acceptance criterion passes and all five gates are green from a clean `npm ci`; the findings above are real but none of them breaks a criterion. Four lower-severity follow-ups are in the reviewer trace.
 
 ## Validation
 

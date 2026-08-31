@@ -1,0 +1,20 @@
+{
+  "extends": "astro/tsconfigs/strict",
+  "compilerOptions": {
+    "allowImportingTsExtensions": true,
+    "lib": ["ES2022", "DOM"],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "noEmit": true,
+    "target": "ES2022",
+    "verbatimModuleSyntax": true
+  },
+  "include": [
+    ".astro/types.d.ts",
+    "adapters/**/*.ts",
+    "core/**/*.ts",
+    "src/**/*.astro",
+    "test/integration/**/*.ts",
+    "vitest.config.ts"
+  ]
+}

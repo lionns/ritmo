@@ -1,2 +1,6 @@
 # macOS
 .DS_Store
+.astro
+.wrangler
+dist
+node_modules

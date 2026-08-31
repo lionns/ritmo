@@ -54,10 +54,3 @@ write (`agent-config.md`). Two things are checked by hand because no
 command can, and both come from requirements rather than taste — that a progress entry can be saved
 in under 20 seconds on a phone (`NFR-1`), and that no copy added by the change puts the owner in
 debt, red, or arrears after a missed period (`NFR-7`, research §15).
-
-## Known Exceptions
-
-- **The commands above do not exist yet.** There is no `package.json` and no source tree; the first
-  task creates the skeleton and the scripts together. Until it closes, the only required baseline
-  check is `node scripts/harness-lint.mjs`. Approved by the owner on 2026-08-29. Expires when the
-  first task reaches `done` — at which point every row above must run for real.

@@ -1,0 +1,29 @@
+{
+  "name": "ritmo",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": "24.20.0"
+  },
+  "scripts": {
+    "test": "node --test test/core/*.test.ts",
+    "check:core": "node scripts/check-core-isolation.mjs",
+    "typecheck": "WRANGLER_WRITE_LOGS=false astro check && tsc --noEmit",
+    "build": "WRANGLER_WRITE_LOGS=false astro build",
+    "test:integration": "WRANGLER_WRITE_LOGS=false vitest run --config vitest.config.ts"
+  },
+  "dependencies": {
+    "@astrojs/cloudflare": "14.2.5",
+    "@tailwindcss/vite": "4.3.3",
+    "astro": "7.2.9",
+    "tailwindcss": "4.3.3"
+  },
+  "devDependencies": {
+    "@astrojs/check": "0.9.10",
+    "@cloudflare/vitest-pool-workers": "0.22.0",
+    "typescript": "6.0.3",
+    "vitest": "4.1.11",
+    "wrangler": "4.127.1"
+  }
+}
