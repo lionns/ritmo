@@ -57,8 +57,9 @@ decisions: [D-002, D-004, D-009]
   `npm run test:integration` and `node scripts/harness-lint.mjs`.
 - Final: the same, plus `node scripts/harness-status.mjs`.
 - Task-specific: `npm run db:reset`, then the two SQL probes above against the rebuilt database.
-- Task-specific: append `export function leak(e: Env) { return String(e); }` to a core file and
-  confirm both `typecheck` and `check:core` fail, then revert it.
+- Task-specific: append `export function leak(e: Env) { return String(new Response(String(e))); }`
+  to a core file and confirm both `typecheck` and `check:core` fail on **each** name, then revert.
+  Naming only `Env` is what let the guard ship half-closed.
 
 ## Assumptions
 
