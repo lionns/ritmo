@@ -1,6 +1,6 @@
 # Harness Version
 
-Version: `0.7.1` · Status: `Operational` · Date: 2026-08-28
+Version: `0.8.0` · Status: `Operational` · Date: 2026-08-31
 
 The active version and profile for a project live in its `harness.json`. This file is the changelog
 and the versioning rules.
@@ -20,6 +20,13 @@ and the versioning rules.
 - A project may stay on an older version. `0.1.0` remains valid for projects that have not migrated.
 
 ## Changelog
+
+### 0.8.0 — 2026-08-31
+
+Task plans and execution records have separate limits. D-015.
+
+- **Split task budgets.** `taskPlanLines` covers everything before the first `## Outcome`, while
+  `taskRecordLines` covers that heading through EOF. A task without the heading is entirely plan.
 
 ### 0.7.1 — 2026-08-28
 

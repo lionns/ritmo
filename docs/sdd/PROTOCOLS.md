@@ -4,6 +4,8 @@
 
 Enforced by `scripts/harness-lint.mjs`, not suggested. The limits themselves live in `harness.json`
 under `budgets` — read them there, not from a copy here that can drift.
+`taskPlanLines` measures the task through the line before its first `## Outcome`; `taskRecordLines`
+measures from that heading to EOF. Without that heading, the whole file is the plan (D-015).
 
 Exceeding a budget means the record is doing something it should not: pasting content that already
 exists elsewhere, accumulating history that belongs in `git log`, or bundling several tasks into

@@ -7,6 +7,7 @@ import { readFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import {
   ROOT, config, tasks, decisions, journal, traces, knownVersions, specIds, section, sddDocLines, lineCount,
+  taskBudgetSections,
   TASK_STATES, DECISION_STATES,
 } from "./lib/harness.mjs";
 import { renderStatus, renderDecisionIndex } from "./harness-status.mjs";
@@ -58,9 +59,14 @@ for (const task of tasks()) {
     }
   }
 
-  const lines = lineCount(task.text);
-  if (lines > budgets.taskFileLines) {
-    fail(where, `${lines} lines exceeds the ${budgets.taskFileLines}-line budget — split the task`);
+  const taskSections = taskBudgetSections(task.text);
+  const planLines = lineCount(taskSections.plan);
+  if (planLines > budgets.taskPlanLines) {
+    fail(where, `plan is ${planLines} lines, plan budget is ${budgets.taskPlanLines} — split the task`);
+  }
+  const recordLines = lineCount(taskSections.record);
+  if (recordLines > budgets.taskRecordLines) {
+    fail(where, `record is ${recordLines} lines, record budget is ${budgets.taskRecordLines} — compress the record`);
   }
   const trace = section(task.text, "Trace");
   if (cfg.profile === "solo" && trace === null && task.meta.status !== "ready") {

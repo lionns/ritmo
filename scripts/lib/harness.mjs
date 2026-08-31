@@ -35,6 +35,13 @@ export function lineCount(text) {
   return text === "" ? 0 : text.replace(/\n$/, "").split(/\r?\n/).length;
 }
 
+/** Splits a task into its agreed plan and execution record at the first Outcome heading. */
+export function taskBudgetSections(text) {
+  const outcome = /^## Outcome[ \t]*\r?$/m.exec(text);
+  if (!outcome) return { plan: text, record: "" };
+  return { plan: text.slice(0, outcome.index), record: text.slice(outcome.index) };
+}
+
 export function config(root = ROOT) {
   return JSON.parse(readFileSync(join(root, "harness.json"), "utf8"));
 }

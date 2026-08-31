@@ -1,5 +1,5 @@
 {
-  "harness": "0.7.1",
+  "harness": "0.8.0",
   "profile": "team",
   "project": "ritmo",
   "foundation": [
@@ -12,7 +12,8 @@
     "interface"
   ],
   "budgets": {
-    "taskFileLines": 120,
+    "taskPlanLines": 120,
+    "taskRecordLines": 60,
     "traceBlockLines": 25,
     "decisionFileLines": 40,
     "journalEntryLines": 1,

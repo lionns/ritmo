@@ -2,7 +2,8 @@
 
 ## Task File
 
-`docs/tasks/<ID>-<slug>.md`. Budget: 120 lines. Fill sections in place — **never append history**.
+`docs/tasks/<ID>-<slug>.md`. Budgets: plan 120 lines; record 60, split at the first `## Outcome`.
+Fill sections in place — **never append history**.
 The change history of a task is `git log --follow` on its file.
 
 ````md
