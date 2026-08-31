@@ -1,6 +1,6 @@
 # D-016 — The linter and `harness.json` must agree on which budgets exist
 
-- Status: proposed
+- Status: accepted
 - Date: 2026-08-31
 - Supersedes: none
 - Tasks: T-002

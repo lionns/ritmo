@@ -18,7 +18,7 @@ Harness `0.8.0` · profile `team`
 
 ## Open decisions
 
-- D-016 — The linter and `harness.json` must agree on which budgets exist — `proposed`, needs human approval
+None. All decisions are accepted or superseded.
 
 ## Journal — last 5
 

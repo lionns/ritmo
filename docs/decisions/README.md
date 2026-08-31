@@ -22,4 +22,4 @@ rather than editing. Template in `../sdd/TEMPLATES.md`.
 | [D-013](D-013-version-pinning.md) | 2026-08-31 | Exact pins, a committed lockfile, and upgrades as their own task | `accepted` | none |
 | [D-014](D-014-types-node-dev-dependency.md) | 2026-08-31 | `@types/node`, the sixth dev dependency | `accepted` | D-012 |
 | [D-015](D-015-task-budget-plan-and-record.md) | 2026-08-31 | Split the task budget: the plan is bounded, the record is not the same thing | `accepted` | none |
-| [D-016](D-016-budget-contract-both-ways.md) | 2026-08-31 | The linter and `harness.json` must agree on which budgets exist | `proposed` | none |
+| [D-016](D-016-budget-contract-both-ways.md) | 2026-08-31 | The linter and `harness.json` must agree on which budgets exist | `accepted` | none |
