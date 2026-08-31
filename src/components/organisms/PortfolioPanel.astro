@@ -1,0 +1,60 @@
+---
+import type { PortfolioProject } from "../../../contracts/portfolio.ts";
+import ProjectCard from "../molecules/ProjectCard.astro";
+
+interface Props {
+  progress: PortfolioProject[];
+  outstanding: PortfolioProject[];
+}
+
+const { progress, outstanding } = Astro.props;
+---
+
+<section class="portfolio-panel glass-panel" aria-labelledby="portfolio-heading">
+  <h2 id="portfolio-heading" class="mono-label">En movimiento</h2>
+  {
+    progress.length === 0 ? (
+      <p class="empty-copy">Aún no hay nada aquí. Escribe la primera línea.</p>
+    ) : (
+      <div class="project-list">
+        {progress.map((project) => <ProjectCard project={project} kind="progress" />)}
+      </div>
+    )
+  }
+  {
+    outstanding.length > 0 && (
+      <section class="outstanding" aria-labelledby="outstanding-heading">
+        <h2 id="outstanding-heading" class="mono-label">Para cuando vuelvas</h2>
+        <div class="project-list">
+          {outstanding.map((project) => <ProjectCard project={project} kind="outstanding" />)}
+        </div>
+      </section>
+    )
+  }
+</section>
+
+<style>
+  .portfolio-panel {
+    padding: 22px;
+  }
+
+  .project-list {
+    margin-top: 6px;
+  }
+
+  .empty-copy {
+    margin: 20px 0 4px;
+  }
+
+  .outstanding {
+    margin-top: 34px;
+    padding-top: 24px;
+    border-top: 1px solid var(--page-hair);
+  }
+
+  @media (min-width: 768px) {
+    .portfolio-panel {
+      padding: 24px 28px;
+    }
+  }
+</style>

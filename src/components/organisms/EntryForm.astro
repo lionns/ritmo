@@ -1,0 +1,173 @@
+---
+import type { PortfolioProject } from "../../../contracts/portfolio.ts";
+
+interface Props {
+  projects: PortfolioProject[];
+  selectedProjectId?: string;
+}
+
+const { projects, selectedProjectId } = Astro.props;
+const initialProject = projects.some(({ id }) => id === selectedProjectId)
+  ? selectedProjectId
+  : projects[0]?.id;
+---
+
+<form class="entry-form glass-panel" data-entry-form>
+  <div class="field-group field-group--primary">
+    <label for="entry-what">Una línea sobre lo que moviste</label>
+    <textarea
+      id="entry-what"
+      name="what"
+      rows="3"
+      required
+      autofocus
+      placeholder="Ej. Dejé lista la estructura del primer capítulo"
+    ></textarea>
+  </div>
+  <div class="field-group">
+    <label for="entry-project">Proyecto</label>
+    <select id="entry-project" name="projectId" required>
+      {projects.map((project) => (
+        <option value={project.id} selected={project.id === initialProject}>{project.title}</option>
+      ))}
+    </select>
+  </div>
+  <button class="primary-action" type="submit" disabled={projects.length === 0}>
+    Guardar entrada
+  </button>
+  <p class="form-status" data-form-status aria-live="polite"></p>
+</form>
+
+<script>
+  const form = document.querySelector<HTMLFormElement>("[data-entry-form]");
+  const status = document.querySelector<HTMLElement>("[data-form-status]");
+
+  form?.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const submit = form.querySelector<HTMLButtonElement>("button[type='submit']");
+    const what = form.elements.namedItem("what");
+    const projectId = form.elements.namedItem("projectId");
+    if (!(what instanceof HTMLTextAreaElement) || !(projectId instanceof HTMLSelectElement)) return;
+
+    if (submit !== null) submit.disabled = true;
+    if (status !== null) status.textContent = "Guardando…";
+
+    try {
+      const response = await fetch("/api/entries", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ projectId: projectId.value, what: what.value }),
+      });
+      const body: unknown = await response.json();
+      if (!response.ok) {
+        const message =
+          typeof body === "object" && body !== null && "error" in body && typeof body.error === "string"
+            ? body.error
+            : "No se pudo guardar la entrada";
+        throw new Error(message);
+      }
+
+      what.value = "";
+      if (status !== null) status.textContent = "Entrada guardada.";
+      growTodayMarks();
+      what.focus();
+    } catch (error) {
+      if (status !== null) {
+        const detail = error instanceof Error ? error.message : "No se pudo guardar la entrada";
+        status.textContent = `${detail}. Revisa la conexión e inténtalo otra vez.`;
+      }
+    } finally {
+      if (submit !== null) submit.disabled = false;
+    }
+  });
+
+  function growTodayMarks(): void {
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const chart = document.querySelector<HTMLElement>("[data-hero-chart]");
+    const duration = Number(chart?.dataset.riseDuration ?? 220);
+    document.querySelectorAll<SVGRectElement>("[data-today-mark]").forEach((mark) => {
+      const baseline = 126;
+      const currentHeight = Number(mark.getAttribute("height") ?? 9);
+      const nextHeight = Math.max(12, currentHeight);
+      mark.setAttribute("height", String(nextHeight));
+      mark.setAttribute("y", String(baseline - nextHeight));
+      mark.setAttribute("data-state", "untimed");
+      mark.classList.remove("chart-bar--empty");
+      mark.classList.add("chart-bar--untimed");
+      if (!reducedMotion) {
+        mark.animate(
+          [{ transform: "scaleY(0)" }, { transform: "scaleY(1)" }],
+          { duration, easing: "cubic-bezier(.16,.9,.24,1)" },
+        );
+      }
+    });
+  }
+</script>
+
+<style>
+  .entry-form {
+    padding: 22px;
+  }
+
+  .field-group + .field-group {
+    margin-top: 22px;
+  }
+
+  label {
+    display: block;
+    margin-bottom: 9px;
+    color: var(--page-dim);
+    font-family: "Martian Mono", ui-monospace, monospace;
+    font-size: 8px;
+    letter-spacing: 0.2em;
+    line-height: 1.4;
+    text-transform: uppercase;
+  }
+
+  textarea,
+  select {
+    width: 100%;
+    min-height: 58px;
+    padding: 16px;
+    border: 1px solid var(--page-glass-border);
+    border-radius: 18px;
+    background: color-mix(in srgb, var(--page-bg) 72%, transparent);
+    color: var(--page-ink);
+    font-size: 16px;
+    line-height: 1.45;
+  }
+
+  textarea {
+    min-height: 132px;
+    resize: vertical;
+  }
+
+  textarea::placeholder {
+    color: var(--page-faint-text);
+    opacity: 1;
+  }
+
+  .primary-action {
+    margin-top: 24px;
+  }
+
+  .form-status {
+    min-height: 42px;
+    margin: 12px 2px 0;
+  }
+
+  @media (min-width: 768px) {
+    .entry-form {
+      padding: 28px;
+    }
+
+    textarea,
+    select {
+      min-height: 56px;
+    }
+
+    textarea {
+      min-height: 150px;
+    }
+  }
+</style>

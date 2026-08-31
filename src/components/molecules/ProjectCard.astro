@@ -1,0 +1,114 @@
+---
+import type { PortfolioProject } from "../../../contracts/portfolio.ts";
+
+interface Props {
+  project: PortfolioProject;
+  kind: "progress" | "outstanding";
+}
+
+const { project, kind } = Astro.props;
+const latestEntry = project.recentEntries[0];
+const logHref = `/registrar?project=${encodeURIComponent(project.id)}`;
+---
+
+<article class="project-card" data-project-kind={kind}>
+  <div class="project-heading">
+    <p class="mono-label">{project.area.name}</p>
+    <h3>{project.title}</h3>
+  </div>
+  {
+    latestEntry && (
+      <p class="latest-entry">
+        <span>Último movimiento</span>
+        {latestEntry.what}
+      </p>
+    )
+  }
+  {
+    project.nextAction === null ? (
+      <p class="next-action next-action--missing">Escribe la próxima acción cuando esté clara.</p>
+    ) : (
+      <div class="next-action">
+        <p><span>Cuando</span>{project.nextAction.trigger}</p>
+        <p><span>Entonces</span>{project.nextAction.act}</p>
+      </div>
+    )
+  }
+  <a class="project-log-link" href={logHref}>Registrar avance</a>
+</article>
+
+<style>
+  .project-card {
+    padding: 20px 0 14px;
+    border-bottom: 1px solid var(--page-hair);
+  }
+
+  .project-card:last-child {
+    border-bottom: 0;
+  }
+
+  .project-heading {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+  }
+
+  .latest-entry,
+  .next-action {
+    margin: 14px 0 0;
+    color: var(--page-ink);
+    font-size: 14px;
+    line-height: 1.45;
+  }
+
+  .latest-entry {
+    color: var(--page-dim);
+  }
+
+  .latest-entry span,
+  .next-action span {
+    display: block;
+    margin-bottom: 4px;
+    color: var(--page-faint-text);
+    font-family: "Martian Mono", ui-monospace, monospace;
+    font-size: 8px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+  }
+
+  .next-action p {
+    margin: 0 0 8px;
+  }
+
+  .next-action--missing {
+    color: var(--page-dim);
+  }
+
+  .project-log-link {
+    width: fit-content;
+    margin-top: 4px;
+  }
+
+  @media (min-width: 768px) {
+    .project-card {
+      padding: 22px 0 16px;
+    }
+
+    h3 {
+      font-size: 20px;
+    }
+
+    .latest-entry,
+    .next-action {
+      font-size: 15px;
+    }
+  }
+</style>
