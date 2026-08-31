@@ -69,8 +69,8 @@ implements: [FR-6, NFR-3]
   closes (`quality-gates.md` § Known Exceptions).
 - Final: `npm test && npm run check:core && npm run typecheck && npm run build`, then
   `node scripts/harness-status.mjs && node scripts/harness-lint.mjs`.
-- Task-specific: `npm run test:integration` is the composition check; delete the Known Exceptions
-  entry in `quality-gates.md` when closing, since every row of that table must then run for real.
+- Task-specific: `npm run test:integration` is the composition check; `npm run db:reset` proves 0001
+  against empty local state. Delete the Known Exceptions entry in `quality-gates.md` when closing.
 
 ## Assumptions
 
@@ -99,19 +99,18 @@ implements: [FR-6, NFR-3]
 
 ## Outcome
 
-- Changes: skeleton plus review fixes for test typing, D1 types/close results, and owner integrity.
+- Changes: skeleton plus review fixes for typing, D1 integrity/results, local reset, and generated types.
 - Files: 24 new implementation/config files; task, lockfile, schema, core, adapter, and tests updated.
 - Baseline result: `node scripts/harness-lint.mjs` clean before implementation.
-- Final result: clean install; unit 3/3, isolation, 16-file typecheck, build, integration 1/1, migration green.
+- Final result: clean install; unit 3/3, isolation, generated 16-file types, build, integration/reset green.
 - Decisions recorded: D-014.
 - Follow-up: independent re-review of resolved findings, then owner validation and closure.
 
 ## Review
 
-- Resolved 2026-08-31, each re-verified rather than taken on report: a type error in `test/core` now fails `tsc` at file:line · the platform types come from `wrangler types` and the typecheck covers 16 files instead of 14 · `closeNextAction` returns whether a row changed and the rule throws on a lost update, asserted in both suites · a cross-owner objective is now rejected by the composite foreign key.
-- Medium · `migrations/0001_initial_schema.sql:1` · an already-applied migration was edited in place instead of adding `0002` · verified: a local D1 carrying 0001 answers `No migrations to apply!` and still holds the old schema with no composite keys — the integration test hides this because vitest rebuilds the database from the file every run · keep 0001 editable and reset instead: nothing has been deployed, `database_id` is still a placeholder, and rebuilding nine tables in an 0002 for a database that has never existed anywhere is ceremony. Add an `npm run db:reset` that clears `.wrangler` state and re-applies, name it in Verification, and state in the migration header that 0001 is editable only until the first remote apply.
-- Medium · `package.json:9` · `worker-configuration.d.ts` is 15278 generated lines that `tsconfig.compilerOptions.types` requires, with no script to regenerate it · verified: removing it fails typecheck with `TS2688`, so it must be committed and it drifts silently whenever `wrangler.jsonc` changes · add `"types": "wrangler types"` and run it from `pretypecheck`, keeping the generated file committed — a dirty tree after the gate then means `wrangler.jsonc` moved and the types were stale.
-- Assessment: all nine acceptance criteria still pass and the five gates are green from a clean `npm ci`. The two findings above are new, neither breaks a criterion, and two low-severity notes are in the reviewer trace.
+- Resolved over two fix rounds, each re-verified: a type error in `test/core` fails `tsc` at file:line · platform types come from `wrangler types`, and deleting the generated file no longer breaks the gate because `pretypecheck` rebuilds it byte-identical · `closeNextAction` reports a lost update and the rule throws · a cross-owner objective is rejected by the composite foreign key · `npm run db:reset` clears local D1 state and re-applies 0001, which is what carries an edited migration to a database that already had it.
+- Resolved in review: `quality-gates.md` still described the typecheck gate as `astro check && tsc --noEmit` after `pretypecheck` was added. The row now names the regeneration step, since that table is the authority for what a required check actually runs.
+- Assessment: no finding remains above Low. All nine acceptance criteria pass and the five gates are green from a clean `npm ci`. Six low-severity follow-ups sit in the reviewer trace and belong in a cleanup task, not here. Recommended for owner validation and closure.
 ## Validation
 
 - Validated by:

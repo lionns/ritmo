@@ -16,7 +16,7 @@ Run these before starting new implementation. Any required failure blocks the ta
 | Tests | `npm test` | yes | `node --test`, no framework (D-006) |
 | Core isolation | `npm run check:core` | yes | No `@cloudflare/*`, `cloudflare:*` or `Env` reaches the core (D-003) |
 | Harness records | `node scripts/harness-lint.mjs` | yes | Budgets and record shape |
-| Type check | `npm run typecheck` | yes | `astro check && tsc --noEmit` (D-008) |
+| Type check | `npm run typecheck` | yes | `wrangler types` via `pretypecheck`, then `astro check && tsc --noEmit` (D-008) |
 | Lint | — | | Formatting is not gated; no dependency earns it here |
 | Build | `npm run build` | yes | `astro build` (D-008); a template that does not compile is not a green baseline |
 

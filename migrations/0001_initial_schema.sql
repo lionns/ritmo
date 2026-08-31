@@ -1,3 +1,4 @@
+-- Editable only until the first remote apply; use `npm run db:reset` to rebuild local D1 state.
 PRAGMA foreign_keys = ON;
 
 CREATE TABLE owners (

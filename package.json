@@ -9,9 +9,12 @@
   "scripts": {
     "test": "node --test test/core/*.test.ts",
     "check:core": "node scripts/check-core-isolation.mjs",
+    "types": "WRANGLER_WRITE_LOGS=false wrangler types",
+    "pretypecheck": "npm run types",
     "typecheck": "WRANGLER_WRITE_LOGS=false astro check && tsc --noEmit",
     "build": "WRANGLER_WRITE_LOGS=false astro build",
-    "test:integration": "WRANGLER_WRITE_LOGS=false vitest run --config vitest.config.ts"
+    "test:integration": "WRANGLER_WRITE_LOGS=false vitest run --config vitest.config.ts",
+    "db:reset": "node -e \"require('node:fs').rmSync('.wrangler/state/v3/d1', { recursive: true, force: true })\" && WRANGLER_WRITE_LOGS=false wrangler d1 migrations apply ritmo --local"
   },
   "dependencies": {
     "@astrojs/cloudflare": "14.2.5",
