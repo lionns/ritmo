@@ -8,8 +8,8 @@ Harness `0.7.1` · profile `team`
 
 | Task | State | Goal |
 |---|---|---|
+| [T-002](docs/tasks/T-002-split-task-budget.md) | `ready` | Replace the single task-file budget with a plan budget and a record budget, enforced by |
 | [T-001](docs/tasks/T-001-skeleton-and-next-action.md) | `review` | Stand up the three-layer tree with every quality-gate command real and green, and prove it by |
-| [T-002](docs/tasks/T-002-split-task-budget.md) | `blocked` | Replace the single task-file budget with a plan budget and a record budget, enforced by |
 
 ## Next
 
@@ -17,8 +17,7 @@ Harness `0.7.1` · profile `team`
 
 ## Open decisions
 
-- D-014 — `@types/node`, the sixth dev dependency — `proposed`, needs human approval
-- D-015 — Split the task budget: the plan is bounded, the record is not the same thing — `proposed`, needs human approval
+None. All decisions are accepted or superseded.
 
 ## Journal — last 5
 

@@ -1,6 +1,6 @@
 # D-012 — node --test for the core, and the five dependencies the platform really costs
 
-- Status: accepted
+- Status: superseded
 - Date: 2026-08-31
 - Supersedes: D-006
 - Tasks: T-001

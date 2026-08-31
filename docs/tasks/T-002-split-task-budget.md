@@ -1,7 +1,7 @@
 ---
 id: T-002
 title: Enforce the task plan and record budgets separately
-status: blocked
+status: ready
 profile: team
 harness: 0.7.1
 role: Backend Implementer

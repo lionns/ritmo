@@ -7,7 +7,7 @@ harness: 0.7.1
 role: Backend Implementer
 goal: Stand up the three-layer tree with every quality-gate command real and green, and prove it by
   storing and reading a project's single open next action through the D1 adapter.
-decisions: [D-001, D-002, D-008, D-009, D-011, D-012, D-013]
+decisions: [D-001, D-002, D-008, D-009, D-011, D-013, D-014]
 implements: [FR-6, NFR-3]
 ---
 
@@ -84,8 +84,8 @@ implements: [FR-6, NFR-3]
 - **TypeScript is pinned at 6.0.3 and not at the current `latest`, 7.0.2.** `@astrojs/check@0.9.10`
   declares `peerDependencies: typescript ^5.0.0 || ^6.0.0`, so `astro check` — half of the
   `typecheck` gate — cannot be green on 7. Revisit when `@astrojs/check` admits 7.
-- **The five dev dependencies are named in `D-012`**, which supersedes `D-006` over its count.
-  `package.json` must match that list exactly; a sixth needs a decision, not a commit.
+- **The six dev dependencies are named in `D-014`**, which supersedes `D-012` over the count.
+  `package.json` must match that list exactly; a seventh needs a decision, not a commit.
 - **No Cloudflare account is needed here.** Migrations and the vitest pool run against a local D1,
   so `database_id` stays a placeholder; a real one needs `wrangler login`, which only the owner runs.
 - **The ten-table migration ships before nine of those tables have rules.** The schema is settled

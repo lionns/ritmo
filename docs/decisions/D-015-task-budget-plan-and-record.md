@@ -1,6 +1,6 @@
 # D-015 — Split the task budget: the plan is bounded, the record is not the same thing
 
-- Status: proposed
+- Status: accepted
 - Date: 2026-08-31
 - Supersedes: none
 - Tasks: T-002

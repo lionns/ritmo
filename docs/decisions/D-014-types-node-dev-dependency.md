@@ -1,9 +1,10 @@
 # D-014 — `@types/node`, the sixth dev dependency
 
-- Status: proposed
+- Status: accepted
 - Date: 2026-08-31
-- Supersedes: none
+- Supersedes: D-012
 - Tasks: T-001
+- Foundation: tests
 
 ## Context
 
@@ -22,8 +23,9 @@ runtime code, so `core/` stays testable with nothing installed and `npm test` st
 ## Consequences
 
 - The typecheck gate covers the tests that guard the rules, instead of stopping at the rules.
-- The count in `D-012` becomes six. That decision is superseded by this one on the number alone;
-  its reasoning about which dependencies are not optional stands.
+- The count is six. This supersedes `D-012` rather than amending it, because leaving an accepted
+  decision asserting five would repeat the miscount `D-012` exists to correct. Its reasoning about
+  which five are not optional is carried forward unchanged; only the number moves.
 - `@types/node` must track the pinned Node line (`D-013`), so a Node bump now moves two pins.
 - Rejecting this leaves the gate with a hole that no amount of care closes, since the failure is
   silence. Excluding the tests to keep the count at five would be narrowing a check to stay green.
