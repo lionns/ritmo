@@ -18,8 +18,9 @@ demands it, the requirement is named.
 - **Laws of UX** (`lawsofux.com`) — Fitts, Doherty, Von Restorff, Selective Attention, Peak-End and
   Miller each changed something concrete; each is cited at the rule it produced.
 - **Fontshare** (`fontshare.com`, Indian Type Foundry) — all three typefaces. Free for commercial
-  use under the ITF Free Font Licence; **fonts are not vendored in this repo and must be downloaded
-  from Fontshare at build time.** Re-check the licence before any redistribution.
+  use under the ITF Free Font Licence. **The four faces are vendored, with the licence beside them.**
+  Fetching them during the build made a required gate depend on the network, which `D-013` forbids;
+  corrected 2026-08-31. Re-check the licence before any redistribution.
 
 ## Design Tokens
 
