@@ -1,7 +1,7 @@
 ---
 id: T-003
 title: The six loose ends T-001 left, and a deploy config that stops lying
-status: review
+status: done
 profile: team
 harness: 0.8.1
 role: Backend Implementer
@@ -81,15 +81,12 @@ decisions: [D-002, D-004, D-009]
 
 ## Outcome
 
-- Changes: constrained owner/week uniqueness; removed the migration PRAGMA; disabled Astro sessions;
-  corrected the asset root; documented the integration env source and isolated its tests; added a
-  core-only TypeScript pass.
-- Files: 7 implementation, config and test files, plus task/trace/status records.
-- Baseline result: unit 7/7, isolation, harness lint, typecheck, build, integration 1/1.
-- Final result: clean `npm ci`; unit 7/7, isolation, typecheck, build, integration 2/2, harness lint.
-- Decisions recorded: none; implemented accepted D-002, D-004 and D-009.
-- Follow-up: independent re-review and owner validation.
-
+- Changes: `weeks` states the invariant it relied on, the migration stopped promising what D1 already gives, Astro sessions are off per `D-004`, the asset root no longer names the server bundle, the integration suite takes `env` from one documented module, and `core/` has a type pass of its own that sees no platform names at all.
+- Files: 12 across config, migration, tests, the new `tsconfig.core.json`, the task and its two traces, plus the generated records.
+- Baseline result: unit 7/7, isolation, typecheck, build, integration 1/1, `harness-lint` clean.
+- Final result: green from a clean `npm ci` — unit 7/7, isolation, typecheck 0 errors across both passes, build, integration 2/2, `harness-lint` clean at 648/650.
+- Decisions recorded: none. Implemented under accepted `D-002`, `D-004` and `D-009`.
+- Follow-up: none from this task. `T-004` still carries the three harness findings.
 ## Review
 
 - All six findings resolved and re-probed, not taken on report: on a database rebuilt by `db:reset` a duplicate week fails `UNIQUE` and an orphan owner fails `FOREIGN KEY`, so dropping the `PRAGMA` cost nothing · the build logs no `Enabling sessions` and the generated config carries `kv_namespaces: []` and `assets.directory: "../client"`, so the double-nesting risk never materialised · the `env` comment cites a real deprecation at `@cloudflare/vitest-pool-workers/types/cloudflare-test.d.ts:3`.
@@ -99,5 +96,5 @@ decisions: [D-002, D-004, D-009]
 
 ## Validation
 
-- Validated by:
-- Date:
+- Validated by: Juan Sebastián León Velásquez
+- Date: 2026-08-31

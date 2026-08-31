@@ -5,3 +5,4 @@
 
 2026-08-31 | T-001 | done | three layers, D1 schema and the first rule end to end | 32 files | unit 3/3, isolation, typecheck, build, integration 1/1 | D-014
 2026-08-31 | T-002 | done | task budgets split, and the budget contract derived from source | 15 files | unit 7/7, isolation, typecheck, build, integration 1/1 | D-015,D-016
+2026-08-31 | T-003 | done | six loose ends closed, and the core type boundary made whole | 12 files | unit 7/7, isolation, typecheck, build, integration 2/2 | -
