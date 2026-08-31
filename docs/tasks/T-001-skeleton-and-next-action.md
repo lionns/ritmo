@@ -1,7 +1,7 @@
 ---
 id: T-001
 title: The skeleton, the enforced boundary, and one next action stored end to end
-status: review
+status: done
 profile: team
 harness: 0.7.1
 role: Backend Implementer
@@ -99,13 +99,12 @@ implements: [FR-6, NFR-3]
 
 ## Outcome
 
-- Changes: skeleton plus review fixes for typing, D1 integrity/results, local reset, and generated types.
-- Files: 24 new implementation/config files; task, lockfile, schema, core, adapter, and tests updated.
-- Baseline result: `node scripts/harness-lint.mjs` clean before implementation.
-- Final result: clean install; unit 3/3, isolation, generated 16-file types, build, integration/reset green.
-- Decisions recorded: D-014.
-- Follow-up: independent re-review of resolved findings, then owner validation and closure.
-
+- Changes: the three layers with every gate command real, the ten-table D1 schema with composite ownership keys, a Project/NextAction store, the one-open-action rule, a hand-written ULID behind a port, and the tests and scripts that hold them.
+- Files: 32 across implementation, config, migrations, tests and records.
+- Baseline result: `node scripts/harness-lint.mjs` clean — the only required baseline, per the Known Exceptions entry that this close removes.
+- Final result: green from a deleted `node_modules` and a clean `npm ci` — unit 3/3, isolation clean, typecheck 0 errors over 16 files, build green, integration 1/1, `harness-lint` clean.
+- Decisions recorded: `D-014`.
+- Follow-up: six low-severity items in the reviewer trace, and `T-002` for the budget split.
 ## Review
 
 - Resolved over two fix rounds, each re-verified: a type error in `test/core` fails `tsc` at file:line · platform types come from `wrangler types`, and deleting the generated file no longer breaks the gate because `pretypecheck` rebuilds it byte-identical · `closeNextAction` reports a lost update and the rule throws · a cross-owner objective is rejected by the composite foreign key · `npm run db:reset` clears local D1 state and re-applies 0001, which is what carries an edited migration to a database that already had it.
@@ -113,5 +112,5 @@ implements: [FR-6, NFR-3]
 - Assessment: no finding remains above Low. All nine acceptance criteria pass and the five gates are green from a clean `npm ci`. Six low-severity follow-ups sit in the reviewer trace and belong in a cleanup task, not here. Recommended for owner validation and closure.
 ## Validation
 
-- Validated by:
-- Date:
+- Validated by: Juan Sebastián León Velásquez
+- Date: 2026-08-31

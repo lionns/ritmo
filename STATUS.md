@@ -9,11 +9,11 @@ Harness `0.7.1` · profile `team`
 | Task | State | Goal |
 |---|---|---|
 | [T-002](docs/tasks/T-002-split-task-budget.md) | `ready` | Replace the single task-file budget with a plan budget and a record budget, enforced by |
-| [T-001](docs/tasks/T-001-skeleton-and-next-action.md) | `review` | Stand up the three-layer tree with every quality-gate command real and green, and prove it by |
+| [T-001](docs/tasks/T-001-skeleton-and-next-action.md) | `done` | Stand up the three-layer tree with every quality-gate command real and green, and prove it by |
 
 ## Next
 
-**T-001** (`review`) — Stand up the three-layer tree with every quality-gate command real and green, and prove it by
+**T-002** (`ready`) — Replace the single task-file budget with a plan budget and a record budget, enforced by
 
 ## Open decisions
 
@@ -21,6 +21,6 @@ None. All decisions are accepted or superseded.
 
 ## Journal — last 5
 
-Empty.
+- 2026-08-31 | T-001 | done | three layers, D1 schema and the first rule end to end | 32 files | unit 3/3, isolation, typecheck, build, integration 1/1 | D-014
 
 Full history: [`JOURNAL.md`](JOURNAL.md) · decisions: [`docs/decisions/`](docs/decisions/README.md)
