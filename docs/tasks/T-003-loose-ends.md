@@ -3,7 +3,7 @@ id: T-003
 title: The six loose ends T-001 left, and a deploy config that stops lying
 status: review
 profile: team
-harness: 0.7.1
+harness: 0.8.1
 role: Backend Implementer
 goal: Close the six low-severity findings the T-001 review left open, so the schema states the
   invariants it relies on and the deploy configuration matches the decisions it claims to serve.
@@ -88,16 +88,14 @@ decisions: [D-002, D-004, D-009]
 - Baseline result: unit 7/7, isolation, harness lint, typecheck, build, integration 1/1.
 - Final result: clean `npm ci`; unit 7/7, isolation, typecheck, build, integration 2/2, harness lint.
 - Decisions recorded: none; implemented accepted D-002, D-004 and D-009.
-- Follow-up: independent Claude review and owner validation.
+- Follow-up: independent re-review and owner validation.
 
 ## Review
 
-- All six resolved, each re-probed rather than taken on report: on a database rebuilt by `db:reset`, a duplicate week fails `UNIQUE constraint failed` and an orphan owner fails `FOREIGN KEY constraint failed`, so dropping the `PRAGMA` cost nothing · the build no longer logs `Enabling sessions` and the generated config carries `kv_namespaces: []` · `assets.directory` still resolves to `../client`, so the double-nesting risk did not materialise · `Env` and `D1Database` now fail `tsconfig.core.json` with `TS2304`.
-- Verified, not accepted: the comment claiming `cloudflare:test`'s `env` is deprecated is true — `@cloudflare/vitest-pool-workers/types/cloudflare-test.d.ts:3` reads `@deprecated Instead, use \`import { env } from "cloudflare:workers"\``.
-- Found beyond the brief, and worth saying: rewriting `setup.ts` to `beforeEach` plus `afterEach(reset)` fixed a latent bug nobody had listed. Verified by reverting it — with the old top-level `applyD1Migrations`, the second test fails on `UNIQUE constraint failed: owners.id`, because isolated storage rolls back the migration between tests. The suite passed only because it had one test.
-- Low · `tsconfig.core.json:5` · `"types": ["node"]` leaves the second guard partial: the criterion named `Env` and `D1Database` and both fail, but `Response`, `crypto` and `fetch` still type-check inside `core/` because `@types/node` declares them globally, and `check-core-isolation.mjs` bans all of them · verified: `"types": []` compiles `core/` clean and catches `Response` and `crypto` too · one word, no downside — `core/` imports nothing under `D-009`, so it needs no ambient types at all.
-- Low · `docs/tasks/T-003-loose-ends.md:6` · front-matter still says `harness: 0.7.1`, but this task ran under `0.8.1` and was subject to the plan and record budgets it introduced · `VERSION.md` § Change Rules says tasks record the version they ran under · flagged as a note in the `T-002` review and not picked up.
-- Assessment: all seven acceptance criteria pass and the five gates are green from a clean `npm ci`, unit 7/7 and integration 2/2. Nothing above Low. Both items are one-line fixes worth taking before closure rather than carrying forward.
+- All six findings resolved and re-probed, not taken on report: on a database rebuilt by `db:reset` a duplicate week fails `UNIQUE` and an orphan owner fails `FOREIGN KEY`, so dropping the `PRAGMA` cost nothing · the build logs no `Enabling sessions` and the generated config carries `kv_namespaces: []` and `assets.directory: "../client"`, so the double-nesting risk never materialised · the `env` comment cites a real deprecation at `@cloudflare/vitest-pool-workers/types/cloudflare-test.d.ts:3`.
+- Both review items closed. `"types": []` makes the second guard complete rather than partial: `Env`, `Response`, `crypto` and `fetch` in a core file now all fail with `TS2304`, `npm run typecheck` exits non-zero on four errors, and `check:core` names both categories at file:line. Two independent guards that fully overlap, where last round there was one and a half. The front-matter reads `0.8.1`, the version this ran under.
+- Worth keeping in the record: rewriting `setup.ts` to `beforeEach` plus `afterEach(reset)` fixed a latent bug in nobody's findings. Reverting it proves it — the second test then fails on `UNIQUE constraint failed: owners.id`, because isolated storage rolls the migration back between tests. The suite had passed only because it held one test.
+- Assessment: no finding remains at any severity. All seven acceptance criteria pass, the five gates are green from a clean `npm ci` with unit 7/7 and integration 2/2, and `harness-lint` is clean. Recommended for owner validation and closure.
 
 ## Validation
 

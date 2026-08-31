@@ -11,3 +11,11 @@
   - failures: sandbox denied local listeners; first isolation attempt retained rows, second removed schema
   - assumptions/blockers: no remote apply observed; independent Claude review and owner validation remain
   - decisions/follow-up: no new decision; task moved to review
+
+- 2026-08-31 — role: Backend Implementer, review fix
+  - read: independent review, current harness version, core-only TypeScript config
+  - did/files: removed Node ambient types from core; updated `T-003` harness field to `0.8.1`
+  - baseline: unit 7/7, isolation/lint/typecheck/build clean; integration 2/2
+  - probe: exact `Env`/`Response` leak failed typecheck with TS2304 and isolation on both names
+  - assumptions/blockers: none; independent re-review and owner validation remain
+  - decisions/follow-up: no new decision; re-probe widened boundary, then re-review
