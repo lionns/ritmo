@@ -12,9 +12,9 @@ const initialProject = projects.some(({ id }) => id === selectedProjectId)
   : projects[0]?.id;
 ---
 
-<form class="entry-form glass-panel" data-entry-form>
-  <div class="field-group field-group--primary">
-    <label for="entry-what">Una línea sobre lo que moviste</label>
+<form class="glass-panel p-[22px] md:p-7" data-entry-form>
+  <div>
+    <label class="mb-[9px] block font-mono text-[8px] leading-[1.4] tracking-[0.2em] text-dim uppercase" for="entry-what">Una línea sobre lo que moviste</label>
     <textarea
       id="entry-what"
       name="what"
@@ -22,20 +22,30 @@ const initialProject = projects.some(({ id }) => id === selectedProjectId)
       required
       autofocus
       placeholder="Ej. Dejé lista la estructura del primer capítulo"
+      class="min-h-[132px] w-full resize-y rounded-field border border-glass-border bg-[color-mix(in_srgb,var(--page-bg)_72%,transparent)] p-4 text-base leading-[1.45] text-ink placeholder:text-faint-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent md:min-h-[150px]"
     ></textarea>
   </div>
-  <div class="field-group">
-    <label for="entry-project">Proyecto</label>
-    <select id="entry-project" name="projectId" required>
+  <div class="mt-[22px]">
+    <label class="mb-[9px] block font-mono text-[8px] leading-[1.4] tracking-[0.2em] text-dim uppercase" for="entry-project">Proyecto</label>
+    <select
+      class="min-h-[58px] w-full rounded-field border border-glass-border bg-[color-mix(in_srgb,var(--page-bg)_72%,transparent)] p-4 text-base leading-[1.45] text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent md:min-h-14"
+      id="entry-project"
+      name="projectId"
+      required
+    >
       {projects.map((project) => (
         <option value={project.id} selected={project.id === initialProject}>{project.title}</option>
       ))}
     </select>
   </div>
-  <button class="primary-action" type="submit" disabled={projects.length === 0}>
+  <button
+    class="mt-6 inline-flex min-h-[58px] w-full cursor-pointer items-center justify-center rounded-[29px] border-0 bg-accent px-7 text-[17px] font-semibold text-accent-ink transition-[filter] duration-[120ms] hover:brightness-[1.06] active:brightness-90 disabled:cursor-wait disabled:saturate-[0.35] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent motion-reduce:transition-none md:min-h-14 md:w-auto md:min-w-[218px] md:rounded-[28px] md:text-base"
+    type="submit"
+    disabled={projects.length === 0}
+  >
     Guardar entrada
   </button>
-  <p class="form-status" data-form-status aria-live="polite"></p>
+  <p class="mx-0 mt-3 min-h-[42px] text-sm leading-normal text-dim" data-form-status aria-live="polite"></p>
 </form>
 
 <script>
@@ -92,8 +102,8 @@ const initialProject = projects.some(({ id }) => id === selectedProjectId)
       mark.setAttribute("height", String(nextHeight));
       mark.setAttribute("y", String(baseline - nextHeight));
       mark.setAttribute("data-state", "untimed");
-      mark.classList.remove("chart-bar--empty");
-      mark.classList.add("chart-bar--untimed");
+      mark.classList.remove("fill-faint-text");
+      mark.classList.add("fill-accent");
       if (!reducedMotion) {
         mark.animate(
           [{ transform: "scaleY(0)" }, { transform: "scaleY(1)" }],
@@ -103,71 +113,3 @@ const initialProject = projects.some(({ id }) => id === selectedProjectId)
     });
   }
 </script>
-
-<style>
-  .entry-form {
-    padding: 22px;
-  }
-
-  .field-group + .field-group {
-    margin-top: 22px;
-  }
-
-  label {
-    display: block;
-    margin-bottom: 9px;
-    color: var(--page-dim);
-    font-family: "Martian Mono", ui-monospace, monospace;
-    font-size: 8px;
-    letter-spacing: 0.2em;
-    line-height: 1.4;
-    text-transform: uppercase;
-  }
-
-  textarea,
-  select {
-    width: 100%;
-    min-height: 58px;
-    padding: 16px;
-    border: 1px solid var(--page-glass-border);
-    border-radius: 18px;
-    background: color-mix(in srgb, var(--page-bg) 72%, transparent);
-    color: var(--page-ink);
-    font-size: 16px;
-    line-height: 1.45;
-  }
-
-  textarea {
-    min-height: 132px;
-    resize: vertical;
-  }
-
-  textarea::placeholder {
-    color: var(--page-faint-text);
-    opacity: 1;
-  }
-
-  .primary-action {
-    margin-top: 24px;
-  }
-
-  .form-status {
-    min-height: 42px;
-    margin: 12px 2px 0;
-  }
-
-  @media (min-width: 768px) {
-    .entry-form {
-      padding: 28px;
-    }
-
-    textarea,
-    select {
-      min-height: 56px;
-    }
-
-    textarea {
-      min-height: 150px;
-    }
-  }
-</style>

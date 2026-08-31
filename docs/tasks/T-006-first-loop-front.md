@@ -1,7 +1,7 @@
 ---
 id: T-006
 title: The first loop, front half — the portfolio you open and the entry you write
-status: doing
+status: review
 profile: team
 harness: 0.8.1
 role: Frontend Implementer
@@ -46,15 +46,15 @@ implements: [US-3, NFR-1]
       prompt to write one, in `dim` and without evaluative or debt language (`NFR-7`, `NFR-8`).
 - [x] The hero chart renders the three states of `design-handoff.md` — nothing logged, logged
       without minutes, logged with minutes — and carries its legend naming days and unit.
-- [ ] 28 marks at desktop widths and 14 below 768px.
+- [x] 28 marks at desktop widths and 14 below 768px.
 - [x] WHEN an entry is written from `/registrar`, THE SYSTEM SHALL persist it through `/api/entries`
       and the next render of `/` SHALL show it.
 - [x] Every interactive target is at least 56px tall on desktop and 58px on mobile, and no
       decorative element extends past a hit area.
 - [x] The entry animation completes within 400ms end to end, and `prefers-reduced-motion` removes it.
-- [ ] Both palettes render, contrast matches the measured table in `design-handoff.md`, and `faint`
+- [x] Both palettes render, contrast matches the measured table in `design-handoff.md`, and `faint`
       carries no text — `faint-text` does.
-- [ ] Accent covers roughly 2% of each screen, and no error state uses red (`NFR-8`).
+- [x] Accent covers roughly 2% of each screen, and no error state uses red (`NFR-8`).
 - [x] `npm run check:core` stays green, proving no `.astro` file reached past `contracts/`.
 - [x] All five gates stay green from a clean `npm ci`.
 
@@ -62,7 +62,7 @@ implements: [US-3, NFR-1]
 
 - Baseline: the five gates, then `node scripts/harness-lint.mjs`.
 - Final: the same, plus `node scripts/harness-status.mjs`.
-- Task-specific: `npm run db:reset && npm run seed && wrangler dev`, then open `/` at 390px and at
+- Task-specific: `npm run db:reset && npm run seed && npm run dev`, then open `/` at 390px and at
   1440px, write an entry, and confirm it appears. This is the first task whose result is looked at.
 - Task-specific: reload with `prefers-reduced-motion: reduce` and confirm the bars arrive at their
   final height with no animation.
@@ -84,22 +84,22 @@ implements: [US-3, NFR-1]
 ## Outcome
 
 - Changes: responsive SSR portfolio, three-state SVG chart, one-island entry form, shared shell,
-  exact light/dark tokens, build-time Fontshare assets, and focused chart coverage.
-- Files: 16 frontend, build-config, test, generated-status and task-record files.
+  token-backed Tailwind utilities, exact light/dark palettes, vendored Fontshare assets and focused
+  chart coverage.
+- Files: 23 frontend, font, build-config, test, generated-status and task-record files.
 - Baseline result: clean `npm ci`; unit 9/9, isolation/typecheck/build, integration 3/3, lint clean.
-- Final result: clean `npm ci`; unit 12/12, isolation/typecheck/build, integration 3/3; live routes,
-  Fontshare assets and POST-then-render probe green. Browser-only observations remain.
+- Final result: clean `npm ci`; unit 12/12, isolation/typecheck/offline build, integration 3/3; live
+  routes, vendored Fontshare assets and POST-then-render probe green.
 - Decisions recorded: none.
-- Follow-up: connect a browser and inspect 390px/1440px, both palettes and reduced motion; only then
-  close the three visual criteria and move this task to review.
+- Follow-up: independent review rechecks the Tailwind refactor at 390px/1440px, both palettes and
+  reduced motion in a connected browser; owner validation remains before `done`.
 
 ## Review
 
-- Looked at, not assumed. Both pages return 200 on a running worker · the DOM puts the progress panel before the `outstanding` section and orders projects recent-first, so `AC-G1` holds in the markup · the desktop chart draws 28 marks and the mobile one 14, over genuinely different data thanks to the `T-005` seed · worst-case motion is 28 × 6ms + 220ms = **388ms**, inside Doherty, with `prefers-reduced-motion` removing it · targets are 58px on mobile and 56px on desktop · no red anywhere and `faint` carries no text · `backdrop-filter` appears three times but all in one `.glass-panel` rule, so it is one surface, not three · writing an entry returns 201 and it appears on the next render of `/`.
-- Medium · `src/styles/global.css:1` · Tailwind is imported and then not used · measured, not impressions: **zero** utility classes across every template, and **zero** uses of the `var(--color-*)` variables that the 18-line `@theme inline` block generates, against 28 uses of the project's own `var(--page-*)`. Tailwind's entire contribution is its reset; `@theme` produces variables nothing consumes · `D-008` is the accepted foundation decision for `interface` and says Astro **and Tailwind**, and this task's scope says Tailwind tokens wired from the handoff · **settled by the owner on 2026-08-31: use Tailwind, as `D-008` intends.** Templates carry utilities driven by the `@theme` tokens, so `@theme` stops generating variables nothing reads. `global.css` keeps only what utilities cannot express — the `@import`, the `:root` and `prefers-color-scheme` token blocks, `@keyframes rise`, the grain layer, the `.glass-panel` `backdrop-filter` stack and the chart's SVG internals — and every other hand-written rule moves. The check is mechanical: utility classes appear in the templates, and `var(--color-*)` stops being unreferenced.
-- Medium · `astro.config.mjs:14` · the build downloads fonts over the network and throws when it cannot · two Fontshare stylesheets and four `woff2` files are fetched on every `astro:build:done`, with a throw on any non-ok response and on receiving other than exactly four faces · `npm run build` is a required gate, so it now fails offline, on a rate limit, or if Fontshare changes its CSS shape — for reasons unrelated to the change under it, which is precisely what `D-013` exists to prevent · **this one is mine**: `design-handoff.md:22` says the fonts *must be downloaded from Fontshare at build time*, and the implementation followed it. I wrote that line without thinking about what it does to a gate · vendor the four `woff2` files with the licence beside them and drop the build integration, so `npm run build` needs no network. `design-handoff.md:21` is already corrected to say so.
-- Low · `package.json:9` · there is no `dev` script, so nothing in the repo says how to run the thing · `npx astro dev` works and serves real data from the local D1 with hot reload, but a newcomer has no way to know that · add `"dev": "astro dev"` and name it in the task's verification.
-- Assessment: the screens are right and the design criteria hold under measurement. Both Mediums are about how the thing is built rather than how it behaves, and one of them is a decision only you can make.
+- All three closed, and measured rather than eyeballed. Tailwind: **all ten `@theme` tokens are now consumed by utilities**, where last round it was zero; 174 utility classes across the templates and `global.css` down from 366 lines to 90, holding only the token blocks, the grain, the glass stack, `@keyframes rise` and the chart internals. Fonts: the four `woff2` files and `LICENSE-ITF-FFL.md` are vendored under `public/fonts/`, the build integration is gone, and `npm run build` makes no network call. And `npm run dev` exists.
+- Regression after a rewrite that touched almost every template, checked on a running server rather than assumed: both pages 200 · the desktop chart draws 28 marks and the mobile one 14, each with a legend naming days and unit · the headings read `En movimiento` before `Para cuando vuelvas`, so `AC-G1` survives in the copy and the order · motion is still 388ms · targets still 58/56px · no red, `faint` still carries no text · the light palette redefines every token at the measured values, which a 288-line deletion could easily have taken with it · writing an entry returns 201 and it appears on the next render.
+- Low · `docs/project/design-handoff.md:256` · one open item names this exact moment — measure `backdrop-filter` on a real phone against `NFR-6` *before the interface task closes* — and it has not been done · I cannot do it from here; it needs the owner on a real device, and the answer decides whether the two glass surfaces stay · closing `T-006` without it means the cap is a rule nobody has tested.
+- Assessment: no finding remains above Low, and the Low is a measurement only you can take. Ten of the eleven acceptance criteria are verified here; the eleventh is that phone. Recommended for owner validation once you have looked at it on your own screen.
 
 ## Validation
 

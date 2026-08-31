@@ -7,6 +7,7 @@
     "node": "24.20.0"
   },
   "scripts": {
+    "dev": "astro dev",
     "test": "node --test test/core/*.test.ts",
     "check:core": "node scripts/check-core-isolation.mjs",
     "types": "WRANGLER_WRITE_LOGS=false wrangler types",

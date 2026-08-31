@@ -32,13 +32,13 @@ function accessibleLabel(day: ChartDay): string {
 ---
 
 <figure
-  class="hero-chart"
+  class="mx-auto w-[min(100%,1440px)] text-faint-text"
   data-hero-chart
   data-rise-duration={CHART_RISE_DURATION_MS}
   style={`--rise-duration:${CHART_RISE_DURATION_MS}ms;--rise-stagger:${CHART_STAGGER_MS}ms`}
 >
   <svg
-    class="chart-svg chart-desktop"
+    class="hidden h-[clamp(168px,24vw,300px)] w-full overflow-visible md:block"
     viewBox="0 0 560 136"
     role="img"
     aria-label="Actividad de los últimos 28 días; la altura representa minutos registrados"
@@ -48,7 +48,7 @@ function accessibleLabel(day: ChartDay): string {
       <g class="chart-day" transform={`translate(${index * 20 + 6} 0)`}>
         <title>{accessibleLabel(day)}</title>
         <rect
-          class:list={["chart-bar", `chart-bar--${day.state}`]}
+          class:list={["chart-bar", day.state === "empty" ? "fill-faint-text" : "fill-accent"]}
           data-chart-mark
           data-today-mark={index === desktopDays.length - 1 ? "true" : undefined}
           data-state={day.state}
@@ -63,7 +63,7 @@ function accessibleLabel(day: ChartDay): string {
     ))}
   </svg>
   <svg
-    class="chart-svg chart-mobile"
+    class="block h-[clamp(168px,24vw,300px)] w-full overflow-visible md:hidden"
     viewBox="0 0 280 136"
     role="img"
     aria-label="Actividad de los últimos 14 días; la altura representa minutos registrados"
@@ -73,7 +73,7 @@ function accessibleLabel(day: ChartDay): string {
       <g class="chart-day" transform={`translate(${index * 20 + 6} 0)`}>
         <title>{accessibleLabel(day)}</title>
         <rect
-          class:list={["chart-bar", `chart-bar--${day.state}`]}
+          class:list={["chart-bar", day.state === "empty" ? "fill-faint-text" : "fill-accent"]}
           data-chart-mark
           data-today-mark={index === mobileDays.length - 1 ? "true" : undefined}
           data-state={day.state}
@@ -87,112 +87,21 @@ function accessibleLabel(day: ChartDay): string {
       </g>
     ))}
   </svg>
-  <figcaption class="chart-caption">
-    <span class="chart-caption-desktop">28 días · altura = minutos registrados</span>
-    <span class="chart-caption-mobile">14 días · minutos</span>
-    <span class="chart-key"><i class="key-empty"></i>Nada</span>
-    <span class="chart-key"><i class="key-untimed"></i>Sin minutos</span>
-    <span class="chart-key"><i class="key-timed"></i>Con minutos</span>
+  <figcaption class="flex min-h-7 flex-wrap items-center gap-x-3.5 gap-y-[9px] px-5 font-mono text-[8px] leading-[1.5] tracking-[0.16em] text-faint-text uppercase md:px-16 md:text-[9px]">
+    <span class="hidden md:block">28 días · altura = minutos registrados</span>
+    <span class="md:hidden">14 días · minutos</span>
+    <span class="inline-flex items-center gap-[5px]"><i class="inline-block size-2 rounded-full border border-current bg-transparent"></i>Nada</span>
+    <span class="inline-flex items-center gap-[5px]"><i class="inline-block size-2 rounded-full border border-current bg-accent"></i>Sin minutos</span>
+    <span class="inline-flex items-center gap-[5px]"><i class="inline-block size-2 rounded-full border border-current bg-accent shadow-[0_-5px_0_-2px_var(--page-accent)]"></i>Con minutos</span>
   </figcaption>
 </figure>
 
 <style>
-  .hero-chart {
-    width: min(100%, 1440px);
-    margin: 0 auto;
-    color: var(--page-faint-text);
-  }
-
-  .chart-svg {
-    width: 100%;
-    height: clamp(168px, 24vw, 300px);
-    display: block;
-    overflow: visible;
-  }
-
-  .chart-desktop,
-  .chart-caption-desktop {
-    display: none;
-  }
-
   .chart-bar {
     transform-box: fill-box;
     transform-origin: 50% 100%;
     animation: rise var(--rise-duration) cubic-bezier(0.16, 0.9, 0.24, 1) both;
     animation-delay: calc(var(--bar-index) * var(--rise-stagger));
-  }
-
-  .chart-bar--empty {
-    fill: var(--page-faint-text);
-  }
-
-  .chart-bar--untimed,
-  .chart-bar--timed {
-    fill: var(--page-accent);
-  }
-
-  .chart-caption {
-    min-height: 28px;
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 9px 14px;
-    padding: 0 20px;
-    color: var(--page-faint-text);
-    font-family: "Martian Mono", ui-monospace, monospace;
-    font-size: 8px;
-    letter-spacing: 0.16em;
-    line-height: 1.5;
-    text-transform: uppercase;
-  }
-
-  .chart-key {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-  }
-
-  .chart-key i {
-    width: 8px;
-    height: 8px;
-    display: inline-block;
-    border-radius: 50%;
-    border: 1px solid currentColor;
-  }
-
-  .key-empty {
-    background: transparent;
-  }
-
-  .key-untimed {
-    background: var(--page-accent);
-  }
-
-  .key-timed {
-    background: var(--page-accent);
-    box-shadow: 0 -5px 0 -2px var(--page-accent);
-  }
-
-  @keyframes rise {
-    from { transform: scaleY(0); }
-    to { transform: scaleY(1); }
-  }
-
-  @media (min-width: 768px) {
-    .chart-mobile,
-    .chart-caption-mobile {
-      display: none;
-    }
-
-    .chart-desktop,
-    .chart-caption-desktop {
-      display: block;
-    }
-
-    .chart-caption {
-      padding: 0 64px;
-      font-size: 9px;
-    }
   }
 
   @media (prefers-reduced-motion: reduce) {

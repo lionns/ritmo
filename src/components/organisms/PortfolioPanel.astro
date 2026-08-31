@@ -10,51 +10,25 @@ interface Props {
 const { progress, outstanding } = Astro.props;
 ---
 
-<section class="portfolio-panel glass-panel" aria-labelledby="portfolio-heading">
-  <h2 id="portfolio-heading" class="mono-label">En movimiento</h2>
+<section class="glass-panel p-[22px] md:px-7 md:py-6" aria-labelledby="portfolio-heading">
+  <h2 id="portfolio-heading" class="m-0 font-mono text-[8px] leading-[1.4] font-normal tracking-[0.22em] text-dim uppercase md:text-[9px]">En movimiento</h2>
   {
     progress.length === 0 ? (
-      <p class="empty-copy">Aún no hay nada aquí. Escribe la primera línea.</p>
+      <p class="mt-5 mb-1 text-sm leading-normal text-dim">Aún no hay nada aquí. Escribe la primera línea.</p>
     ) : (
-      <div class="project-list">
+      <div class="mt-1.5">
         {progress.map((project) => <ProjectCard project={project} kind="progress" />)}
       </div>
     )
   }
   {
     outstanding.length > 0 && (
-      <section class="outstanding" aria-labelledby="outstanding-heading">
-        <h2 id="outstanding-heading" class="mono-label">Para cuando vuelvas</h2>
-        <div class="project-list">
+      <section class="mt-[34px] border-t border-hair pt-6" aria-labelledby="outstanding-heading">
+        <h2 id="outstanding-heading" class="m-0 font-mono text-[8px] leading-[1.4] font-normal tracking-[0.22em] text-dim uppercase md:text-[9px]">Para cuando vuelvas</h2>
+        <div class="mt-1.5">
           {outstanding.map((project) => <ProjectCard project={project} kind="outstanding" />)}
         </div>
       </section>
     )
   }
 </section>
-
-<style>
-  .portfolio-panel {
-    padding: 22px;
-  }
-
-  .project-list {
-    margin-top: 6px;
-  }
-
-  .empty-copy {
-    margin: 20px 0 4px;
-  }
-
-  .outstanding {
-    margin-top: 34px;
-    padding-top: 24px;
-    border-top: 1px solid var(--page-hair);
-  }
-
-  @media (min-width: 768px) {
-    .portfolio-panel {
-      padding: 24px 28px;
-    }
-  }
-</style>

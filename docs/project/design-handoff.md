@@ -255,4 +255,4 @@ Also binding:
 
 - [ ] Re-render the canvas artboards with `faint-text` so artboards and tokens agree.
 - [ ] Measure `backdrop-filter` cost on a real phone against NFR-6 before the interface task closes.
-- [ ] Confirm the Fontshare licence text at build time and record it in the repo.
+- [x] Fontshare licence recorded at `public/fonts/LICENSE-ITF-FFL.md`, beside the four faces (T-006).
