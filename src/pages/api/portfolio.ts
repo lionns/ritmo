@@ -1,6 +1,7 @@
 import type { APIRoute } from "astro";
 
 import { runtimeStore } from "../../../adapters/d1/store.ts";
+import { LOCAL_OWNER_ID } from "../../../adapters/local-owner.ts";
 import type { Clock } from "../../../core/ports/clock.ts";
 import {
   readPortfolio,
@@ -18,7 +19,7 @@ const responseHeaders = { "Cache-Control": "no-store" };
 export async function handleGetPortfolio(): Promise<Response> {
   try {
     const store = runtimeStore();
-    const owner = await store.getOwner();
+    const owner = await store.getOwner(LOCAL_OWNER_ID);
     if (owner === null) {
       return Response.json(
         { error: "Seeded owner is missing; run npm run seed" } satisfies PortfolioErrorResponse,
@@ -62,12 +63,15 @@ function toContractProject(value: CorePortfolioProject): PortfolioProject {
       effortMinutes: entry.effortMinutes,
       note: entry.note,
     })),
-    nextAction: {
-      id: value.nextAction.id,
-      trigger: value.nextAction.trigger,
-      act: value.nextAction.act,
-      obstacle: value.nextAction.obstacle,
-      estimateMinutes: value.nextAction.estimateMinutes,
-    },
+    nextAction:
+      value.nextAction === null
+        ? null
+        : {
+            id: value.nextAction.id,
+            trigger: value.nextAction.trigger,
+            act: value.nextAction.act,
+            obstacle: value.nextAction.obstacle,
+            estimateMinutes: value.nextAction.estimateMinutes,
+          },
   };
 }

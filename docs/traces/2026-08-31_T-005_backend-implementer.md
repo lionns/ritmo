@@ -10,3 +10,11 @@
   - failures: local D1/listeners first hit sandbox `EPERM`; identical permitted runs passed
   - assumptions: recent is the rolling 14 days; seeded singleton owner stands in for identity
   - blockers/decisions/follow-up: no new decision; independent review and owner validation remain
+
+- 2026-08-31 — role: Backend Implementer, review fix
+  - read: independent review and probes; current contract, portfolio rule, store and seed
+  - did: made actions nullable, batched areas, addressed owners by id, and expanded representative seed
+  - baseline: unit 9/9, isolation/typecheck/build, integration 3/3, harness lint clean
+  - checks: clean `npm ci`; unit 9/9; isolation/typecheck/build; integration 3/3; harness lint clean
+  - probes: seed twice at 1/3/4/2/10; real Worker actionless GET 200 and POST/GET 201/200
+  - assumptions/blockers: no new decision; independent re-review and owner validation remain

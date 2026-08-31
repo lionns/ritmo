@@ -9,7 +9,7 @@ export interface PortfolioProject {
   project: Project;
   area: Area;
   recentEntries: Entry[];
-  nextAction: NextAction;
+  nextAction: NextAction | null;
 }
 
 export interface Portfolio {
@@ -37,14 +37,12 @@ export async function readPortfolio(
   const [entries, actions, areas] = await Promise.all([
     store.readRecentEntries(projectIds, occurredSince),
     store.readOpenNextActions(projectIds),
-    Promise.all(areaIds.map((areaId) => store.getArea(areaId))),
+    store.readAreas(areaIds),
   ]);
 
   const entriesByProject = groupEntries(entries);
   const actionsByProject = new Map(actions.map((action) => [action.projectId, action]));
-  const areasById = new Map(
-    areas.filter((area): area is Area => area !== null).map((area) => [area.id, area]),
-  );
+  const areasById = new Map(areas.map((area) => [area.id, area]));
   const assembled = projects.map((project) =>
     assembleProject(project, entriesByProject, actionsByProject, areasById),
   );
@@ -84,14 +82,10 @@ function assembleProject(
   if (area === undefined) {
     throw new PortfolioRuleError(`Active project ${project.id} has no area ${project.areaId}`);
   }
-  const nextAction = actionsByProject.get(project.id);
-  if (nextAction === undefined) {
-    throw new PortfolioRuleError(`Active project ${project.id} has no open next action`);
-  }
   return {
     project,
     area,
     recentEntries: entriesByProject.get(project.id) ?? [],
-    nextAction,
+    nextAction: actionsByProject.get(project.id) ?? null,
   };
 }

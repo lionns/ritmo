@@ -23,12 +23,17 @@ describe("the first portfolio loop", () => {
       occurredAt: "2026-08-16T11:59:59.999Z",
     });
     store.entries.set(entry.id, entry);
+    store.entries.set(actionlessEntry.id, actionlessEntry);
 
     const portfolio = await readPortfolio(store, clock, owner.id);
 
     assert.equal(RECENT_PROGRESS_DAYS, 14);
-    assert.deepEqual(portfolio.progress.map(({ project }) => project.id), [activeProject.id]);
+    assert.deepEqual(portfolio.progress.map(({ project }) => project.id), [
+      activeProject.id,
+      actionlessProject.id,
+    ]);
     assert.deepEqual(portfolio.progress[0].recentEntries, [entry]);
+    assert.equal(portfolio.progress[1].nextAction, null);
     assert.deepEqual(portfolio.outstanding.map(({ project }) => project.id), [quietProject.id]);
     assert.equal(
       [...portfolio.progress, ...portfolio.outstanding].some(
@@ -97,6 +102,11 @@ const projectBase: Project = {
 };
 const activeProject: Project = { ...projectBase, id: "project-active", title: "Active" };
 const quietProject: Project = { ...projectBase, id: "project-quiet", title: "Quiet" };
+const actionlessProject: Project = {
+  ...projectBase,
+  id: "project-actionless",
+  title: "Needs a next action",
+};
 const shelvedProject: Project = {
   ...projectBase,
   id: "project-shelved",
@@ -125,13 +135,19 @@ const entry: Entry = {
   effortMinutes: null,
   note: null,
 };
+const actionlessEntry: Entry = {
+  ...entry,
+  id: "entry-actionless",
+  projectId: actionlessProject.id,
+  occurredAt: "2026-08-29T12:00:00.000Z",
+};
 const clock: Clock = { now: () => new Date("2026-08-30T12:00:00.000Z") };
 
 function populatedStore(): MemoryStore {
   const store = new MemoryStore();
   store.owners.set(owner.id, owner);
   store.areas.set(area.id, area);
-  for (const project of [activeProject, quietProject, shelvedProject]) {
+  for (const project of [activeProject, quietProject, actionlessProject, shelvedProject]) {
     store.projects.set(project.id, project);
   }
   for (const project of [activeProject, quietProject]) {
@@ -149,9 +165,12 @@ class MemoryStore implements Store {
   readonly entries = new Map<string, Entry>();
 
   async createOwner(value: Owner) { this.owners.set(value.id, value); }
-  async getOwner() { return this.owners.values().next().value ?? null; }
+  async getOwner(id: string) { return this.owners.get(id) ?? null; }
   async createArea(value: Area) { this.areas.set(value.id, value); }
   async getArea(id: string) { return this.areas.get(id) ?? null; }
+  async readAreas(areaIds: string[]) {
+    return [...this.areas.values()].filter((value) => areaIds.includes(value.id));
+  }
   async createProject(value: Project) { this.projects.set(value.id, value); }
   async getProject(id: string) { return this.projects.get(id) ?? null; }
   async listActiveProjects(ownerId: string) {

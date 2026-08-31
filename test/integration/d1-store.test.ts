@@ -2,6 +2,7 @@ import { env } from "cloudflare:workers";
 import { beforeEach, describe, expect, it } from "vitest";
 
 import { D1Store } from "../../adapters/d1/store.ts";
+import { LOCAL_OWNER_ID } from "../../adapters/local-owner.ts";
 import type { Area, NextAction, Owner, Project } from "../../core/model/entities.ts";
 import { closeNextAction, createNextAction } from "../../core/rules/next-action.ts";
 import type { CreateEntryErrorResponse, CreateEntryResponse } from "../../contracts/entries.ts";
@@ -25,8 +26,9 @@ describe("D1Store with the next-action rule", () => {
     await store.createProject(project);
     await createNextAction(store, action);
 
-    expect(await store.getOwner()).toEqual(owner);
+    expect(await store.getOwner(owner.id)).toEqual(owner);
     expect(await store.getArea(area.id)).toEqual(area);
+    expect(await store.readAreas([area.id])).toEqual([area]);
     expect(await store.getProject(project.id)).toEqual(project);
     expect(await store.getNextAction(action.id)).toEqual(action);
     await expect(
@@ -46,6 +48,11 @@ describe("D1Store with the next-action rule", () => {
 
   it("drives POST entries and GET portfolio through the real D1 adapter", async () => {
     const quietProject: Project = { ...project, id: "project-quiet", title: "Quiet project" };
+    const actionlessProject: Project = {
+      ...project,
+      id: "project-actionless",
+      title: "Needs a next action",
+    };
     const shelvedProject: Project = {
       ...project,
       id: "project-shelved",
@@ -54,6 +61,7 @@ describe("D1Store with the next-action rule", () => {
     };
     await store.createProject(project);
     await store.createProject(quietProject);
+    await store.createProject(actionlessProject);
     await store.createProject(shelvedProject);
     await createNextAction(store, action);
     await createNextAction(store, {
@@ -61,6 +69,12 @@ describe("D1Store with the next-action rule", () => {
       id: "action-quiet",
       projectId: quietProject.id,
     });
+    await createNextAction(store, {
+      ...action,
+      id: "action-now-closed",
+      projectId: actionlessProject.id,
+    });
+    await closeNextAction(store, "action-now-closed", "2026-09-01T11:00:00.000Z");
 
     const createdResponse = await postEntry({
       projectId: project.id,
@@ -86,9 +100,17 @@ describe("D1Store with the next-action rule", () => {
         note: null,
       }),
     ]);
-    expect(portfolio.progress[0].nextAction.id).toBe(action.id);
-    expect(portfolio.outstanding.map(({ id }) => id)).toEqual([quietProject.id]);
-    expect(portfolio.outstanding[0].nextAction.id).toBe("action-quiet");
+    expect(portfolio.progress[0].nextAction?.id).toBe(action.id);
+    expect(portfolio.outstanding.map(({ id }) => id)).toEqual([
+      actionlessProject.id,
+      quietProject.id,
+    ]);
+    expect(
+      portfolio.outstanding.find(({ id }) => id === actionlessProject.id)?.nextAction,
+    ).toBeNull();
+    expect(portfolio.outstanding.find(({ id }) => id === quietProject.id)?.nextAction?.id).toBe(
+      "action-quiet",
+    );
     expect(
       [...portfolio.progress, ...portfolio.outstanding].some(
         ({ id }) => id === shelvedProject.id,
@@ -110,11 +132,11 @@ describe("D1Store with the next-action rule", () => {
     expect(await env.DB.prepare("PRAGMA foreign_keys").first("foreign_keys")).toBe(1);
 
     await env.DB.prepare("INSERT INTO weeks (id, owner_id, starts_on) VALUES (?, ?, ?)")
-      .bind("week-1", "owner-1", "2026-08-31")
+      .bind("week-1", owner.id, "2026-08-31")
       .run();
     await expect(
       env.DB.prepare("INSERT INTO weeks (id, owner_id, starts_on) VALUES (?, ?, ?)")
-        .bind("week-2", "owner-1", "2026-08-31")
+        .bind("week-2", owner.id, "2026-08-31")
         .run(),
     ).rejects.toThrow();
     await expect(
@@ -143,7 +165,7 @@ async function entryCount(): Promise<number> {
   );
 }
 
-const owner: Owner = { id: "owner-1", activeCap: 3, capRaises: [] };
+const owner: Owner = { id: LOCAL_OWNER_ID, activeCap: 3, capRaises: [] };
 const area: Area = {
   id: "area-1",
   ownerId: owner.id,
@@ -153,7 +175,7 @@ const area: Area = {
 
 const project: Project = {
   id: "project-1",
-  ownerId: "owner-1",
+  ownerId: owner.id,
   areaId: "area-1",
   objectiveId: null,
   title: "Ship the skeleton",
@@ -164,7 +186,7 @@ const project: Project = {
 
 const action: NextAction = {
   id: "action-1",
-  ownerId: "owner-1",
+  ownerId: owner.id,
   projectId: project.id,
   trigger: "When the baseline is green",
   act: "Implement the first slice",

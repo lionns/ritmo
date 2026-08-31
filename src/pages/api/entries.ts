@@ -1,6 +1,7 @@
 import type { APIRoute } from "astro";
 
 import { runtimeStore } from "../../../adapters/d1/store.ts";
+import { LOCAL_OWNER_ID } from "../../../adapters/local-owner.ts";
 import { UlidGenerator } from "../../../adapters/ulid.ts";
 import type { Clock } from "../../../core/ports/clock.ts";
 import { createProgressEntry, EntryRuleError } from "../../../core/rules/entry.ts";
@@ -18,7 +19,7 @@ export async function handlePostEntry(request: Request): Promise<Response> {
 
   try {
     const store = runtimeStore();
-    const owner = await store.getOwner();
+    const owner = await store.getOwner(LOCAL_OWNER_ID);
     if (owner === null) {
       return errorResponse("Seeded owner is missing; run npm run seed", 503);
     }

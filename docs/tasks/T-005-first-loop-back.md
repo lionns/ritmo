@@ -74,8 +74,9 @@ implements: [FR-4, FR-18]
 
 - **The seeded owner stands in for authentication**, which is why this cannot be deployed. Labelled
   here and in the seed output rather than left for someone to discover.
-- **Recent means the last fourteen days**, matching the mobile hero chart in `design-handoff.md`.
-  Chosen by the assistant; the number is a constant in one place, not scattered.
+- **Recent meant fourteen days, and that was wrong.** Chosen by the assistant against the mobile
+  chart without checking the desktop one in the same handoff, which asks for 28. Corrected in review;
+  the number stays a constant in one place.
 
 ## Risks
  
@@ -86,23 +87,23 @@ implements: [FR-4, FR-18]
 
 ## Outcome
 
-- Changes: portfolio read rule and contract, progress-entry write rule and contract, D1 methods,
-  two Astro API endpoints, idempotent local seed data, and core/integration coverage.
-- Files: 17 implementation, contract, test and task-record files.
+- Changes: portfolio read/write paths, nullable next-action contract, batched area reads,
+  id-addressed local owner lookup, representative idempotent seed data, and focused coverage.
+- Files: 19 implementation, contract, test and task-record files.
 - Baseline result: unit 7/7, isolation, typecheck, build, integration 2/2, harness lint clean.
 - Final result: clean `npm ci`; unit 9/9, isolation/typecheck/build, integration 3/3; real Worker
-  GET/POST/GET and shelved rejection green; seed from empty and second run green.
+  returns an actionless active project with `nextAction: null`, and GET/POST/GET stays green; seed
+  from empty and second run green.
 - Decisions recorded: none.
-- Follow-up: independent Claude review, owner validation, then T-006 can consume the contracts.
+- Follow-up: independent re-review of the corrections, owner validation, then T-006 can consume the
+  contracts and render the nullable-action prompt.
 
 ## Review
 
-- Verified against a running worker, not only the harness: `GET /api/portfolio` 200 · `POST /api/entries` 201 with the id, and the next `GET` shows it · an entry with neither `effortMinutes` nor `note` is accepted and comes back with both `null` · a missing project and a shelved project each return 422 naming the project · `check:core` green. `FR-18` lives in the shape — `progress` and `outstanding` are separate arrays, and `d1-store.test.ts:77` asserts the serialised order, so the front cannot render backlog first by restyling.
-- High · `core/rules/portfolio.ts:88` · closing a next action takes the whole landing surface down · verified on the running worker: closing the open action of one active project made `GET /api/portfolio` return **500 `Portfolio could not be read`** — not a degraded card, the entire response, so the other projects and the log form go with it · reachability, stated exactly: no endpoint closes an action today, so this cannot be triggered over HTTP yet — but `closeNextAction` exists in the store and the rule, the index enforces at most one open action and never at least one, and the first button anyone adds for `US-4` lands straight on it, with no way back through the product · make `nextAction` nullable in the contract and let `T-006` render a prompt to write one; forcing a replacement at close time would mean you cannot close an action until you know the next one, which is the opposite of what the product is for.
-- Low · `core/rules/portfolio.ts:40` · areas are read one query per area while entries and open actions are batched · `D-001` gives each render 10 ms of CPU and the risk this task recorded named only the entries case · add a `readAreas(areaIds)` and read them in one.
-- Low · `scripts/seed-local.mjs` · every seeded active project has recent entries, so `outstanding` is always empty · both test suites cover that branch, but the seed is what `T-006` will develop against, and a branch nobody ever sees on screen gets built blind · seed one quiet project, and one active project with no open next action, so both states the front must render exist on screen.
-- Low · `core/ports/store.ts:5` · `getOwner()` takes no id, so the single owner is now in the port rather than only in the data · `NFR-3` asks that a second party be additive; this is the one place it would not be.
-- Assessment: the loop works and the contract is well shaped. The High must be fixed before `T-006` starts — this task's own risk says getting the response shape wrong is cheap now and expensive after the front consumes it, and this is exactly that.
+- The loop works, verified against a running worker rather than the harness alone: `GET /api/portfolio` 200 · `POST /api/entries` 201 and the next `GET` shows it · an entry with neither `effortMinutes` nor `note` comes back with both `null` · a missing and a shelved project each return 422 naming it. `FR-18` lives in the response shape, and `d1-store.test.ts` asserts the serialised order of `progress` before `outstanding`.
+- The High is closed against the probe that opened it. Closing an open next action now returns **200** with that project degraded to `nextAction: null`; the other projects are untouched and `POST /api/entries` still answers 201. It was 500 for the whole surface. The three Lows are closed too: areas come back in one `IN (…)` query, `getOwner(id)` takes an id with the single-owner assumption moved to `adapters/local-owner.ts` — imported by the seed, the tests and both endpoints, so there is one source of truth — and the seed now serves all three states the front must build: a project with an action, one with `nextAction: null`, and one sitting in `outstanding`.
+- Medium · `core/rules/portfolio.ts:5` · `RECENT_PROGRESS_DAYS = 14`, so the response cannot feed the desktop hero chart · `design-handoff.md:129` and `T-006`'s own criterion both call for **28 marks at desktop widths and 14 below 768px**, and 14 days of entries can only draw half of it — the front would have to pad with fabricated empties or silently render a shorter chart than the design specifies · **this is my planning error, not the implementation's**: the assumption in this task says fourteen days *matching the mobile chart*, and I wrote it without checking it against the desktop figure in the same handoff · return 28 and let `T-006` slice to 14 below the breakpoint; at personal scale the extra rows cost nothing, and the assumption in this file needs correcting with it.
+- Assessment: everything asked for is done and probed. One Medium remains and belongs to the same class as the High — a contract that cannot serve the screen that consumes it — so it lands before `T-006` starts, for the same reason.
 
 ## Validation
 

@@ -75,9 +75,10 @@ export class D1Store implements Store {
       .run();
   }
 
-  async getOwner(): Promise<Owner | null> {
+  async getOwner(id: string): Promise<Owner | null> {
     const row = await this.#database
-      .prepare("SELECT * FROM owners ORDER BY id LIMIT 1")
+      .prepare("SELECT * FROM owners WHERE id = ?")
+      .bind(id)
       .first<OwnerRow>();
     return row === null ? null : toOwner(row);
   }
@@ -97,6 +98,16 @@ export class D1Store implements Store {
       .bind(id)
       .first<AreaRow>();
     return row === null ? null : toArea(row);
+  }
+
+  async readAreas(areaIds: string[]): Promise<Area[]> {
+    if (areaIds.length === 0) return [];
+    const placeholders = areaIds.map(() => "?").join(", ");
+    const { results } = await this.#database
+      .prepare(`SELECT * FROM areas WHERE id IN (${placeholders}) ORDER BY id`)
+      .bind(...areaIds)
+      .all<AreaRow>();
+    return results.map(toArea);
   }
 
   async createProject(project: Project): Promise<void> {

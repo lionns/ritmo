@@ -1,12 +1,14 @@
 import { spawnSync } from "node:child_process";
 
+import { LOCAL_OWNER_ID } from "../adapters/local-owner.ts";
+
 const DAY_MILLISECONDS = 24 * 60 * 60 * 1_000;
 const now = new Date();
 const seedId = (sequence) => `01K0000000${sequence.toString().padStart(16, "0")}`;
 const occurredAt = (daysAgo) => new Date(now.getTime() - daysAgo * DAY_MILLISECONDS).toISOString();
 const sqlText = (value) => `'${value.replaceAll("'", "''")}'`;
 
-const ownerId = seedId(1);
+const ownerId = LOCAL_OWNER_ID;
 const areas = [
   { id: seedId(2), name: "Trabajo fijo", countsAgainstCap: 0 },
   { id: seedId(3), name: "Estudio", countsAgainstCap: 1 },
@@ -28,13 +30,6 @@ const actions = [
   },
   {
     id: seedId(10),
-    projectId: projects[1].id,
-    trigger: "Cuando abra el portátil para estudiar",
-    act: "Construir una escena con una luz y una cámara",
-    estimateMinutes: 40,
-  },
-  {
-    id: seedId(11),
     projectId: projects[2].id,
     trigger: "Cuando la línea base esté verde",
     act: "Conectar la portada al contrato del portfolio",
@@ -44,14 +39,14 @@ const actions = [
 const entries = [
   [projects[0].id, 13, "Documenté el plan de corte", 30],
   [projects[1].id, 12, "Terminé la introducción a materiales", null],
-  [projects[2].id, 10, "Aprobé el modelo de datos", 45],
+  [projects[1].id, 10, "Aprobé el modelo de datos", 45],
   [projects[0].id, 8, "Probé la réplica en local", 20],
   [projects[1].id, 7, "Construí la primera geometría", 35],
-  [projects[2].id, 5, "Cerré el arnés inicial", 50],
+  [projects[0].id, 5, "Cerré el arnés inicial", 50],
   [projects[0].id, 3, "Preparé la lista de verificación", null],
-  [projects[2].id, 2, "Conecté el adaptador D1", 40],
+  [projects[1].id, 2, "Conecté el adaptador D1", 40],
   [projects[1].id, 1, "Anoté las dudas de la cámara", 15],
-  [projects[2].id, 0, "Abrí el primer bucle", null],
+  [projects[0].id, 0, "Abrí el primer bucle", null],
 ];
 
 const statements = [
@@ -101,4 +96,4 @@ const result = spawnSync(
 );
 if (result.error !== undefined) throw result.error;
 if (result.status !== 0) process.exit(result.status ?? 1);
-console.log("Seed complete: 1 owner, 3 areas, 4 projects, 3 next actions, 10 entries.");
+console.log("Seed complete: 1 owner, 3 areas, 4 projects, 2 next actions, 10 entries.");

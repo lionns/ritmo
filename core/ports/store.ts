@@ -2,9 +2,10 @@ import type { Area, Entry, NextAction, Owner, Project } from "../model/entities.
 
 export interface Store {
   createOwner(owner: Owner): Promise<void>;
-  getOwner(): Promise<Owner | null>;
+  getOwner(id: string): Promise<Owner | null>;
   createArea(area: Area): Promise<void>;
   getArea(id: string): Promise<Area | null>;
+  readAreas(areaIds: string[]): Promise<Area[]>;
   createProject(project: Project): Promise<void>;
   getProject(id: string): Promise<Project | null>;
   listActiveProjects(ownerId: string): Promise<Project[]>;

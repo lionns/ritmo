@@ -23,7 +23,7 @@ export interface PortfolioProject {
     name: string;
   };
   recentEntries: PortfolioEntry[];
-  nextAction: PortfolioNextAction;
+  nextAction: PortfolioNextAction | null;
 }
 
 export interface PortfolioResponse {

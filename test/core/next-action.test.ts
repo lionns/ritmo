@@ -63,9 +63,10 @@ class MemoryStore implements Store {
   readonly actions = new Map<string, NextAction>();
 
   async createOwner(_value: Owner) { throw new Error("not used"); }
-  async getOwner() { return null; }
+  async getOwner(_id: string) { return null; }
   async createArea(_value: Area) { throw new Error("not used"); }
   async getArea(_id: string) { return null; }
+  async readAreas(_areaIds: string[]) { return []; }
   async createProject(value: Project) { this.projects.set(value.id, value); }
   async getProject(id: string) { return this.projects.get(id) ?? null; }
   async listActiveProjects(ownerId: string) {
