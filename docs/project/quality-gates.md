@@ -1,6 +1,7 @@
 # Quality Gates
 
 Commands run from the repo root. Name the real commands — the harness gates invoke these verbatim.
+Dependencies install with `npm ci` against the committed lockfile, never `npm install` (`D-013`).
 
 Every command below follows from an accepted foundation decision: `node --test` and the absence of a
 test framework from `D-006`, the core isolation check from `D-003`, `tsc` and the Workers runtime

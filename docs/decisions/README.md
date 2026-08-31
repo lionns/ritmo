@@ -19,3 +19,4 @@ rather than editing. Template in `../sdd/TEMPLATES.md`.
 | [D-010](D-010-profile-team.md) | 2026-08-29 | Switch the profile to `team` | `accepted` | none |
 | [D-011](D-011-ids-ulid.md) | 2026-08-30 | ULID text ids, generated behind a port | `accepted` | none |
 | [D-012](D-012-tests-dependency-count.md) | 2026-08-31 | node --test for the core, and the five dependencies the platform really costs | `accepted` | D-006 |
+| [D-013](D-013-version-pinning.md) | 2026-08-31 | Exact pins, a committed lockfile, and upgrades as their own task | `accepted` | none |
