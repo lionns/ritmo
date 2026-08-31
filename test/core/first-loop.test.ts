@@ -17,22 +17,35 @@ import { readPortfolio, RECENT_PROGRESS_DAYS } from "../../core/rules/portfolio.
 describe("the first portfolio loop", () => {
   it("puts recently moved projects before outstanding projects and excludes old entries", async () => {
     const store = populatedStore();
-    store.entries.set("old-entry", {
+    const occurredSince =
+      clock.now().getTime() - RECENT_PROGRESS_DAYS * 24 * 60 * 60 * 1_000;
+    const justOutside: Entry = {
       ...entry,
-      id: "old-entry",
-      occurredAt: "2026-08-16T11:59:59.999Z",
-    });
+      id: "entry-just-outside",
+      occurredAt: new Date(occurredSince - 1).toISOString(),
+    };
+    const justInside: Entry = {
+      ...entry,
+      id: "entry-just-inside",
+      occurredAt: new Date(occurredSince + 1).toISOString(),
+    };
+    store.entries.set(justOutside.id, justOutside);
+    store.entries.set(justInside.id, justInside);
     store.entries.set(entry.id, entry);
     store.entries.set(actionlessEntry.id, actionlessEntry);
 
     const portfolio = await readPortfolio(store, clock, owner.id);
 
-    assert.equal(RECENT_PROGRESS_DAYS, 14);
+    assert.equal(RECENT_PROGRESS_DAYS, 28);
     assert.deepEqual(portfolio.progress.map(({ project }) => project.id), [
       activeProject.id,
       actionlessProject.id,
     ]);
-    assert.deepEqual(portfolio.progress[0].recentEntries, [entry]);
+    assert.deepEqual(portfolio.progress[0].recentEntries, [entry, justInside]);
+    assert.equal(
+      portfolio.progress[0].recentEntries.some(({ id }) => id === justOutside.id),
+      false,
+    );
     assert.equal(portfolio.progress[1].nextAction, null);
     assert.deepEqual(portfolio.outstanding.map(({ project }) => project.id), [quietProject.id]);
     assert.equal(

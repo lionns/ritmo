@@ -2,7 +2,7 @@ import type { Area, Entry, NextAction, Project } from "../model/entities.ts";
 import type { Clock } from "../ports/clock.ts";
 import type { Store } from "../ports/store.ts";
 
-export const RECENT_PROGRESS_DAYS = 14;
+export const RECENT_PROGRESS_DAYS = 28;
 const DAY_MILLISECONDS = 24 * 60 * 60 * 1_000;
 
 export interface PortfolioProject {

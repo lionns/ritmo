@@ -37,12 +37,12 @@ const actions = [
   },
 ];
 const entries = [
-  [projects[0].id, 13, "Documenté el plan de corte", 30],
-  [projects[1].id, 12, "Terminé la introducción a materiales", null],
-  [projects[1].id, 10, "Aprobé el modelo de datos", 45],
+  [projects[0].id, 27, "Documenté el plan de corte", 30],
+  [projects[1].id, 24, "Terminé la introducción a materiales", null],
+  [projects[0].id, 19, "Cerré el arnés inicial", 50],
+  [projects[1].id, 16, "Aprobé el modelo de datos", 45],
   [projects[0].id, 8, "Probé la réplica en local", 20],
   [projects[1].id, 7, "Construí la primera geometría", 35],
-  [projects[0].id, 5, "Cerré el arnés inicial", 50],
   [projects[0].id, 3, "Preparé la lista de verificación", null],
   [projects[1].id, 2, "Conecté el adaptador D1", 40],
   [projects[1].id, 1, "Anoté las dudas de la cámara", 15],

@@ -18,3 +18,8 @@
   - checks: clean `npm ci`; unit 9/9; isolation/typecheck/build; integration 3/3; harness lint clean
   - probes: seed twice at 1/3/4/2/10; real Worker actionless GET 200 and POST/GET 201/200
   - assumptions/blockers: no new decision; independent re-review and owner validation remain
+- 2026-08-31 — role: Backend Implementer, window fix
+  - read: round-2 Medium, corrected assumption, and its two named regression traps
+  - did: widened to 28 days; derived both boundary fixtures; seeded days 16, 19, 24 and 27
+  - checks: baseline/final unit 9/9, isolation/typecheck/build, integration 3/3; harness lint clean
+  - probes/blockers: seed twice; real GET 200 with 10 entries; re-review and owner validation remain
