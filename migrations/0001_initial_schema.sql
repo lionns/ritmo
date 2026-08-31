@@ -1,5 +1,4 @@
 -- Editable only until the first remote apply; use `npm run db:reset` to rebuild local D1 state.
-PRAGMA foreign_keys = ON;
 
 CREATE TABLE owners (
   id TEXT PRIMARY KEY,
@@ -69,6 +68,7 @@ CREATE TABLE weeks (
   reflection TEXT,
   closed_at TEXT,
   UNIQUE (id, owner_id),
+  UNIQUE (owner_id, starts_on),
   FOREIGN KEY (tag_id, owner_id) REFERENCES tags(id, owner_id)
 );
 

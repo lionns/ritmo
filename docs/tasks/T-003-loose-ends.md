@@ -1,7 +1,7 @@
 ---
 id: T-003
 title: The six loose ends T-001 left, and a deploy config that stops lying
-status: ready
+status: review
 profile: team
 harness: 0.7.1
 role: Backend Implementer
@@ -36,20 +36,20 @@ decisions: [D-002, D-004, D-009]
 
 ## Acceptance Criteria
 
-- [ ] WHEN two `weeks` rows share an `owner_id` and a `starts_on`, THE SYSTEM SHALL reject the
+- [x] WHEN two `weeks` rows share an `owner_id` and a `starts_on`, THE SYSTEM SHALL reject the
       second, verified against a database rebuilt by `npm run db:reset`.
-- [ ] After `npm run db:reset` with the `PRAGMA` line gone, `PRAGMA foreign_keys` still reports `1`
+- [x] After `npm run db:reset` with the `PRAGMA` line gone, `PRAGMA foreign_keys` still reports `1`
       and an orphan `owner_id` insert is still rejected — the line was describing D1, not setting it.
-- [ ] WHEN `npm run build` runs, THE SYSTEM SHALL NOT log `Enabling sessions`, and the generated
+- [x] WHEN `npm run build` runs, THE SYSTEM SHALL NOT log `Enabling sessions`, and the generated
       `dist/server/wrangler.json` SHALL declare no `SESSION` KV binding.
-- [ ] The generated `dist/server/wrangler.json` still resolves `assets.directory` to the client
+- [x] The generated `dist/server/wrangler.json` still resolves `assets.directory` to the client
       build output, and the root `wrangler.jsonc` no longer names a directory containing
       `dist/server`.
-- [ ] `env` reaches the integration suite from one module, named in a comment saying which and why,
+- [x] `env` reaches the integration suite from one module, named in a comment saying which and why,
       and `npm run test:integration` stays green.
-- [ ] WHEN a file under `core/` references `Env` or `D1Database`, THE SYSTEM SHALL fail
+- [x] WHEN a file under `core/` references `Env` or `D1Database`, THE SYSTEM SHALL fail
       `npm run typecheck` as well as `npm run check:core`.
-- [ ] All five gates stay green from a clean `npm ci`, and `harness-lint` stays clean.
+- [x] All five gates stay green from a clean `npm ci`, and `harness-lint` stays clean.
 
 ## Verification
 
@@ -80,16 +80,23 @@ decisions: [D-002, D-004, D-009]
 
 ## Outcome
 
-- Changes:
-- Files:
-- Baseline result:
-- Final result:
-- Decisions recorded:
-- Follow-up:
+- Changes: constrained owner/week uniqueness; removed the migration PRAGMA; disabled Astro sessions;
+  corrected the asset root; documented the integration env source and isolated its tests; added a
+  core-only TypeScript pass.
+- Files: 7 implementation, config and test files, plus task/trace/status records.
+- Baseline result: unit 7/7, isolation, harness lint, typecheck, build, integration 1/1.
+- Final result: clean `npm ci`; unit 7/7, isolation, typecheck, build, integration 2/2, harness lint.
+- Decisions recorded: none; implemented accepted D-002, D-004 and D-009.
+- Follow-up: independent Claude review and owner validation.
 
 ## Review
 
-- Severity · `file:line` · issue · impact · recommendation
+- All six resolved, each re-probed rather than taken on report: on a database rebuilt by `db:reset`, a duplicate week fails `UNIQUE constraint failed` and an orphan owner fails `FOREIGN KEY constraint failed`, so dropping the `PRAGMA` cost nothing · the build no longer logs `Enabling sessions` and the generated config carries `kv_namespaces: []` · `assets.directory` still resolves to `../client`, so the double-nesting risk did not materialise · `Env` and `D1Database` now fail `tsconfig.core.json` with `TS2304`.
+- Verified, not accepted: the comment claiming `cloudflare:test`'s `env` is deprecated is true — `@cloudflare/vitest-pool-workers/types/cloudflare-test.d.ts:3` reads `@deprecated Instead, use \`import { env } from "cloudflare:workers"\``.
+- Found beyond the brief, and worth saying: rewriting `setup.ts` to `beforeEach` plus `afterEach(reset)` fixed a latent bug nobody had listed. Verified by reverting it — with the old top-level `applyD1Migrations`, the second test fails on `UNIQUE constraint failed: owners.id`, because isolated storage rolls back the migration between tests. The suite passed only because it had one test.
+- Low · `tsconfig.core.json:5` · `"types": ["node"]` leaves the second guard partial: the criterion named `Env` and `D1Database` and both fail, but `Response`, `crypto` and `fetch` still type-check inside `core/` because `@types/node` declares them globally, and `check-core-isolation.mjs` bans all of them · verified: `"types": []` compiles `core/` clean and catches `Response` and `crypto` too · one word, no downside — `core/` imports nothing under `D-009`, so it needs no ambient types at all.
+- Low · `docs/tasks/T-003-loose-ends.md:6` · front-matter still says `harness: 0.7.1`, but this task ran under `0.8.1` and was subject to the plan and record budgets it introduced · `VERSION.md` § Change Rules says tasks record the version they ran under · flagged as a note in the `T-002` review and not picked up.
+- Assessment: all seven acceptance criteria pass and the five gates are green from a clean `npm ci`, unit 7/7 and integration 2/2. Nothing above Low. Both items are one-line fixes worth taking before closure rather than carrying forward.
 
 ## Validation
 

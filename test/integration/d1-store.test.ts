@@ -46,6 +46,24 @@ describe("D1Store with the next-action rule", () => {
     expect((await store.getNextAction(action.id))?.closedAt).toBe("2026-09-01T11:00:00.000Z");
     expect(await store.findOpenNextAction(project.id)).toEqual(replacement);
   });
+
+  it("enforces foreign keys and one week per owner and start date", async () => {
+    expect(await env.DB.prepare("PRAGMA foreign_keys").first("foreign_keys")).toBe(1);
+
+    await env.DB.prepare("INSERT INTO weeks (id, owner_id, starts_on) VALUES (?, ?, ?)")
+      .bind("week-1", "owner-1", "2026-08-31")
+      .run();
+    await expect(
+      env.DB.prepare("INSERT INTO weeks (id, owner_id, starts_on) VALUES (?, ?, ?)")
+        .bind("week-2", "owner-1", "2026-08-31")
+        .run(),
+    ).rejects.toThrow();
+    await expect(
+      env.DB.prepare("INSERT INTO weeks (id, owner_id, starts_on) VALUES (?, ?, ?)")
+        .bind("orphan-week", "missing-owner", "2026-09-07")
+        .run(),
+    ).rejects.toThrow();
+  });
 });
 
 const project: Project = {
