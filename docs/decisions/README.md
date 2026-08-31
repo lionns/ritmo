@@ -20,3 +20,5 @@ rather than editing. Template in `../sdd/TEMPLATES.md`.
 | [D-011](D-011-ids-ulid.md) | 2026-08-30 | ULID text ids, generated behind a port | `accepted` | none |
 | [D-012](D-012-tests-dependency-count.md) | 2026-08-31 | node --test for the core, and the five dependencies the platform really costs | `accepted` | D-006 |
 | [D-013](D-013-version-pinning.md) | 2026-08-31 | Exact pins, a committed lockfile, and upgrades as their own task | `accepted` | none |
+| [D-014](D-014-types-node-dev-dependency.md) | 2026-08-31 | `@types/node`, the sixth dev dependency | `proposed` | none |
+| [D-015](D-015-task-budget-plan-and-record.md) | 2026-08-31 | Split the task budget: the plan is bounded, the record is not the same thing | `proposed` | none |
