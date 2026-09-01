@@ -28,9 +28,34 @@ export async function closeNextAction(
   store: Store,
   actionId: string,
   closedAt: string,
+  replacement: NextAction,
 ): Promise<void> {
-  const closed = await store.closeNextAction(actionId, closedAt);
-  if (!closed) {
+  const current = await store.getNextAction(actionId);
+  if (current === null || current.closedAt !== null) {
     throw new NextActionRuleError(`Next action ${actionId} does not exist or is already closed`);
   }
+
+  const project = await store.getProject(current.projectId);
+  if (project === null) {
+    throw new NextActionRuleError(`Project ${current.projectId} does not exist`);
+  }
+  if (project.state !== "active") {
+    throw new NextActionRuleError(`Project ${project.id} is not active`);
+  }
+  if (replacement.id === current.id) {
+    throw new NextActionRuleError(`Replacement next action must have a new id`);
+  }
+  if (
+    replacement.projectId !== current.projectId ||
+    replacement.ownerId !== current.ownerId
+  ) {
+    throw new NextActionRuleError(
+      `Replacement next action must belong to project ${current.projectId}`,
+    );
+  }
+  if (replacement.closedAt !== null) {
+    throw new NextActionRuleError(`Replacement next action ${replacement.id} must be open`);
+  }
+
+  await store.replaceNextAction(actionId, closedAt, replacement);
 }

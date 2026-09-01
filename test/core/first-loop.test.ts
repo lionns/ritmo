@@ -47,6 +47,8 @@ describe("the first portfolio loop", () => {
       false,
     );
     assert.equal(portfolio.progress[1].nextAction, null);
+    assert.equal(portfolio.progress[0].progressSincePlan, 1);
+    assert.equal(portfolio.progress[1].progressSincePlan, 0);
     assert.deepEqual(portfolio.outstanding.map(({ project }) => project.id), [quietProject.id]);
     assert.equal(
       [...portfolio.progress, ...portfolio.outstanding].some(
@@ -203,11 +205,12 @@ class MemoryStore implements Store {
       (value) => projectIds.includes(value.projectId) && value.closedAt === null,
     );
   }
-  async closeNextAction(id: string, closedAt: string) {
+  async replaceNextAction(id: string, closedAt: string, replacement: NextAction) {
     const value = this.actions.get(id);
-    if (value === undefined || value.closedAt !== null) return false;
+    if (value === undefined || value.closedAt !== null) throw new Error("not open");
+    if (this.actions.has(replacement.id)) throw new Error("duplicate action");
     this.actions.set(id, { ...value, closedAt });
-    return true;
+    this.actions.set(replacement.id, replacement);
   }
   async createEntry(value: Entry) { this.entries.set(value.id, value); }
   async readRecentEntries(projectIds: string[], occurredSince: string) {
@@ -216,5 +219,18 @@ class MemoryStore implements Store {
         (value) => projectIds.includes(value.projectId) && value.occurredAt >= occurredSince,
       )
       .sort((left, right) => right.occurredAt.localeCompare(left.occurredAt));
+  }
+  async countProgressSinceOpenNextActions(projectIds: string[]) {
+    return [...this.actions.values()]
+      .filter((action) => projectIds.includes(action.projectId) && action.closedAt === null)
+      .map((action) => ({
+        projectId: action.projectId,
+        count: [...this.entries.values()].filter(
+          (value) =>
+            value.projectId === action.projectId &&
+            value.kind === "progress" &&
+            value.occurredAt >= action.createdAt,
+        ).length,
+      }));
   }
 }

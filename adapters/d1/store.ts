@@ -57,6 +57,11 @@ interface EntryRow {
   note: string | null;
 }
 
+interface ProgressSincePlanRow {
+  project_id: string;
+  progress_since_plan: number;
+}
+
 export function runtimeStore(): D1Store {
   return new D1Store(env.DB);
 }
@@ -197,12 +202,36 @@ export class D1Store implements Store {
     return results.map(toNextAction);
   }
 
-  async closeNextAction(id: string, closedAt: string): Promise<boolean> {
-    const result = await this.#database
-      .prepare("UPDATE next_actions SET closed_at = ? WHERE id = ? AND closed_at IS NULL")
-      .bind(closedAt, id)
-      .run();
-    return result.meta.changes === 1;
+  async replaceNextAction(
+    id: string,
+    closedAt: string,
+    replacement: NextAction,
+  ): Promise<void> {
+    await this.#database.batch([
+      this.#database
+        .prepare(
+          `UPDATE next_actions SET closed_at = ?
+           WHERE id = ? AND owner_id = ? AND project_id = ? AND closed_at IS NULL`,
+        )
+        .bind(closedAt, id, replacement.ownerId, replacement.projectId),
+      this.#database
+        .prepare(
+          `INSERT INTO next_actions
+            (id, owner_id, project_id, trigger, act, obstacle, estimate_minutes, created_at, closed_at)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        )
+        .bind(
+          replacement.id,
+          replacement.ownerId,
+          replacement.projectId,
+          replacement.trigger,
+          replacement.act,
+          replacement.obstacle,
+          replacement.estimateMinutes,
+          replacement.createdAt,
+          replacement.closedAt,
+        ),
+    ]);
   }
 
   async createEntry(entry: Entry): Promise<void> {
@@ -239,6 +268,34 @@ export class D1Store implements Store {
       .bind(...projectIds, occurredSince)
       .all<EntryRow>();
     return results.map(toEntry);
+  }
+
+  async countProgressSinceOpenNextActions(
+    projectIds: string[],
+  ): Promise<Array<{ projectId: string; count: number }>> {
+    if (projectIds.length === 0) return [];
+    const placeholders = projectIds.map(() => "?").join(", ");
+    const { results } = await this.#database
+      .prepare(
+        `SELECT next_actions.project_id,
+                COUNT(entries.id) AS progress_since_plan
+         FROM next_actions
+         LEFT JOIN entries
+           ON entries.project_id = next_actions.project_id
+          AND entries.owner_id = next_actions.owner_id
+          AND entries.kind = 'progress'
+          AND entries.occurred_at >= next_actions.created_at
+         WHERE next_actions.closed_at IS NULL
+           AND next_actions.project_id IN (${placeholders})
+         GROUP BY next_actions.project_id
+         ORDER BY next_actions.project_id`,
+      )
+      .bind(...projectIds)
+      .all<ProgressSincePlanRow>();
+    return results.map((row) => ({
+      projectId: row.project_id,
+      count: row.progress_since_plan,
+    }));
   }
 }
 

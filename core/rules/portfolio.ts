@@ -10,6 +10,7 @@ export interface PortfolioProject {
   area: Area;
   recentEntries: Entry[];
   nextAction: NextAction | null;
+  progressSincePlan: number;
 }
 
 export interface Portfolio {
@@ -34,17 +35,27 @@ export async function readPortfolio(
     clock.now().getTime() - RECENT_PROGRESS_DAYS * DAY_MILLISECONDS,
   ).toISOString();
   const areaIds = [...new Set(projects.map(({ areaId }) => areaId))];
-  const [entries, actions, areas] = await Promise.all([
+  const [entries, actions, areas, progressCounts] = await Promise.all([
     store.readRecentEntries(projectIds, occurredSince),
     store.readOpenNextActions(projectIds),
     store.readAreas(areaIds),
+    store.countProgressSinceOpenNextActions(projectIds),
   ]);
 
   const entriesByProject = groupEntries(entries);
   const actionsByProject = new Map(actions.map((action) => [action.projectId, action]));
   const areasById = new Map(areas.map((area) => [area.id, area]));
+  const progressByProject = new Map(
+    progressCounts.map(({ projectId, count }) => [projectId, count]),
+  );
   const assembled = projects.map((project) =>
-    assembleProject(project, entriesByProject, actionsByProject, areasById),
+    assembleProject(
+      project,
+      entriesByProject,
+      actionsByProject,
+      areasById,
+      progressByProject,
+    ),
   );
 
   const progress = assembled
@@ -77,6 +88,7 @@ function assembleProject(
   entriesByProject: Map<string, Entry[]>,
   actionsByProject: Map<string, NextAction>,
   areasById: Map<string, Area>,
+  progressByProject: Map<string, number>,
 ): PortfolioProject {
   const area = areasById.get(project.areaId);
   if (area === undefined) {
@@ -87,5 +99,6 @@ function assembleProject(
     area,
     recentEntries: entriesByProject.get(project.id) ?? [],
     nextAction: actionsByProject.get(project.id) ?? null,
+    progressSincePlan: progressByProject.get(project.id) ?? 0,
   };
 }

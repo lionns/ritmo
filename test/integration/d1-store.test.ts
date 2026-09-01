@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 
 import { D1Store } from "../../adapters/d1/store.ts";
 import { LOCAL_OWNER_ID } from "../../adapters/local-owner.ts";
-import type { Area, NextAction, Owner, Project } from "../../core/model/entities.ts";
+import type { Area, Entry, NextAction, Owner, Project } from "../../core/model/entities.ts";
 import { closeNextAction, createNextAction } from "../../core/rules/next-action.ts";
 import type { CreateEntryErrorResponse, CreateEntryResponse } from "../../contracts/entries.ts";
 import type { PortfolioResponse } from "../../contracts/portfolio.ts";
@@ -35,14 +35,38 @@ describe("D1Store with the next-action rule", () => {
       createNextAction(store, { ...action, id: "action-2" }),
     ).rejects.toThrow(action.id);
 
-    await closeNextAction(store, action.id, "2026-09-01T11:00:00.000Z");
-    await expect(
-      closeNextAction(store, action.id, "2026-09-01T11:00:00.500Z"),
-    ).rejects.toThrow(action.id);
     const replacement = { ...action, id: "action-2", createdAt: "2026-09-01T11:00:01.000Z" };
-    await createNextAction(store, replacement);
+    await closeNextAction(
+      store,
+      action.id,
+      "2026-09-01T11:00:00.000Z",
+      replacement,
+    );
+    await expect(
+      closeNextAction(
+        store,
+        action.id,
+        "2026-09-01T11:00:00.500Z",
+        { ...replacement, id: "action-3" },
+      ),
+    ).rejects.toThrow(action.id);
 
     expect((await store.getNextAction(action.id))?.closedAt).toBe("2026-09-01T11:00:00.000Z");
+    expect(await store.findOpenNextAction(project.id)).toEqual(replacement);
+
+    await store.createNextAction({
+      ...action,
+      id: "action-id-collision",
+      createdAt: "2026-08-31T10:00:00.000Z",
+      closedAt: "2026-08-31T10:30:00.000Z",
+    });
+    await expect(
+      closeNextAction(store, replacement.id, "2026-09-01T12:00:00.000Z", {
+        ...replacement,
+        id: "action-id-collision",
+        createdAt: "2026-09-01T12:00:01.000Z",
+      }),
+    ).rejects.toThrow();
     expect(await store.findOpenNextAction(project.id)).toEqual(replacement);
   });
 
@@ -69,13 +93,6 @@ describe("D1Store with the next-action rule", () => {
       id: "action-quiet",
       projectId: quietProject.id,
     });
-    await createNextAction(store, {
-      ...action,
-      id: "action-now-closed",
-      projectId: actionlessProject.id,
-    });
-    await closeNextAction(store, "action-now-closed", "2026-09-01T11:00:00.000Z");
-
     const createdResponse = await postEntry({
       projectId: project.id,
       what: "Stored without effort or note",
@@ -126,6 +143,50 @@ describe("D1Store with the next-action rule", () => {
       expect(rejected.error).toContain(projectId);
       expect(await entryCount()).toBe(countBeforeRejections);
     }
+  });
+
+  it("counts progress since an old open plan without widening recent entries", async () => {
+    const now = new Date();
+    const daysAgo = (days: number) =>
+      new Date(now.getTime() - days * 24 * 60 * 60 * 1_000).toISOString();
+    const oldProject: Project = { ...project, id: "project-old-plan", title: "Old plan" };
+    const oldAction: NextAction = {
+      ...action,
+      id: "action-old-plan",
+      projectId: oldProject.id,
+      createdAt: daysAgo(40),
+    };
+    const oldProgress: Entry = {
+      id: "entry-old-progress",
+      ownerId: owner.id,
+      kind: "progress",
+      projectId: oldProject.id,
+      creditsObjectiveId: null,
+      occurredAt: daysAgo(35),
+      what: "Progress after the plan opened",
+      effortMinutes: null,
+      note: null,
+    };
+    const reserveSpend: Entry = {
+      ...oldProgress,
+      id: "entry-old-reserve",
+      kind: "reserve_spend",
+      occurredAt: daysAgo(34),
+      what: "Reserve event after the plan opened",
+    };
+    await store.createProject(oldProject);
+    await createNextAction(store, oldAction);
+    await store.createEntry(oldProgress);
+    await store.createEntry(reserveSpend);
+
+    const response = await fetchWorker("/api/portfolio");
+    expect(response.status).toBe(200);
+    const portfolio = await response.json<PortfolioResponse>();
+    const result = portfolio.outstanding.find(({ id }) => id === oldProject.id);
+
+    expect(result?.recentEntries).toEqual([]);
+    expect(result?.nextAction?.createdAt).toBe(oldAction.createdAt);
+    expect(result?.progressSincePlan).toBe(1);
   });
 
   it("enforces foreign keys and one week per owner and start date", async () => {

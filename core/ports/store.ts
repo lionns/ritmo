@@ -1,5 +1,10 @@
 import type { Area, Entry, NextAction, Owner, Project } from "../model/entities.ts";
 
+export interface ProgressSincePlanCount {
+  projectId: string;
+  count: number;
+}
+
 export interface Store {
   createOwner(owner: Owner): Promise<void>;
   getOwner(id: string): Promise<Owner | null>;
@@ -13,7 +18,8 @@ export interface Store {
   getNextAction(id: string): Promise<NextAction | null>;
   findOpenNextAction(projectId: string): Promise<NextAction | null>;
   readOpenNextActions(projectIds: string[]): Promise<NextAction[]>;
-  closeNextAction(id: string, closedAt: string): Promise<boolean>;
+  replaceNextAction(id: string, closedAt: string, replacement: NextAction): Promise<void>;
   createEntry(entry: Entry): Promise<void>;
   readRecentEntries(projectIds: string[], occurredSince: string): Promise<Entry[]>;
+  countProgressSinceOpenNextActions(projectIds: string[]): Promise<ProgressSincePlanCount[]>;
 }

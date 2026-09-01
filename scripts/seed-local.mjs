@@ -35,6 +35,13 @@ const actions = [
     act: "Conectar la portada al contrato del portfolio",
     estimateMinutes: 35,
   },
+  {
+    id: seedId(11),
+    projectId: projects[1].id,
+    trigger: "Cuando termine el bloque de trabajo",
+    act: "Abrir la escena y probar una luz direccional",
+    estimateMinutes: 30,
+  },
 ];
 const entries = [
   [projects[0].id, 27, "Documenté el plan de corte", 30],
@@ -79,6 +86,13 @@ const statements = [
       `${sqlText(projectId)}, NULL, ${sqlText(occurredAt(daysAgo))}, ${sqlText(what)}, ` +
       `${effortMinutes ?? "NULL"}, NULL)`,
   ),
+  `SELECT projects.id AS project_id, COUNT(next_actions.id) AS open_next_actions
+   FROM projects
+   LEFT JOIN next_actions
+     ON next_actions.project_id = projects.id AND next_actions.closed_at IS NULL
+   WHERE projects.state = 'active'
+   GROUP BY projects.id
+   ORDER BY projects.id`,
 ];
 
 console.log("Seeding local D1 only.");
@@ -96,4 +110,4 @@ const result = spawnSync(
 );
 if (result.error !== undefined) throw result.error;
 if (result.status !== 0) process.exit(result.status ?? 1);
-console.log("Seed complete: 1 owner, 3 areas, 4 projects, 2 next actions, 10 entries.");
+console.log("Seed complete: 1 owner, 3 areas, 4 projects, 3 next actions, 10 entries.");

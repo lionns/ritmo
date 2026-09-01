@@ -145,7 +145,14 @@ describe("the first-loop page composition", () => {
     assert.equal(countProgressMarks(15), 4);
 
     const sentence = (trigger: string, act: string) =>
-      readAsSentence({ id: "na", trigger, act, obstacle: null, estimateMinutes: null });
+      readAsSentence({
+        id: "na",
+        trigger,
+        act,
+        obstacle: null,
+        estimateMinutes: null,
+        createdAt: "2026-09-01T12:00:00.000Z",
+      });
 
     // The act joins verbatim: no case transform, so a proper noun survives intact.
     assert.equal(sentence("Cuando X", "Notion queda ordenado"), "Cuando X, Notion queda ordenado.");

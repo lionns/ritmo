@@ -13,6 +13,7 @@ export interface PortfolioNextAction {
   act: string;
   obstacle: string | null;
   estimateMinutes: number | null;
+  createdAt: string;
 }
 
 export interface PortfolioProject {
@@ -24,6 +25,7 @@ export interface PortfolioProject {
   };
   recentEntries: PortfolioEntry[];
   nextAction: PortfolioNextAction | null;
+  progressSincePlan: number;
 }
 
 export interface PortfolioResponse {

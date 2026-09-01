@@ -21,17 +21,26 @@ describe("the open next-action rule", () => {
     const store = new MemoryStore();
     await store.createProject(project);
     await createNextAction(store, firstAction);
-    await closeNextAction(store, firstAction.id, "2026-09-01T12:00:00.000Z");
     const replacement = { ...firstAction, id: "action-2", createdAt: "2026-09-01T12:00:01.000Z" };
-
-    await createNextAction(store, replacement);
+    await closeNextAction(
+      store,
+      firstAction.id,
+      "2026-09-01T12:00:00.000Z",
+      replacement,
+    );
 
     assert.equal((await store.getNextAction(firstAction.id))?.closedAt, "2026-09-01T12:00:00.000Z");
     assert.deepEqual(await store.findOpenNextAction(project.id), replacement);
     await assert.rejects(
-      closeNextAction(store, firstAction.id, "2026-09-01T12:00:02.000Z"),
+      closeNextAction(
+        store,
+        firstAction.id,
+        "2026-09-01T12:00:02.000Z",
+        { ...replacement, id: "action-3" },
+      ),
       /action-1/,
     );
+    assert.deepEqual(await store.findOpenNextAction(project.id), replacement);
   });
 });
 
@@ -84,12 +93,14 @@ class MemoryStore implements Store {
       (value) => projectIds.includes(value.projectId) && value.closedAt === null,
     );
   }
-  async closeNextAction(id: string, closedAt: string) {
+  async replaceNextAction(id: string, closedAt: string, replacement: NextAction) {
     const value = this.actions.get(id);
-    if (value === undefined || value.closedAt !== null) return false;
+    if (value === undefined || value.closedAt !== null) throw new Error("not open");
+    if (this.actions.has(replacement.id)) throw new Error("duplicate action");
     this.actions.set(id, { ...value, closedAt });
-    return true;
+    this.actions.set(replacement.id, replacement);
   }
   async createEntry(_value: Entry) { throw new Error("not used"); }
   async readRecentEntries(_projectIds: string[], _occurredSince: string) { return []; }
+  async countProgressSinceOpenNextActions(_projectIds: string[]) { return []; }
 }

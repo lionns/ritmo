@@ -63,6 +63,7 @@ function toContractProject(value: CorePortfolioProject): PortfolioProject {
       effortMinutes: entry.effortMinutes,
       note: entry.note,
     })),
+    progressSincePlan: value.progressSincePlan,
     nextAction:
       value.nextAction === null
         ? null
@@ -72,6 +73,7 @@ function toContractProject(value: CorePortfolioProject): PortfolioProject {
             act: value.nextAction.act,
             obstacle: value.nextAction.obstacle,
             estimateMinutes: value.nextAction.estimateMinutes,
+            createdAt: value.nextAction.createdAt,
           },
   };
 }
