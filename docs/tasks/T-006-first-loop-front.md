@@ -1,7 +1,7 @@
 ---
 id: T-006
 title: The first loop, front half — the portfolio you open and the entry you write
-status: review
+status: doing
 profile: team
 harness: 0.8.1
 role: Frontend Implementer
@@ -89,8 +89,14 @@ implements: [US-3, NFR-1]
 - Baseline: clean `npm ci`; unit 9/9, isolation/typecheck/build, integration 3/3, lint clean.
 - Final: unit 23/23, isolation/typecheck/offline build, integration 3/3; live route probes green.
 - Decisions: owner-settled in `design-handoff.md` and the traces; no decision file.
-- Follow-up before `done`: owner rechecks the screens, settles `AC-5` and findings 2–3, and measures
-  `backdrop-filter` on a real phone.
+- Follow-up: **back to the Frontend Implementer, 2026-09-01, now that `T-007` is done.** One change
+  and its record: `ProjectCard.astro` reads `project.progressSincePlan` instead of
+  `recentEntries.length`, which is what stops the marks decaying; `design-handoff.md:161` still says
+  "per recent progress entry" and must say since the current plan opened; the cap of four and
+  everything else in § The Project Row stand. Update the coverage in `page-layout.test.ts` with it.
+  Touch no backend — `T-007` is closed and validated. Re-run all five gates afterwards, which this
+  task's Risks required once the contract changed. Then Reviewer, then the owner's three:
+  the visual recheck, the marks reading right, and `backdrop-filter` on a real phone.
 
 ## Review
 
@@ -114,25 +120,19 @@ implements: [US-3, NFR-1]
   at the mark cap, untimed, same day: no mark, no order, no bar (`UNTIMED_HEIGHT` is fixed) ·
   **closed**: owner restored the last movement as a `dim` line, and the probe that failed now passes
   (201, then the line changed). `AC-5` re-checked on that evidence.
-- Medium · `project-row.ts:6` · marks read the rolling 28-day window, so a path decays with time
-  alone — the score `NFR-7` forbids · owner settled the fix: count entries since the open next action
-  opened. **Blocked here**: needs `NextAction.createdAt` in the contract (it exists in
-  `data-model.md:153`, not in `PortfolioNextAction`) and a window wider than 28 days, so it is a
-  finding against `T-005`, not an edit here. `reserve_spend` counting as progress rides along.
+- Medium · `project-row.ts:6` · marks read the rolling 28-day window, so a path decays with time alone — the score `NFR-7` forbids · owner settled the fix and `T-007` built it: `progressSincePlan` counts entries since the open plan opened. Consuming it is the follow-up above.
 - Medium · proper nouns lowercased (`"Notion"` → `"notion"`) · **closed**: owner chose to join the
   act verbatim, so it fails benignly (a capital after a comma) instead of corrupting a name.
 - Self-inflicted, caught after landing in `aa17a7e`: rewriting § The Hero Chart deleted § The Project Row wholesale, and no gate covers prose. Restored from `HEAD~1` with this round's rules applied.
 - Fixed · doubled terminal punctuation, a leading `¿` defeating the lowercasing, a blank act rendering `"Cuando X, ."`, the weak unconditional-mark guard (now shape-based, mutation-tested).
-- The three Low, closed 2026-09-01: dead `::-webkit-scrollbar` block gone (the standard properties
-  already carry the handoff's thumb/track contract), `scrollbar-gutter` no longer offsets a panel
-  that does not scroll, and the chart legend is out of the figure entirely. A key of three bars was
-  built first and **rejected on sight by the owner** — right, and recommending it was the
-  implementer's error: a key sized for a `9px` line cannot teach the `9:12` difference honestly, and
+- The three Low, closed 2026-09-01: dead `::-webkit-scrollbar` block gone, `scrollbar-gutter` no
+  longer offsets a panel that does not scroll, and the chart legend left the figure entirely. A key
+  of three bars was built first and **rejected on sight by the owner** — right, and recommending it
+  was the implementer's error: a key sized for a `9px` line cannot teach the `9:12` difference, and
   a chart drawn at `0.30` as ground carries neither caption nor taxonomy. The four artboards settled
-  it: the header's right slot is a per-screen context label (`REGISTRO`, `DOMINGO · S34`, …) that
-  both pages were duplicating as a body eyebrow. `AppShell` owns the slot; key, figcaption and
-  eyebrows are gone. `AC-3`'s legend now sits in the header, still naming days and unit, each mark
-  keeping its `<title>`. Written into § The Hero Chart and § Navigation Map.
+  it: the header's right slot is a per-screen context label both pages duplicated as a body eyebrow.
+  `AppShell` owns it now; key, figcaption and eyebrows are gone, and `AC-3`'s legend sits there,
+  still naming days and unit, each mark keeping its `<title>`.
 - Assessment: validation not granted. `AC-5` unchecked, findings 1–3 are the owner's, and this review was written by the code's own author.
 
 ## Validation
