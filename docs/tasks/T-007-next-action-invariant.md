@@ -1,7 +1,7 @@
 ---
 id: T-007
 title: The next action made real — the invariant enforced, and the path it measures
-status: review
+status: doing
 profile: team
 harness: 0.8.1
 role: Backend Implementer
