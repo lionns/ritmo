@@ -9,7 +9,7 @@ interface Props {
 
 const { project, kind } = Astro.props;
 const latestEntry = project.recentEntries[0];
-const progressMarks = countProgressMarks(project.recentEntries.length);
+const progressMarks = countProgressMarks(project.progressSincePlan);
 const logHref = `/registrar?project=${encodeURIComponent(project.id)}`;
 const line = project.nextAction === null
   ? "Escribe la próxima acción cuando esté clara."

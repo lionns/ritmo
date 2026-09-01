@@ -117,6 +117,8 @@ describe("the first-loop page composition", () => {
     assert.match(card, /mark-open[^"]*size-\[11px\][^"]*rounded-full border-\[1\.5px\] border-faint[^"]*md:size-3/);
     assert.match(card, /mark-goal ml-\[5px\][^"]*size-2 rotate-45 bg-faint[^"]*md:size-\[9px\]/);
     assert.match(card, /class="project-marks flex items-center gap-2\.5"/);
+    assert.match(card, /countProgressMarks\(project\.progressSincePlan\)/);
+    assert.doesNotMatch(card, /countProgressMarks\(project\.recentEntries\.length\)/);
     // The next step is always drawn: an active project always carries one (data-model.md).
     // Guarded by shape, not by one spelling — any conditional around the mark fails this.
     const markLines = card.split("\n");

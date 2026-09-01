@@ -159,8 +159,9 @@ page `page-ux`) but never written down until now, so the first implementation co
   No area label, no field labels, no per-field rows. The artboards carry four fewer text blocks than
   a labelled form does, and that difference is the design.
 - **The markers, above the title.** A small path, left to right: one **filled `accent` circle per
-  recent progress entry**, then one **`faint` outlined circle** — the next step, always drawn — then
-  a **`faint` diamond** for the objective. A project with nothing logged opens at its empty circle.
+  progress entry logged since the current plan opened**, then one **`faint` outlined circle** — the
+  next step, always drawn — then a **`faint` diamond** for the objective. A project with nothing
+  logged against that plan opens at its empty circle.
   The outline is not conditional: `data-model.md` requires every active project to carry exactly one
   open next action, so the step always exists, and all three rows of the canvas draw it.
   | Mark | Geometry | Desktop | Mobile |

@@ -5,8 +5,8 @@ export const PROGRESS_MARK_CAP = 4;
 
 const TERMINAL_PUNCTUATION = /[.…?!]$/;
 
-export function countProgressMarks(recentEntryCount: number): number {
-  return Math.min(Math.max(recentEntryCount, 0), PROGRESS_MARK_CAP);
+export function countProgressMarks(progressSincePlan: number): number {
+  return Math.min(Math.max(progressSincePlan, 0), PROGRESS_MARK_CAP);
 }
 
 /**

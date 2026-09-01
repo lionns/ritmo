@@ -1,7 +1,7 @@
 ---
 id: T-006
 title: The first loop, front half — the portfolio you open and the entry you write
-status: doing
+status: review
 profile: team
 harness: 0.8.1
 role: Frontend Implementer
@@ -85,55 +85,53 @@ implements: [US-3, NFR-1]
 
 - Changes: responsive SSR portfolio, three-state SVG chart with a bar-shaped key, canvas-faithful
   project row, one-island entry form, `100dvh` stage with height-aware density, token-backed
-  utilities, both palettes, vendored Fontshare assets, chart/layout/row coverage. 27 files.
+  utilities, both palettes, vendored Fontshare assets, and plan-lifetime project marks. 27 files.
 - Baseline: clean `npm ci`; unit 9/9, isolation/typecheck/build, integration 3/3, lint clean.
-- Final: unit 23/23, isolation/typecheck/offline build, integration 3/3; live route probes green.
+- Final: clean `npm ci`; unit 25/25, isolation/typecheck/build, integration 4/4 and harness lint;
+  live API 3/3/0 plan counts rendered as 3/3/0 marks while recent entries stayed 5/5/0.
 - Decisions: owner-settled in `design-handoff.md` and the traces; no decision file.
-- Follow-up: **back to the Frontend Implementer, 2026-09-01, now that `T-007` is done.** One change
-  and its record: `ProjectCard.astro` reads `project.progressSincePlan` instead of
-  `recentEntries.length`, which is what stops the marks decaying; `design-handoff.md:161` still says
-  "per recent progress entry" and must say since the current plan opened; the cap of four and
-  everything else in § The Project Row stand. Update the coverage in `page-layout.test.ts` with it.
-  Touch no backend — `T-007` is closed and validated. Re-run all five gates afterwards, which this
-  task's Risks required once the contract changed. Then Reviewer, then the owner's three:
-  the visual recheck, the marks reading right, and `backdrop-filter` on a real phone.
+- Follow-up: independent Reviewer re-checks the T-007 consumption; owner then performs the visual
+  and marks-reading checks plus `backdrop-filter` measurement on a real phone. No browser backend
+  was connected for the implementer's responsive recheck; live HTTP composition was verified.
 
 ## Review
 
-- **2026-08-31 (settled).** Tailwind refactor and vendored fonts verified; regression checked on a
-  running server. Round 2 refused validation — the columns of `/` shared no vertical anchor and the
-  responsive table specified width only. Owner answered with the `100dvh` stage, denser dark glass,
-  chart opacity off the legend, and panel reading hierarchy.
-- **2026-09-01, owner rounds.** The owner recognised markers drawn in the approved canvas that the
-  screens never had — `design-handoff.md` had no project-row section, so no build from it could
-  have produced them, and the row had shipped as six blocks under four mono labels. It is now
-  marks, title, one sentence and the last movement, written into § The Project Row. Owner settled:
-  the marks are a path not a score, four is the cap, the row is the prefilled link, and the outline
-  is the next step drawn always — `data-model.md:233` holds, since without a task list the next
-  action is the only thing that says what to do, so `AC-2` is repair copy for invalid data. A
-  hierarchy regression was fixed the same day: the rewrite had cut the row's semantic gaps to 6px.
-- For the next-action task: `closeNextAction` closes without requiring a replacement, and `seed-local.mjs` seeds four projects with two next actions — both produce the state the invariant forbids.
-- **Reviewer, `/code-review high` on `351319f`, 2026-09-01.** All gates green, so every finding is
-  behavioral. **Independence: none** — `agent-config.md` puts Frontend Implementer on Codex and
-  Reviewer on Claude for work it did not write; Claude did both here, owner-accepted. Weigh it so.
-- Medium/High · `AC-5` · a written entry could leave `/` wholly unchanged — already first, already
-  at the mark cap, untimed, same day: no mark, no order, no bar (`UNTIMED_HEIGHT` is fixed) ·
-  **closed**: owner restored the last movement as a `dim` line, and the probe that failed now passes
-  (201, then the line changed). `AC-5` re-checked on that evidence.
-- Medium · `project-row.ts:6` · marks read the rolling 28-day window, so a path decays with time alone — the score `NFR-7` forbids · owner settled the fix and `T-007` built it: `progressSincePlan` counts entries since the open plan opened. Consuming it is the follow-up above.
-- Medium · proper nouns lowercased (`"Notion"` → `"notion"`) · **closed**: owner chose to join the
-  act verbatim, so it fails benignly (a capital after a comma) instead of corrupting a name.
-- Self-inflicted, caught after landing in `aa17a7e`: rewriting § The Hero Chart deleted § The Project Row wholesale, and no gate covers prose. Restored from `HEAD~1` with this round's rules applied.
-- Fixed · doubled terminal punctuation, a leading `¿` defeating the lowercasing, a blank act rendering `"Cuando X, ."`, the weak unconditional-mark guard (now shape-based, mutation-tested).
-- The three Low, closed 2026-09-01: dead `::-webkit-scrollbar` block gone, `scrollbar-gutter` no
-  longer offsets a panel that does not scroll, and the chart legend left the figure entirely. A key
-  of three bars was built first and **rejected on sight by the owner** — right, and recommending it
-  was the implementer's error: a key sized for a `9px` line cannot teach the `9:12` difference, and
-  a chart drawn at `0.30` as ground carries neither caption nor taxonomy. The four artboards settled
-  it: the header's right slot is a per-screen context label both pages duplicated as a body eyebrow.
-  `AppShell` owns it now; key, figcaption and eyebrows are gone, and `AC-3`'s legend sits there,
-  still naming days and unit, each mark keeping its `<title>`.
-- Assessment: validation not granted. `AC-5` unchecked, findings 1–3 are the owner's, and this review was written by the code's own author.
+- **Rounds 1–3 (settled, full text in `git log`).** Tailwind refactor and vendored fonts verified;
+  validation refused twice on owner-screen findings, answered with the `100dvh` stage, denser glass
+  and panel reading hierarchy. Then the project row: markers the canvas drew and no document
+  recorded, rebuilt as marks, title, sentence and last movement, with § The Project Row written.
+  Owner settled the path-not-score reading, the cap of four, the prefilled row, the always-drawn
+  next step, the verbatim act, and the legend's removal. Nine findings raised and closed, `AC-5`
+  unchecked and re-earned with a probe. Those reviews were written by the code's own author.
+- **Round 4, `/code-review high`, 2026-09-01 — the `T-007` consumption.** Independent: Codex wrote
+  it, Claude reviewed. **The change itself is right and proven live** — the API reports
+  `progressSincePlan` 3/3/0 where `recentEntries` is 5/5/0, and the page draws 3/3/0 marks. The
+  decay is gone structurally, not just by test: the count compares against a fixed `createdAt`, so
+  no moving boundary remains. Handoff, cap and coverage moved with it. Gates re-run: 25/25, 4/4.
+- Medium · `PageStage.astro:15` + `HeroChart.astro:43,68` · the three-state legend was deleted on a
+  rationale **I wrote into § The Hero Chart** — "the exact state of one day is in that mark's
+  `<title>`, on hover and for assistive technology" · neither path works: `pointer-events-none` on
+  the chart wrapper kills hover, and `role="img"` makes the SVG's children presentational, so the
+  titles reach no screen reader either · the spec now states something false, and the per-day state
+  reaches nobody. Correct the rationale, make the titles reachable, or reconsider the legend —
+  owner's, since the legend is a decision already taken once.
+- Medium, reasoned not observed · `PortfolioPanel.astro:14` · `xl:max-h-full` may never cap the
+  panel: it is a grid item on an implicit `auto` row, which grows to content, so `max-height:100%`
+  resolves against the grown area and the fallback scroll the handoff promises would never engage —
+  the cards would spill over the chart instead · I cannot confirm layout behavior without a browser,
+  and the seed's three projects never reach it. Fold into the owner's visual check with ~6 projects.
+- Low · `project-row.ts:19` · a whitespace-only `trigger` renders `", Hacer X."`, opening on a bare
+  comma, and the opener strip omits `…?!` so `"¿Cuándo vuelvo?"` yields `"¿Cuándo vuelvo?, hacer X."`
+  · reproduced both · `act` is guarded and `trigger` is not; no rule validates either.
+- Routing, not defects · `next-action.ts:59` compares timestamps lexicographically, so
+  `13:00+02:00` passes as later than `12:00Z` when it is an hour earlier (reproduced) — `T-007`'s
+  code, closed and validated, and I missed it in that review · nothing enforces the invariant at
+  *creation*: there is no project rule at all, so a project can be born without a plan, which is the
+  state `AC-2`'s copy repairs · `reserve_spend` still splits one way and counts another.
+- Rejected · the seed's verification `SELECT` is not debug residue: `T-007`'s acceptance criterion
+  asks for it in those words — "checkable by a query the seed prints or a test asserts".
+- Assessment: changes requested, none of them in this round's change. The Medium on the chart
+  titles is the one that matters, because a specification now asserts something untrue.
 
 ## Validation
 
