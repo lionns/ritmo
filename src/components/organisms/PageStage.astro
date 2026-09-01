@@ -1,0 +1,35 @@
+---
+interface Props {
+  chartVeiled?: boolean;
+}
+
+const { chartVeiled = false } = Astro.props;
+---
+
+<div class="page-stage flex min-h-0 flex-1 flex-col">
+  <main class="grid min-h-0 flex-1 items-center gap-[46px] xl:grid-cols-[minmax(0,1fr)_clamp(400px,32vw,480px)] xl:gap-16">
+    <slot />
+  </main>
+  <div
+    class:list={[
+      "pointer-events-none relative left-1/2 mt-[var(--stage-chart-gap)] w-screen shrink-0 -translate-x-1/2",
+      chartVeiled ? "[--stage-chart-opacity:0.06]" : "[--stage-chart-opacity:0.3]",
+    ]}
+  >
+    <slot name="chart" />
+  </div>
+</div>
+
+<style>
+  .page-stage {
+    --stage-chart-gap: 48px;
+    --stage-chart-height: clamp(144px, min(18vw, 22dvh), 240px);
+  }
+
+  @media (min-width: 75rem) {
+    .page-stage {
+      --stage-chart-gap: clamp(12px, 2dvh, 32px);
+      --stage-chart-height: clamp(96px, 12dvh, 180px);
+    }
+  }
+</style>

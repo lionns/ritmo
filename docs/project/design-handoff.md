@@ -39,7 +39,7 @@ below are the ones running in the approved canvas.
 | `hair` | `rgba(237,233,223,0.10)` | `rgba(18,17,16,0.14)` | Row dividers inside glass. |
 | `accent` | `#00E0FF` | `#00707F` | The single accent. Light is **not** the same cyan — see below. |
 | `accent-ink` | `#07090A` | `#FFFFFF` | Text on an accent fill. |
-| `glass` | `rgba(12,18,20,0.42)` | `rgba(255,255,255,0.55)` | Panel fill behind `backdrop-filter`. |
+| `glass` | `rgba(5,9,10,0.64)` | `rgba(255,255,255,0.55)` | Panel fill behind `backdrop-filter`. Dark corrected against a real screen on 2026-08-31. |
 | `glass-border` | `rgba(237,233,223,0.10)` | `rgba(18,17,16,0.10)` | 1px panel edge. |
 | `glow` | `0,224,255` | `0,112,127` | RGB triplet for the ground gradient. |
 | `sleep` | `#7E7565` | `#8A7E68` | Dormant projects. Warm, not grey — a paused project is not a dead one. |
@@ -138,7 +138,52 @@ The bars behind every screen are data, not texture. **Settled with the owner on 
   chart would lie about exactly the thing the product exists to protect.
 - **Always labelled.** `28 DIAS · ALTURA = MINUTOS REGISTRADOS` / `14 DIAS · MINUTOS`, in the mono
   label style. An unlabelled height is not a datum.
-- **Opacity 0.30** on landing surfaces.
+- **Opacity 0.30 applies to marks, never labels.** The legend remains full-opacity `dim`, at 9px
+  mobile / 10px desktop; settled after owner readability testing on 2026-08-31.
+
+## The Project Row
+
+Every project inside the glass panel. Drawn in the approved canvas (`L-Escritorio` and `L-Movil`,
+page `page-ux`) but never written down until now, so the first implementation could not build it.
+**Settled with the owner on 2026-09-01**, reading the artboards back.
+
+- **Three elements, in this order:** the marker row, the project title, one sentence. Nothing else.
+  No area label, no field labels, no per-field rows. The artboards carry four fewer text blocks than
+  a labelled form does, and that difference is the design.
+- **The markers, above the title.** A small path, left to right: one **filled `accent` circle per
+  recent progress entry**, then one **`faint` outlined circle** — the next step, always drawn — then
+  a **`faint` diamond** for the objective. A project with nothing logged opens at its empty circle.
+  The outline is not conditional: `data-model.md` requires every active project to carry exactly one
+  open next action, so the step always exists, and all three rows of the canvas draw it.
+  | Mark | Geometry | Desktop | Mobile |
+  |---|---|---|---|
+  | Progress | circle, filled `accent` | 12px | 11px |
+  | Open next action | circle, `1.5px` border in `faint`, no fill | 12px | 11px |
+  | Objective | square rotated `45deg`, filled `faint`, `margin-left: 5px` | 9px | 8px |
+  Row is `flex`, `align-items: center`, `gap: 10px`.
+- **Filled circles cap at four.** Owner's number, not the canvas's — the artboards only ever draw
+  two. Four is the 28-day window read as weeks, and it holds the row near 65px inside a 400–480px
+  panel. Past four the row stops growing.
+- **The markers are a path, not a score.** They carry no number, no streak and no target, and a
+  missed period removes nothing that was there (`NFR-7`, `AC-X4`). If a count is ever rendered
+  beside them, that rule is the one it breaks.
+- **The sentence is the next action, read as language.** `trigger` and `act` join into one line in
+  `dim`: the trigger already carries its own *Cuando* / *Si* / *El sábado*, so the rendering joins
+  them with a comma, lowercases the first letter of `act` unless that word is capitalised in its own
+  right, and closes with a period. `Cuando pase el despliegue de la mañana, verifico la réplica.`
+  A project with no open next action shows the prompt to write one instead, also in `dim`.
+- **The marks are `aria-hidden`.** Everything they encode is already in text on the same screen:
+  the section heading says whether the project moved, and the sentence says whether a next action is
+  open. Only the count of advances is theirs alone, and `NFR-7` does not want that spoken any more
+  than it wants it drawn. Shape already carries the states for anyone reading them (§ Accessibility
+  Notes, "Progress dots pair fill with an outline shape").
+- **Spacing.** `14px` above and below the row on mobile, `16px` on desktop, a `hair` rule between
+  rows, and **`8px` between the marks, the title and the sentence**. Those three 8px gaps are the
+  hierarchy of the row; compact height mode takes its space from the outer padding (down to `12px`)
+  and never from them.
+- **The whole row is the link** to `/registrar?project=<id>`, which is what preserves the prefilled
+  project without spending a visible element on it (`NFR-1`). The canvas draws a single accent
+  button in the headline column; a second call to action per card was never in it.
 
 ## Navigation Map
 
@@ -183,9 +228,24 @@ Mobile-first; desktop is where the owner actually spends the day, so both are de
 |---|---|
 | **390px** (base) | Single column. Full-bleed hero. Full-width CTA pinned low. 14-day chart. |
 | **≥ 768px** | Single column, wider gutters, chart to 28 days. |
-| **≥ 1200px** | Two columns, `minmax(0,1fr) 400px`, 64px gap. Headline left, glass panel right. |
+| **≥ 1200px** | Two columns, `minmax(0,1fr)` plus a fluid 400–480px glass, 64px gap. Headline left, glass panel right. |
 
 Artboards are drawn at 390×844 and 1440×900.
+
+**Height and content reflow, settled with the owner on 2026-08-31.** The main grid takes available
+height and centres both columns on one vertical axis, but the hero chart owns a full-width row after
+the grid instead of staying fixed to the viewport. Desktop is a `100dvh` stage: page padding, header
+gap, footer gap and chart height contract fluidly with viewport height, and viewports up to 1200px
+tall use compact card spacing while preserving type sizes and 56px targets. The normal three-project
+portfolio should fit without scrolling. The glass is capped to the remaining grid row and scrolls
+internally only as a fallback for exceptional content. Mobile keeps one document flow, avoiding a
+scroll surface inside a narrow screen.
+
+When fallback scrolling appears, its track stays transparent and its thin `dim` thumb belongs to
+the glass surface; it never uses accent. **Density may remove empty space, not reading structure**:
+compact height mode contracts the outer padding of a row and the gaps between blocks, never the gaps
+*inside* a row, and never a type size or a 56px target. The 12px figure this paragraph carried until
+2026-09-01 described the retired six-block card; § The Project Row now sets the row's own numbers.
 
 ## Interaction States
 

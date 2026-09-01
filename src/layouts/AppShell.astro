@@ -29,18 +29,18 @@ const { title, description } = Astro.props;
     <title>{title}</title>
   </head>
   <body class="m-0 min-h-screen min-h-dvh overflow-x-hidden bg-bg font-sans text-ink selection:bg-accent selection:text-accent-ink">
-    <div class="relative isolate min-h-screen min-h-dvh px-5 pt-8 pb-6 md:px-16 md:py-11">
+    <div class="relative isolate min-h-screen min-h-dvh px-5 pt-8 pb-6 md:px-16 md:py-11 xl:h-dvh xl:min-h-0 xl:py-[clamp(24px,4dvh,44px)]">
       <div
         class="pointer-events-none fixed -z-30 h-[76vh] blur-[86px] [background:radial-gradient(ellipse_at_50%_50%,rgba(var(--page-glow),0.5)_0%,rgba(var(--page-glow),0.12)_36%,transparent_72%)] -inset-x-[15vw] -bottom-[34vh]"
         aria-hidden="true"
       ></div>
       <Grain />
-      <div class="relative z-[2] mx-auto flex min-h-[calc(100dvh-56px)] w-[min(100%,1312px)] flex-col md:min-h-[calc(100dvh-88px)]">
-        <header class="mb-11 flex items-center justify-between md:mb-16">
+      <div class="relative z-[2] mx-auto flex min-h-[calc(100dvh-56px)] w-[min(100%,1312px)] flex-col md:min-h-[calc(100dvh-88px)] xl:h-full xl:min-h-0">
+        <header class="mb-11 flex items-center justify-between md:mb-16 xl:mb-[clamp(24px,4dvh,64px)] xl:shrink-0">
           <Wordmark />
         </header>
         <slot />
-        <footer class="mt-auto flex items-center justify-between gap-3 pt-[34px]">
+        <footer class="mt-auto flex items-center justify-between gap-3 pt-[34px] xl:shrink-0 xl:pt-[clamp(12px,2dvh,34px)]">
           <p class="m-0 font-mono text-[8px] leading-[1.4] font-normal tracking-[0.22em] text-dim uppercase md:text-[9px]">
             Un registro que acompaña
           </p>

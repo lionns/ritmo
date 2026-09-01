@@ -10,20 +10,23 @@ interface Props {
 const { progress, outstanding } = Astro.props;
 ---
 
-<section class="glass-panel p-[22px] md:px-7 md:py-6" aria-labelledby="portfolio-heading">
+<section
+  class="portfolio-panel glass-panel p-[22px] md:px-7 md:py-6 xl:max-h-full xl:overflow-y-auto xl:overscroll-contain xl:[scrollbar-gutter:stable]"
+  aria-labelledby="portfolio-heading"
+>
   <h2 id="portfolio-heading" class="m-0 font-mono text-[8px] leading-[1.4] font-normal tracking-[0.22em] text-dim uppercase md:text-[9px]">En movimiento</h2>
   {
     progress.length === 0 ? (
       <p class="mt-5 mb-1 text-sm leading-normal text-dim">Aún no hay nada aquí. Escribe la primera línea.</p>
     ) : (
-      <div class="mt-1.5">
+      <div class="portfolio-progress mt-1.5">
         {progress.map((project) => <ProjectCard project={project} kind="progress" />)}
       </div>
     )
   }
   {
     outstanding.length > 0 && (
-      <section class="mt-[34px] border-t border-hair pt-6" aria-labelledby="outstanding-heading">
+      <section class="portfolio-outstanding mt-[34px] border-t border-hair pt-6" aria-labelledby="outstanding-heading">
         <h2 id="outstanding-heading" class="m-0 font-mono text-[8px] leading-[1.4] font-normal tracking-[0.22em] text-dim uppercase md:text-[9px]">Para cuando vuelvas</h2>
         <div class="mt-1.5">
           {outstanding.map((project) => <ProjectCard project={project} kind="outstanding" />)}
@@ -32,3 +35,47 @@ const { progress, outstanding } = Astro.props;
     )
   }
 </section>
+
+<style>
+  @media (min-width: 75rem) {
+    .portfolio-panel {
+      scrollbar-color: color-mix(in srgb, var(--page-dim) 72%, transparent) transparent;
+      scrollbar-width: thin;
+    }
+
+    .portfolio-panel::-webkit-scrollbar {
+      width: 12px;
+    }
+
+    .portfolio-panel::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .portfolio-panel::-webkit-scrollbar-thumb {
+      background: color-mix(in srgb, var(--page-dim) 72%, transparent);
+      background-clip: padding-box;
+      border: 4px solid transparent;
+      border-radius: 999px;
+    }
+
+    .portfolio-panel::-webkit-scrollbar-thumb:hover {
+      background: color-mix(in srgb, var(--page-dim) 92%, transparent);
+      background-clip: padding-box;
+    }
+  }
+
+  @media (min-width: 75rem) and (max-height: 75rem) {
+    .portfolio-panel {
+      padding-block: 16px;
+    }
+
+    .portfolio-progress {
+      margin-top: 2px;
+    }
+
+    .portfolio-outstanding {
+      margin-top: 16px;
+      padding-top: 16px;
+    }
+  }
+</style>

@@ -38,7 +38,7 @@ function accessibleLabel(day: ChartDay): string {
   style={`--rise-duration:${CHART_RISE_DURATION_MS}ms;--rise-stagger:${CHART_STAGGER_MS}ms`}
 >
   <svg
-    class="hidden h-[clamp(168px,24vw,300px)] w-full overflow-visible md:block"
+    class="hidden h-[var(--stage-chart-height,clamp(144px,min(18vw,22dvh),240px))] w-full overflow-visible opacity-[var(--stage-chart-opacity,0.3)] md:block"
     viewBox="0 0 560 136"
     role="img"
     aria-label="Actividad de los últimos 28 días; la altura representa minutos registrados"
@@ -63,7 +63,7 @@ function accessibleLabel(day: ChartDay): string {
     ))}
   </svg>
   <svg
-    class="block h-[clamp(168px,24vw,300px)] w-full overflow-visible md:hidden"
+    class="block h-[var(--stage-chart-height,clamp(144px,min(18vw,22dvh),240px))] w-full overflow-visible opacity-[var(--stage-chart-opacity,0.3)] md:hidden"
     viewBox="0 0 280 136"
     role="img"
     aria-label="Actividad de los últimos 14 días; la altura representa minutos registrados"
@@ -87,7 +87,7 @@ function accessibleLabel(day: ChartDay): string {
       </g>
     ))}
   </svg>
-  <figcaption class="flex min-h-7 flex-wrap items-center gap-x-3.5 gap-y-[9px] px-5 font-mono text-[8px] leading-[1.5] tracking-[0.16em] text-faint-text uppercase md:px-16 md:text-[9px]">
+  <figcaption class="flex min-h-7 flex-wrap items-center gap-x-3.5 gap-y-[9px] px-5 font-mono text-[9px] leading-[1.5] tracking-[0.16em] text-dim uppercase md:px-16 md:text-[10px]">
     <span class="hidden md:block">28 días · altura = minutos registrados</span>
     <span class="md:hidden">14 días · minutos</span>
     <span class="inline-flex items-center gap-[5px]"><i class="inline-block size-2 rounded-full border border-current bg-transparent"></i>Nada</span>

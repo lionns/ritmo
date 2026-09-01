@@ -31,8 +31,8 @@
   --page-hair: rgba(237, 233, 223, 0.1);
   --page-accent: #00e0ff;
   --page-accent-ink: #07090a;
-  --page-glass: rgba(12, 18, 20, 0.42);
-  --page-glass-fallback: rgba(12, 18, 20, 0.92);
+  --page-glass: rgba(5, 9, 10, 0.64);
+  --page-glass-fallback: rgba(5, 9, 10, 0.94);
   --page-glass-border: rgba(237, 233, 223, 0.1);
   --page-glow: 0, 224, 255;
   --grain-blend: screen;

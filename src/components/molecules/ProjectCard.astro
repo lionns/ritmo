@@ -1,5 +1,6 @@
 ---
 import type { PortfolioProject } from "../../../contracts/portfolio.ts";
+import { countProgressMarks, readAsSentence } from "../../lib/project-row.ts";
 
 interface Props {
   project: PortfolioProject;
@@ -7,35 +8,39 @@ interface Props {
 }
 
 const { project, kind } = Astro.props;
-const latestEntry = project.recentEntries[0];
+const progressMarks = countProgressMarks(project.recentEntries.length);
 const logHref = `/registrar?project=${encodeURIComponent(project.id)}`;
+const line = project.nextAction === null
+  ? "Escribe la próxima acción cuando esté clara."
+  : readAsSentence(project.nextAction);
 ---
 
-<article class="border-b border-hair pt-5 pb-3.5 last:border-b-0 md:pt-[22px] md:pb-4" data-project-kind={kind}>
-  <div class="flex flex-col gap-2">
-    <p class="m-0 font-mono text-[8px] leading-[1.4] font-normal tracking-[0.22em] text-dim uppercase">{project.area.name}</p>
-    <h3 class="m-0 text-lg leading-[1.15] font-semibold tracking-[-0.02em] md:text-xl">{project.title}</h3>
-  </div>
-  {
-    latestEntry && (
-      <p class="mt-3.5 text-sm leading-[1.45] text-dim md:text-[15px]">
-        <span class="mb-1 block font-mono text-[8px] tracking-[0.18em] text-faint-text uppercase">Último movimiento</span>
-        {latestEntry.what}
-      </p>
-    )
+<a
+  class="project-card block min-h-[58px] border-b border-hair pt-3.5 pb-3.5 no-underline last:border-b-0 hover:[&_.project-line]:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent md:min-h-14 md:pt-4 md:pb-4"
+  href={logHref}
+  data-project-kind={kind}
+>
+  <span class="project-marks flex items-center gap-2.5" aria-hidden="true">
+    {
+      Array.from({ length: progressMarks }, (_unused, index) => (
+        <span class="mark-progress block size-[11px] rounded-full bg-accent md:size-3" data-mark-index={index} />
+      ))
+    }
+    <span class="mark-open block size-[11px] rounded-full border-[1.5px] border-faint md:size-3" />
+    <span class="mark-goal ml-[5px] block size-2 rotate-45 bg-faint md:size-[9px]" />
+  </span>
+  <h3 class="project-title mt-2 mb-0 text-[17px] leading-[1.15] font-semibold tracking-[-0.02em] text-ink md:text-xl">{project.title}</h3>
+  <span class="project-line mt-2 block min-h-[26px] text-sm leading-[1.45] text-dim transition-colors duration-[120ms] motion-reduce:transition-none md:text-[15px]">{line}</span>
+</a>
+
+<style>
+  /* design-handoff.md § Responsive Behavior: density may remove empty space, not reading
+     structure. Only the outer padding contracts — the 8px between the marks, the title and the
+     sentence is the row's hierarchy and is never touched. */
+  @media (min-width: 75rem) and (max-height: 75rem) {
+    .project-card {
+      padding-top: 12px;
+      padding-bottom: 12px;
+    }
   }
-  {
-    project.nextAction === null ? (
-      <p class="mt-3.5 text-sm leading-[1.45] text-dim md:text-[15px]">Escribe la próxima acción cuando esté clara.</p>
-    ) : (
-      <div class="mt-3.5 text-sm leading-[1.45] text-ink md:text-[15px]">
-        <p class="mb-2"><span class="mb-1 block font-mono text-[8px] tracking-[0.18em] text-faint-text uppercase">Cuando</span>{project.nextAction.trigger}</p>
-        <p class="mb-2"><span class="mb-1 block font-mono text-[8px] tracking-[0.18em] text-faint-text uppercase">Entonces</span>{project.nextAction.act}</p>
-      </div>
-    )
-  }
-  <a
-    class="mt-1 inline-flex min-h-[58px] w-fit items-center text-sm font-medium text-dim underline-offset-[5px] transition-colors duration-[120ms] hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent motion-reduce:transition-none md:min-h-14"
-    href={logHref}>Registrar avance</a
-  >
-</article>
+</style>
