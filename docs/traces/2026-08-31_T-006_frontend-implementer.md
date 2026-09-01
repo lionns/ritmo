@@ -17,8 +17,9 @@
   - decisions: owner settled marker meaning (a path, not a score), the cap of four filled marks,
     and the whole row as the prefilled link replacing the per-card call to action
   - checks: unit 22/22, isolation, typecheck, build, integration 3/3
-  - probes: seeded `/` drew `●●●●○◇` capped down from more entries, `●●●●◇` with no open action,
-    `○◇` outstanding; prefill selected the right project; POST returned 201 and moved the project
-    to the top of `En movimiento` with a new filled mark
+  - probes: seeded `/` drew `●●●●○◇` capped down from more entries and `●○◇` on one advance;
+    prefill selected the right project; POST returned 201 and moved the project to the top of
+    `En movimiento` with a new filled mark. (The `●●●●◇` reading recorded earlier in this block
+    predated the owner making the next-step mark unconditional; corrected 2026-09-01.)
   - blocker: the entry's *text* no longer renders on `/`, so `AC-5` needs the owner's reading;
     owner visual recheck and the real-phone `backdrop-filter` measurement still stand

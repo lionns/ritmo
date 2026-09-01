@@ -100,8 +100,13 @@ describe("the first-loop page composition", () => {
     assert.match(card, /mark-goal ml-\[5px\][^"]*size-2 rotate-45 bg-faint[^"]*md:size-\[9px\]/);
     assert.match(card, /class="project-marks flex items-center gap-2\.5"/);
     // The next step is always drawn: an active project always carries one (data-model.md).
-    assert.doesNotMatch(card, /nextAction !== null && <span class="mark-open/);
-    assert.match(card, /\n\s*<span class="mark-open/);
+    // Guarded by shape, not by one spelling — any conditional around the mark fails this.
+    const markLines = card.split("\n");
+    const openAt = markLines.findIndex((l) => l.includes("mark-open"));
+    assert.notEqual(openAt, -1, "the row needs the next-step mark");
+    assert.equal(markLines.filter((l) => l.includes("mark-open")).length, 1);
+    assert.doesNotMatch(markLines[openAt], /&&|\?|nextAction|map\(/);
+    assert.doesNotMatch(markLines[openAt - 1].trim(), /(&&|\?|=>|\{)$/);
     // Three elements only: no area label, no field labels, no second call to action.
     assert.doesNotMatch(card, /Último movimiento|>Cuando<|>Entonces<|project\.area/);
     assert.doesNotMatch(card, /Registrar avance/);
@@ -127,16 +132,15 @@ describe("the first-loop page composition", () => {
       }),
       "Cuando pase el despliegue de la mañana, verificar la réplica y guardar el resultado.",
     );
+    const sentence = (trigger: string, act: string) =>
+      readAsSentence({ id: "na", trigger, act, obstacle: null, estimateMinutes: null });
+
     // A word capitalised in its own right keeps its capitals.
-    assert.equal(
-      readAsSentence({
-        id: "na-2",
-        trigger: "Si tengo la lista de invitados,",
-        act: "RSVP montado antes del viernes.",
-        obstacle: null,
-        estimateMinutes: null,
-      }),
-      "Si tengo la lista de invitados, RSVP montado antes del viernes.",
-    );
+    assert.equal(sentence("Si tengo la lista,", "RSVP montado."), "Si tengo la lista, RSVP montado.");
+    // Terminal punctuation is not doubled, and "¿" does not defeat the lowercasing.
+    assert.equal(sentence("Cuando X", "¿Confirmar con Ana?"), "Cuando X, ¿confirmar con Ana?");
+    assert.equal(sentence("Cuando X", "Esperar…"), "Cuando X, esperar…");
+    // An act that is only whitespace must not render a bare comma and period.
+    assert.equal(sentence("Cuando X", "   "), "Cuando X.");
   });
 });

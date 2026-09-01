@@ -47,7 +47,7 @@ implements: [US-3, NFR-1]
 - [x] The hero chart renders the three states of `design-handoff.md` — nothing logged, logged
       without minutes, logged with minutes — and carries its legend naming days and unit.
 - [x] 28 marks at desktop widths and 14 below 768px.
-- [x] WHEN an entry is written from `/registrar`, THE SYSTEM SHALL persist it through `/api/entries`
+- [ ] WHEN an entry is written from `/registrar`, THE SYSTEM SHALL persist it through `/api/entries`
       and the next render of `/` SHALL show it.
 - [x] Every interactive target is at least 56px tall on desktop and 58px on mobile, and no
       decorative element extends past a hit area.
@@ -84,55 +84,58 @@ implements: [US-3, NFR-1]
 ## Outcome
 
 - Changes: responsive SSR portfolio, three-state SVG chart, canvas-faithful project row, one-island
-  entry form, shared shell and `100dvh` desktop stage with height-aware density, token-backed
-  Tailwind utilities, exact light/dark palettes, vendored Fontshare assets and chart/layout/row coverage.
-- Files: 27 frontend, font, build-config, test, design-handoff, generated-status and task-record files.
-- Baseline result: clean `npm ci`; unit 9/9, isolation/typecheck/build, integration 3/3, lint clean.
-- Final result: unit 22/22, isolation/typecheck/offline build, integration 3/3; live routes,
-  vendored Fontshare assets, marker/prefill and POST-then-render probes green.
-- Decisions recorded: owner-settled viewport-height behavior in `design-handoff.md` and the
-  implementer trace; no decision file.
-- Follow-up: owner rechecks the screens, settles the `AC-5` reading below, and measures
-  `backdrop-filter` on a real phone; the three remain before `done`.
+  entry form, `100dvh` desktop stage with height-aware density, token-backed Tailwind utilities,
+  both palettes, vendored Fontshare assets, chart/layout/row coverage. 27 files.
+- Baseline: clean `npm ci`; unit 9/9, isolation/typecheck/build, integration 3/3, lint clean.
+- Final: unit 22/22, isolation/typecheck/offline build, integration 3/3; live routes, marker/prefill
+  and POST-then-render probes green.
+- Decisions: owner-settled in `design-handoff.md` and the traces; no decision file.
+- Follow-up before `done`: owner rechecks the screens, settles `AC-5` and the two Medium findings
+  below, and measures `backdrop-filter` on a real phone.
 
 ## Review
 
-- **Rounds 1–2, reviewer (compressed).** Tailwind refactor verified — all ten `@theme` tokens
-  consumed, `global.css` down to 90 lines; fonts vendored and the build makes no network call;
-  regression checked on a running server: both pages 200, 28/14 chart marks with legends, `AC-G1`
-  order intact, motion 388ms, targets 58/56px, no red, both palettes exact, POST-then-render green.
-  Only Low left standing: the real-phone `backdrop-filter` measurement, which is the owner's.
-- **Round 2 — validation refused, 2026-08-31 (compressed).** Two findings off the owner's screen:
-  the columns of `/` shared no vertical anchor, so composition was a function of window height; and
-  the responsive table specified width only, with every depth layer bottom-anchored. Both needed
-  the owner, not the reviewer. Martian Mono from Google Fonts was withdrawn on check — the handoff
-  specifies it. Owner answered with a bounded `100dvh` stage, fluid gaps, chart and cards, panel
-  scroll as exception only; then corrected dark glass to `rgba(5,9,10,0.64)`, moved chart opacity
-  off the legend, and restored panel reading hierarchy with a non-accent fallback scrollbar.
-- **Project row, owner 2026-09-01.** The owner recognised markers drawn in the approved canvas
-  (`L-Escritorio`/`L-Movil`) that the screens never had — because `design-handoff.md` had no
-  project-row section at all, so no build from it could have produced them, and the row had shipped
-  as six blocks under four mono field labels. The handoff now carries § The Project Row; the row is
-  marks, title and one sentence. Owner settled the markers as a path rather than a score, the cap of
-  four filled marks, and the whole row as the prefilled link.
-- **Hierarchy fix, same day.** Owner approved the design except this row, on air. Cause was this
-  round's own regression: the rewrite cut the row's semantic gaps to 6px, which § Responsive
-  Behavior forbids, and it applied on every laptop since the compact query is
-  `(min-width:1200px) and (max-height:1200px)` and 1440×900 satisfies both. The three 8px gaps are
-  now untouchable, density comes out of outer padding, row padding matches the artboard, and the
-  invented accent hover is gone. The handoff's stale "12px between semantic groups" is corrected.
-- **The next step is always drawn, owner 2026-09-01.** Owner settled the contradiction between
-  `data-model.md:233` and this task's `AC-2`: the invariant holds — an active project must carry an
-  open next action, because without a task list it is the only thing saying what to do. So the
-  outline circle is not conditional, which is also how all three rows of the canvas draw it; the
-  inference that it tracked `nextAction !== null` was the implementer's, not the design's. Row now
-  renders it unconditionally, and `AC-2` stops describing a normal state: it is the repair copy for
-  data that violates the invariant. Behavior kept, criterion left checked under that reading.
-- Two consequences outside this task's scope, for the next-action task to carry: `closeNextAction`
-  (`core/rules/next-action.ts`) closes without requiring a replacement, so the core can still produce
-  the forbidden state; and `scripts/seed-local.mjs` seeds four projects with two next actions, which
-  the invariant forbids. Neither is a silent edit here — `Assumptions` says a needed change to
-  `T-005` is a finding against it.
+- **2026-08-31, rounds 1–2 (settled).** Tailwind refactor and vendored fonts verified; regression
+  checked on a running server (both pages 200, 28/14 marks, `AC-G1` order, 388ms, 58/56px targets,
+  both palettes, POST-then-render). Round 2 refused validation on two owner-screen findings — the
+  columns of `/` shared no vertical anchor, and the responsive table specified width only. Owner
+  answered with the `100dvh` stage, denser dark glass, chart opacity off the legend, and panel
+  reading hierarchy. Martian Mono from Google Fonts was withdrawn on check.
+- **2026-09-01, owner rounds.** The owner recognised markers drawn in the approved canvas that the
+  screens never had — `design-handoff.md` had no project-row section at all, so no build from it
+  could have produced them, and the row had shipped as six blocks under four mono labels. The
+  handoff now carries § The Project Row; the row is marks, title and one sentence. Owner settled:
+  the marks are a path not a score, four is the cap, the whole row is the prefilled link, and the
+  outlined circle is the next step drawn always — `data-model.md:233` holds, since without a task
+  list the next action is the only thing that says what to do, so `AC-2` is now repair copy for
+  data that violates the invariant. A hierarchy regression was found and fixed the same day: the
+  rewrite had cut the row's semantic gaps to 6px, which § Responsive Behavior forbids, on every
+  laptop (the compact query is `(min-width:1200px) and (max-height:1200px)`).
+- For the next-action task, not touched here: `closeNextAction` closes without requiring a
+  replacement, and `seed-local.mjs` seeds four projects with two next actions — both can produce
+  the state the invariant forbids.
+- **Reviewer, `/code-review high` on `351319f`, 2026-09-01.** All gates green, so every finding is
+  behavioral. **Independence: none** — `agent-config.md` puts Frontend Implementer on Codex and
+  Reviewer on Claude for work it did not write; Claude did both here, owner-accepted. Weigh it so.
+- Medium/High · `ProjectCard.astro:11` · a written entry can leave `/` wholly unchanged: a project
+  already first in `En movimiento`, already at the four-mark cap, logging a second untimed entry on
+  one day moves no mark, no order and no bar (`UNTIMED_HEIGHT` is fixed) · `AC-5` **unchecked**;
+  its reading is the owner's, and option B — one `dim` line of entry text — closes it.
+- Medium · `project-row.ts:6` · marks are fed the rolling 28-day window, so three entries aged 27
+  days render `●●●○◇` today and `○◇` tomorrow · a decaying recency score is what `NFR-7` and the
+  handoff's own "a missed period removes nothing that was there" forbid · owner decides what the
+  marks count; the same call also counts `reserve_spend` entries as progress.
+- Medium · `project-row.ts:19` · proper nouns are lowercased — `"Notion queda ordenado"` renders
+  `"notion"` · no heuristic separates a proper noun from a verb, so the choice is binary: keep
+  transforming and mangle names, or join verbatim and accept a capital after the comma. Owner's.
+- Fixed this round · doubled terminal punctuation, a leading `¿` defeating the lowercasing, a blank
+  act rendering `"Cuando X, ."`, the weak unconditional-mark guard (now shape-based, mutation-tested).
+- Low, earlier round, untouched · `PortfolioPanel.astro:43` dead `::-webkit-scrollbar` block where
+  `scrollbar-width`/`-color` are also declared · `:14` `scrollbar-gutter: stable` offsets content
+  ~12px when nothing scrolls · `registrar.astro:32` full-opacity legend with two accent swatches
+  labels a chart veiled to 0.06, against `AC-9`.
+- Assessment: validation not granted. `AC-5` is unchecked, two Medium findings need the owner, and
+  the review that produced this list was written by the code's own author.
 
 ## Validation
 
