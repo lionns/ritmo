@@ -148,6 +148,60 @@ The bars behind every screen are data, not texture. **Settled with the owner on 
 - **Opacity 0.30 applies to marks, never labels.** The legend remains full-opacity `dim`, at 9px
   mobile / 10px desktop; settled after owner readability testing on 2026-08-31.
 
+## The Project Row
+
+Every project inside the glass panel. Drawn in the approved canvas (`L-Escritorio` and `L-Movil`,
+page `page-ux`) but never written down until now, so the first implementation could not build it.
+**Settled with the owner on 2026-09-01**, reading the artboards back.
+
+- **Four elements, in this order:** the marker row, the project title, the next action as one
+  sentence, and the last movement. Nothing else.
+  No area label, no field labels, no per-field rows. The artboards carry four fewer text blocks than
+  a labelled form does, and that difference is the design.
+- **The markers, above the title.** A small path, left to right: one **filled `accent` circle per
+  recent progress entry**, then one **`faint` outlined circle** — the next step, always drawn — then
+  a **`faint` diamond** for the objective. A project with nothing logged opens at its empty circle.
+  The outline is not conditional: `data-model.md` requires every active project to carry exactly one
+  open next action, so the step always exists, and all three rows of the canvas draw it.
+  | Mark | Geometry | Desktop | Mobile |
+  |---|---|---|---|
+  | Progress | circle, filled `accent` | 12px | 11px |
+  | Open next action | circle, `1.5px` border in `faint`, no fill | 12px | 11px |
+  | Objective | square rotated `45deg`, filled `faint`, `margin-left: 5px` | 9px | 8px |
+  Row is `flex`, `align-items: center`, `gap: 10px`.
+- **Filled circles cap at four.** Owner's number, not the canvas's — the artboards only ever draw
+  two. Four is the 28-day window read as weeks, and it holds the row near 65px inside a 400–480px
+  panel. Past four the row stops growing.
+- **The markers are a path, not a score.** They carry no number, no streak and no target, and a
+  missed period removes nothing that was there (`NFR-7`, `AC-X4`). If a count is ever rendered
+  beside them, that rule is the one it breaks.
+- **The sentence is the next action, read as language.** `trigger` and `act` join into one line in
+  `dim`: the trigger already carries its own *Cuando* / *Si* / *El sábado*, so the rendering joins
+  them with a comma and closes the sentence, never doubling punctuation the act already carries. The
+  act joins **verbatim** — settled 2026-09-01, after lowercasing its first letter mangled proper
+  nouns (`Notion` → `notion`). No heuristic separates a name from a verb, and a capital after a
+  comma is a benign oddity where a corrupted name is not. The register belongs to how the action is
+  written, which the screen that writes one can prompt for. A project with no open next action shows
+  the prompt to write one instead, also in `dim`.
+- **The last movement closes the row**, in `dim`, prefixed `Último:` in `faint-text`. Restored
+  2026-09-01: the canvas draws three elements, but with only three, writing an entry can leave `/`
+  unchanged — a project already first and already at the mark cap, logging without minutes, moves no
+  mark, no order and no bar. § Interaction States makes the chart the only confirmation ("the chart
+  mark grows… no toast") and the untimed floor is fixed, so that confirmation never arrives for
+  exactly the cheapest entry to write (`NFR-1`). This line is what makes `AC-5` true.
+- **The marks are `aria-hidden`.** Everything they encode is already in text on the same screen:
+  the section heading says whether the project moved, and the sentence says whether a next action is
+  open. Only the count of advances is theirs alone, and `NFR-7` does not want that spoken any more
+  than it wants it drawn. Shape already carries the states for anyone reading them (§ Accessibility
+  Notes, "Progress dots pair fill with an outline shape").
+- **Spacing.** `14px` above and below the row on mobile, `16px` on desktop, a `hair` rule between
+  rows, and **`8px` between the marks, the title and the sentence**. Those three 8px gaps are the
+  hierarchy of the row; compact height mode takes its space from the outer padding (down to `12px`)
+  and never from them.
+- **The whole row is the link** to `/registrar?project=<id>`, which is what preserves the prefilled
+  project without spending a visible element on it (`NFR-1`). The canvas draws a single accent
+  button in the headline column; a second call to action per card was never in it.
+
 ## Navigation Map
 
 Six routes, three levels deep. Settled with the owner on 2026-08-30 after drawing both options.

@@ -8,6 +8,7 @@ interface Props {
 }
 
 const { project, kind } = Astro.props;
+const latestEntry = project.recentEntries[0];
 const progressMarks = countProgressMarks(project.recentEntries.length);
 const logHref = `/registrar?project=${encodeURIComponent(project.id)}`;
 const line = project.nextAction === null
@@ -31,6 +32,13 @@ const line = project.nextAction === null
   </span>
   <h3 class="project-title mt-2 mb-0 text-[17px] leading-[1.15] font-semibold tracking-[-0.02em] text-ink md:text-xl">{project.title}</h3>
   <span class="project-line mt-2 block min-h-[26px] text-sm leading-[1.45] text-dim transition-colors duration-[120ms] motion-reduce:transition-none md:text-[15px]">{line}</span>
+  {
+    latestEntry && (
+      <span class="project-latest mt-1.5 block text-sm leading-[1.45] text-dim md:text-[15px]">
+        <span class="text-faint-text">Último:</span> {latestEntry.what}
+      </span>
+    )
+  }
 </a>
 
 <style>

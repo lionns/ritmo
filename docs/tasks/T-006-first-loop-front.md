@@ -47,7 +47,7 @@ implements: [US-3, NFR-1]
 - [x] The hero chart renders the three states of `design-handoff.md` — nothing logged, logged
       without minutes, logged with minutes — and carries its legend naming days and unit.
 - [x] 28 marks at desktop widths and 14 below 768px.
-- [ ] WHEN an entry is written from `/registrar`, THE SYSTEM SHALL persist it through `/api/entries`
+- [x] WHEN an entry is written from `/registrar`, THE SYSTEM SHALL persist it through `/api/entries`
       and the next render of `/` SHALL show it.
 - [x] Every interactive target is at least 56px tall on desktop and 58px on mobile, and no
       decorative element extends past a hit area.
@@ -101,29 +101,27 @@ implements: [US-3, NFR-1]
 - **2026-09-01, owner rounds.** The owner recognised markers drawn in the approved canvas that the
   screens never had — `design-handoff.md` had no project-row section, so no build from it could
   have produced them, and the row had shipped as six blocks under four mono labels. It is now
-  marks, title and one sentence, written into § The Project Row. Owner settled: the marks are a
-  path not a score, four is the cap, the row is the prefilled link, and the outlined circle is the
-  next step drawn always — `data-model.md:233` holds, since without a task list the next action is
-  the only thing that says what to do, so `AC-2` is now repair copy for invalid data. A hierarchy
-  regression was fixed the same day: the rewrite had cut the row's semantic gaps to 6px, which
-  § Responsive Behavior forbids, on every laptop.
-- For the next-action task, not touched here: `closeNextAction` closes without requiring a
-  replacement, and `seed-local.mjs` seeds four projects with two next actions — both can produce
-  the state the invariant forbids.
+  marks, title, one sentence and the last movement, written into § The Project Row. Owner settled:
+  the marks are a path not a score, four is the cap, the row is the prefilled link, and the outline
+  is the next step drawn always — `data-model.md:233` holds, since without a task list the next
+  action is the only thing that says what to do, so `AC-2` is repair copy for invalid data. A
+  hierarchy regression was fixed the same day: the rewrite had cut the row's semantic gaps to 6px.
+- For the next-action task: `closeNextAction` closes without requiring a replacement, and `seed-local.mjs` seeds four projects with two next actions — both produce the state the invariant forbids.
 - **Reviewer, `/code-review high` on `351319f`, 2026-09-01.** All gates green, so every finding is
   behavioral. **Independence: none** — `agent-config.md` puts Frontend Implementer on Codex and
   Reviewer on Claude for work it did not write; Claude did both here, owner-accepted. Weigh it so.
-- Medium/High · `ProjectCard.astro:11` · a written entry can leave `/` wholly unchanged — a project
-  already first and already at the four-mark cap, logging a second untimed entry in one day, moves
-  no mark, no order and no bar (`UNTIMED_HEIGHT` is fixed) · `AC-5` **unchecked**; one `dim` line of
-  entry text closes it, but the reading is the owner's.
-- Medium · `project-row.ts:6` · marks are fed the rolling 28-day window, so three entries aged 27
-  days render `●●●○◇` today and `○◇` tomorrow — the decaying score `NFR-7` and the handoff's own
-  "a missed period removes nothing that was there" forbid · owner decides what the marks count; the
-  same call also counts `reserve_spend` entries as progress.
-- Medium · `project-row.ts:19` · proper nouns are lowercased — `"Notion"` renders `"notion"` · no
-  heuristic separates a name from a verb, so it is binary: transform and mangle names, or join
-  verbatim and accept a capital after the comma. Owner's.
+- Medium/High · `AC-5` · a written entry could leave `/` wholly unchanged — already first, already
+  at the mark cap, untimed, same day: no mark, no order, no bar (`UNTIMED_HEIGHT` is fixed) ·
+  **closed**: owner restored the last movement as a `dim` line, and the probe that failed now passes
+  (201, then the line changed). `AC-5` re-checked on that evidence.
+- Medium · `project-row.ts:6` · marks read the rolling 28-day window, so a path decays with time
+  alone — the score `NFR-7` forbids · owner settled the fix: count entries since the open next action
+  opened. **Blocked here**: needs `NextAction.createdAt` in the contract (it exists in
+  `data-model.md:153`, not in `PortfolioNextAction`) and a window wider than 28 days, so it is a
+  finding against `T-005`, not an edit here. `reserve_spend` counting as progress rides along.
+- Medium · proper nouns lowercased (`"Notion"` → `"notion"`) · **closed**: owner chose to join the
+  act verbatim, so it fails benignly (a capital after a comma) instead of corrupting a name.
+- Self-inflicted, caught after landing in `aa17a7e`: rewriting § The Hero Chart deleted § The Project Row wholesale, and no gate covers prose. Restored from `HEAD~1` with this round's rules applied.
 - Fixed · doubled terminal punctuation, a leading `¿` defeating the lowercasing, a blank act rendering `"Cuando X, ."`, the weak unconditional-mark guard (now shape-based, mutation-tested).
 - The three Low, closed 2026-09-01: dead `::-webkit-scrollbar` block gone (the standard properties
   already carry the handoff's thumb/track contract), `scrollbar-gutter` no longer offsets a panel
