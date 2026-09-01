@@ -9,6 +9,7 @@ Harness `0.8.1` · profile `team`
 | Task | State | Goal |
 |---|---|---|
 | [T-004](docs/tasks/T-004-harness-loose-ends.md) | `ready` | Close the three low-severity findings the T-002 review left in the harness tooling, keeping |
+| [T-008](docs/tasks/T-008-log-form-minutes-and-context.md) | `ready` | Give `/registrar` the three things the approved artboard has and the screen does not — optional |
 | [T-006](docs/tasks/T-006-first-loop-front.md) | `review` | Build the landing surface and the log form from the approved design, against the endpoints |
 | [T-001](docs/tasks/T-001-skeleton-and-next-action.md) | `done` | Stand up the three-layer tree with every quality-gate command real and green, and prove it by |
 | [T-002](docs/tasks/T-002-split-task-budget.md) | `done` | Replace the single task-file budget with a plan budget and a record budget, enforced by |
