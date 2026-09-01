@@ -140,6 +140,19 @@ The bars behind every screen are data, not texture. **Settled with the owner on 
   label style. An unlabelled height is not a datum.
 - **Opacity 0.30 applies to marks, never labels.** The legend remains full-opacity `dim`, at 9px
   mobile / 10px desktop; settled after owner readability testing on 2026-08-31.
+- **The legend's swatches are bars, because the marks are bars.** Settled with the owner on
+  2026-09-01. Three states exist so a day with untimed entries cannot read as an empty day, and
+  nothing else on the screen explains that difference — so the legend names it, and must look like
+  what it names. Each swatch is a `3px` pill, bottom-aligned with its label, at `7px` / `9px` /
+  `14px`, holding the real `9:12` ratio between the empty stub and the untimed floor rather than
+  exaggerating it for legibility. Colour does the first split (`faint-text` against `accent`) and
+  height the second, which is how the chart itself separates them. Circles are wrong here: the marks
+  have no circular state, and a circle cannot show the height the whole chart encodes. The approved
+  canvas draws no swatches at all — this adds to it deliberately, for the three states it predates.
+- **A veiled chart takes its legend with it.** On the form screens of § Interaction States the marks
+  drop to `0.06`, and a legible label for invisible bars names nothing while spending accent that
+  belongs to the one field. The legend is removed, not faded — faded would leave unreadable text on
+  screen instead of taking it away.
 
 ## The Project Row
 

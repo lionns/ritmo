@@ -77,6 +77,29 @@ describe("the first-loop page composition", () => {
     assert.match(stage, /--stage-chart-opacity:0\.3/);
     assert.doesNotMatch(stage, /opacity-30/);
     assert.match(chart, /opacity-\[var\(--stage-chart-opacity,0\.3\)\]/);
+    // A veiled chart takes its legend with it: a label for invisible bars names nothing,
+    // and its two accent swatches would spend accent on a form screen (AC-9).
+    assert.match(stage, /\[--stage-legend:none\]/);
+    assert.match(chart, /<figcaption class="\[display:var\(--stage-legend,flex\)\]/);
+  });
+
+  it("draws the legend key as bars, in the chart's own ratio", () => {
+    const chart = source("src/components/molecules/HeroChart.astro");
+    const marks = source("src/components/molecules/hero-chart.ts");
+
+    // The key must echo the marks: pills, empty in faint-text, the other two in accent.
+    const keys = [...chart.matchAll(/class="chart-key[^"]*h-\[(\d+)px\] w-\[(\d+)px\][^"]*bg-([a-z-]+)"/g)];
+    assert.equal(keys.length, 3);
+    assert.deepEqual(keys.map((k) => k[3]), ["faint-text", "accent", "accent"]);
+    assert.deepEqual(keys.map((k) => k[2]), ["3", "3", "3"]);
+    const [empty, untimed, timed] = keys.map((k) => Number(k[1]));
+    assert.ok(empty < untimed && untimed < timed, "the key must rise with the states it names");
+    // And it must not exaggerate: the empty/untimed ratio follows EMPTY_HEIGHT/UNTIMED_HEIGHT.
+    const real = Number(marks.match(/EMPTY_HEIGHT = (\d+)/)![1]) /
+      Number(marks.match(/UNTIMED_HEIGHT = (\d+)/)![1]);
+    assert.ok(Math.abs(empty / untimed - real) < 0.05, `key ratio ${empty / untimed} vs ${real}`);
+    // No circles, and no shadow faking a height a circle cannot have.
+    assert.doesNotMatch(chart, /chart-key[^"]*(?:size-2|shadow-)/);
     assert.match(chart, /<figcaption class="[^"]*text-\[9px\][^"]*text-dim[^"]*md:text-\[10px\]/);
   });
 
@@ -86,9 +109,12 @@ describe("the first-loop page composition", () => {
 
     assert.match(stage, /clamp\(400px,32vw,480px\)/);
     assert.match(panel, /scrollbar-width: thin/);
-    assert.match(panel, /::-webkit-scrollbar-thumb/);
     assert.match(panel, /var\(--page-dim\) 72%/);
     assert.doesNotMatch(panel, /scrollbar[^\n]*accent/);
+    // Declaring the standard properties makes ::-webkit-scrollbar* dead everywhere it could apply.
+    assert.doesNotMatch(panel, /::-webkit-scrollbar/);
+    // The gutter is not reserved: the normal panel does not scroll, and must stay centred.
+    assert.doesNotMatch(panel, /scrollbar-gutter/);
   });
 
   it("draws the project row as marks, a title and one sentence", () => {

@@ -13,7 +13,7 @@ const { chartVeiled = false } = Astro.props;
   <div
     class:list={[
       "pointer-events-none relative left-1/2 mt-[var(--stage-chart-gap)] w-screen shrink-0 -translate-x-1/2",
-      chartVeiled ? "[--stage-chart-opacity:0.06]" : "[--stage-chart-opacity:0.3]",
+      chartVeiled ? "[--stage-chart-opacity:0.06] [--stage-legend:none]" : "[--stage-chart-opacity:0.3]",
     ]}
   >
     <slot name="chart" />

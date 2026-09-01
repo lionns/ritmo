@@ -83,15 +83,14 @@ implements: [US-3, NFR-1]
 
 ## Outcome
 
-- Changes: responsive SSR portfolio, three-state SVG chart, canvas-faithful project row, one-island
-  entry form, `100dvh` desktop stage with height-aware density, token-backed Tailwind utilities,
-  both palettes, vendored Fontshare assets, chart/layout/row coverage. 27 files.
+- Changes: responsive SSR portfolio, three-state SVG chart with a bar-shaped key, canvas-faithful
+  project row, one-island entry form, `100dvh` stage with height-aware density, token-backed
+  utilities, both palettes, vendored Fontshare assets, chart/layout/row coverage. 27 files.
 - Baseline: clean `npm ci`; unit 9/9, isolation/typecheck/build, integration 3/3, lint clean.
-- Final: unit 22/22, isolation/typecheck/offline build, integration 3/3; live routes, marker/prefill
-  and POST-then-render probes green.
+- Final: unit 23/23, isolation/typecheck/offline build, integration 3/3; live route probes green.
 - Decisions: owner-settled in `design-handoff.md` and the traces; no decision file.
-- Follow-up before `done`: owner rechecks the screens, settles `AC-5` and the two Medium findings
-  below, and measures `backdrop-filter` on a real phone.
+- Follow-up before `done`: owner rechecks the screens, settles `AC-5` and findings 2–3, and measures
+  `backdrop-filter` on a real phone.
 
 ## Review
 
@@ -117,25 +116,26 @@ implements: [US-3, NFR-1]
 - **Reviewer, `/code-review high` on `351319f`, 2026-09-01.** All gates green, so every finding is
   behavioral. **Independence: none** — `agent-config.md` puts Frontend Implementer on Codex and
   Reviewer on Claude for work it did not write; Claude did both here, owner-accepted. Weigh it so.
-- Medium/High · `ProjectCard.astro:11` · a written entry can leave `/` wholly unchanged: a project
-  already first in `En movimiento`, already at the four-mark cap, logging a second untimed entry on
-  one day moves no mark, no order and no bar (`UNTIMED_HEIGHT` is fixed) · `AC-5` **unchecked**;
-  its reading is the owner's, and option B — one `dim` line of entry text — closes it.
+- Medium/High · `ProjectCard.astro:11` · a written entry can leave `/` wholly unchanged — a project
+  already first and already at the four-mark cap, logging a second untimed entry in one day, moves
+  no mark, no order and no bar (`UNTIMED_HEIGHT` is fixed) · `AC-5` **unchecked**; one `dim` line of
+  entry text closes it, but the reading is the owner's.
 - Medium · `project-row.ts:6` · marks are fed the rolling 28-day window, so three entries aged 27
-  days render `●●●○◇` today and `○◇` tomorrow · a decaying recency score is what `NFR-7` and the
-  handoff's own "a missed period removes nothing that was there" forbid · owner decides what the
-  marks count; the same call also counts `reserve_spend` entries as progress.
-- Medium · `project-row.ts:19` · proper nouns are lowercased — `"Notion queda ordenado"` renders
-  `"notion"` · no heuristic separates a proper noun from a verb, so the choice is binary: keep
-  transforming and mangle names, or join verbatim and accept a capital after the comma. Owner's.
+  days render `●●●○◇` today and `○◇` tomorrow — the decaying score `NFR-7` and the handoff's own
+  "a missed period removes nothing that was there" forbid · owner decides what the marks count; the
+  same call also counts `reserve_spend` entries as progress.
+- Medium · `project-row.ts:19` · proper nouns are lowercased — `"Notion"` renders `"notion"` · no
+  heuristic separates a name from a verb, so it is binary: transform and mangle names, or join
+  verbatim and accept a capital after the comma. Owner's.
 - Fixed this round · doubled terminal punctuation, a leading `¿` defeating the lowercasing, a blank
   act rendering `"Cuando X, ."`, the weak unconditional-mark guard (now shape-based, mutation-tested).
-- Low, earlier round, untouched · `PortfolioPanel.astro:43` dead `::-webkit-scrollbar` block where
-  `scrollbar-width`/`-color` are also declared · `:14` `scrollbar-gutter: stable` offsets content
-  ~12px when nothing scrolls · `registrar.astro:32` full-opacity legend with two accent swatches
-  labels a chart veiled to 0.06, against `AC-9`.
-- Assessment: validation not granted. `AC-5` is unchecked, two Medium findings need the owner, and
-  the review that produced this list was written by the code's own author.
+- The three Low from the earlier round, closed 2026-09-01: the dead `::-webkit-scrollbar` block is
+  gone (the standard properties already carry the handoff's thumb/track contract), the unconditional
+  `scrollbar-gutter` no longer offsets a panel that does not scroll, and a veiled chart now takes its
+  legend with it. Owner then settled the legend key itself: swatches are `3px` pills at 7/9/14px
+  holding the chart's real `9:12` ratio, not circles with a shadow faking a height. Written into
+  § The Hero Chart; covered by a test that reads the ratio from `hero-chart.ts` rather than pinning it.
+- Assessment: validation not granted. `AC-5` unchecked, findings 1–3 are the owner's, and this review was written by the code's own author.
 
 ## Validation
 
