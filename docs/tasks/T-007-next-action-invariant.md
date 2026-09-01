@@ -1,7 +1,7 @@
 ---
 id: T-007
 title: The next action made real — the invariant enforced, and the path it measures
-status: ready
+status: review
 profile: team
 harness: 0.8.1
 role: Backend Implementer
@@ -55,20 +55,20 @@ implements: [FR-6, NFR-7]
 
 ## Acceptance Criteria
 
-- [ ] WHEN the portfolio is read, THE SYSTEM SHALL expose for each active project the number of
+- [x] WHEN the portfolio is read, THE SYSTEM SHALL expose for each active project the number of
       `progress` entries logged since its open next action was created.
-- [ ] WHEN a project's open next action was created more than 28 days ago, THE SYSTEM SHALL include
+- [x] WHEN a project's open next action was created more than 28 days ago, THE SYSTEM SHALL include
       entries logged before that window in the count, proving the count is not the window.
-- [ ] WHEN a project has `reserve_spend` entries, THE SYSTEM SHALL NOT count them as progress.
-- [ ] WHEN a caller closes the open next action of an active project, THE SYSTEM SHALL open its
+- [x] WHEN a project has `reserve_spend` entries, THE SYSTEM SHALL NOT count them as progress.
+- [x] WHEN a caller closes the open next action of an active project, THE SYSTEM SHALL open its
       replacement in the same operation, and SHALL leave no state in which an active project has no
       open next action.
-- [ ] WHEN `npm run seed` completes, every active project SHALL have exactly one open next action,
+- [x] WHEN `npm run seed` completes, every active project SHALL have exactly one open next action,
       checkable by a query the seed prints or a test asserts.
-- [ ] The progress/outstanding split and the chart SHALL keep using the 28-day window, so `AC-G1`
+- [x] The progress/outstanding split and the chart SHALL keep using the 28-day window, so `AC-G1`
       and the chart's 28/14 marks are unchanged.
-- [ ] `PortfolioNextAction.createdAt` is present and typed, and `npm run check:core` stays green.
-- [ ] All five gates stay green from a clean `npm ci`.
+- [x] `PortfolioNextAction.createdAt` is present and typed, and `npm run check:core` stays green.
+- [x] All five gates stay green from a clean `npm ci`.
 
 ## Verification
 
@@ -103,16 +103,54 @@ implements: [FR-6, NFR-7]
 
 ## Outcome
 
-- Changes:
-- Files:
-- Baseline result:
-- Final result:
-- Decisions recorded:
-- Follow-up:
+- Changes: portfolio exposes `createdAt` and SQL-counted `progressSincePlan`; next-action replacement
+  is one D1 transaction; the representative seed satisfies and prints the invariant.
+- Files: 11 implementation/test files, this task record, its trace and generated `STATUS.md`.
+- Baseline result: clean `npm ci`; unit 23/23, isolation, harness lint, typecheck and build green.
+- Final result: clean `npm ci`; unit 23/23, integration 4/4, isolation, typecheck, build and harness
+  records green; reset plus two seeds each printed one open action for all three active projects.
+- Decisions recorded: none.
+- Follow-up: **back to the Backend Implementer, 2026-09-01.** Fix the Medium and the Low in § Review.
+  Every gate is green today, so a red one means the fix broke something. Leave `src/components/` and
+  `page-layout.test.ts` alone beyond what the contract forces — `T-006` owns them. The
+  `reserve_spend` Low needs the owner to route it first. Then Reviewer, then validation.
 
 ## Review
 
-- Severity · `file:line` · issue · impact · recommendation
+- **Reviewer, `/code-review high`, 2026-09-01.** Independent — written by Codex, reviewed by Claude,
+  as `agent-config.md` asks. Record verified rather than read: unit 23/23, integration 4/4, isolation
+  and lint green here, and `db:reset` + two seeds each printed all three active projects at one open
+  action. Scope held, and the plan's own risk is answered — the count is `COUNT()` in SQL.
+- Medium · `adapters/d1/store.ts:205` · `replaceNextAction` drops the batch result, so the UPDATE's
+  row count is never checked, and its `WHERE` binds `replacement.ownerId`/`projectId` rather than the
+  identity of the action being closed · any caller passing a replacement on a different project gets
+  a zero-row UPDATE and a successful INSERT — the original stays open *and* a second open action
+  exists, on two different projects, so the `one_open_next_action_per_project` partial index cannot
+  catch it. `batch()` is a transaction (verified against Cloudflare's D1 docs, not recalled), but a
+  zero-row UPDATE is a successful no-op, not a failure, so nothing rolls back · bind the UPDATE on
+  `id` alone and assert `results[0].meta.changes === 1`.
+- Low · `core/rules/next-action.ts:45` · the replacement's `createdAt` is the one field the new
+  metric depends on and the one field not validated · the natural caller shape `{ ...current, id }`
+  copies the closed plan's `createdAt`, so a brand-new plan is born already counting every entry of
+  the plan it replaced; the tests only escape it by overriding `createdAt` by hand each time ·
+  reject a replacement whose `createdAt` precedes `closedAt`.
+- Low · `core/rules/next-action.ts:33` · read-then-write across two round trips · two concurrent closes both pass the `closedAt !== null` check and the loser trips the partial index as a raw `D1_ERROR`, not `NextActionRuleError` — a 500 where a route would map 422 · closed by the Medium above.
+- Low · `core/rules/portfolio.ts:62` · `progressSincePlan` excludes `reserve_spend`, but
+  `readRecentEntries` has no `kind` filter and the split still counts rows from it · one reserve
+  spend moves a quiet project into `En movimiento` and draws a filled mark while `progressSincePlan`
+  stays 0 — two contradictory progress numbers in one payload, and `FR-8` says a reserve spend is an
+  event, not an advance · pre-existing from `T-005`; this task is where "reserve spend is not
+  progress" became a rule, so it needs routing rather than silence. AC left checked: the criterion is
+  about the count, and the count is right.
+- Low · `test/integration/d1-store.test.ts:96` · removing the `action-now-closed` setup leaves `actionlessProject` with no rows, so `expect(nextAction).toBeNull()` passes trivially · the only coverage that `readOpenNextActions` filters on `closed_at IS NULL` is gone — the distinction this task enforces · seed the closed row via `createNextAction`, as the collision test does.
+- Low · `core/rules/portfolio.ts:40` · `readOpenNextActions` and `countProgressSinceOpenNextActions`
+  scan `next_actions` with the same predicate on every render · one query returning the action plus
+  its count drops a D1 round trip and removes the window where a replace landing between them pairs
+  a new action with the old plan's count.
+- Cleared on check: `batch` is atomic and ordered UPDATE-before-INSERT; the partial index prevents double-counting; `?? 0` covers a project with no open plan; `occurredAt` is clock-assigned, so the ISO comparison is sound.
+- Assessment: changes requested. One Medium and five Low, none of them the metric itself, which is
+  correct and proven by an integration test that counts outside the 28-day window. Not fixed here —
+  the Reviewer does not write the Implementer's code, which is the whole point of the split.
 
 ## Validation
 
