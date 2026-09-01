@@ -6,9 +6,13 @@ import "../styles/global.css";
 interface Props {
   title: string;
   description: string;
+  /** design-handoff.md § Header: the mono label opposite the wordmark, naming where you are. */
+  context: string;
+  /** Optional wider wording from `md` up, where the same label has room to say more. */
+  contextWide?: string;
 }
 
-const { title, description } = Astro.props;
+const { title, description, context, contextWide } = Astro.props;
 ---
 
 <!doctype html>
@@ -36,8 +40,16 @@ const { title, description } = Astro.props;
       ></div>
       <Grain />
       <div class="relative z-[2] mx-auto flex min-h-[calc(100dvh-56px)] w-[min(100%,1312px)] flex-col md:min-h-[calc(100dvh-88px)] xl:h-full xl:min-h-0">
-        <header class="mb-11 flex items-center justify-between md:mb-16 xl:mb-[clamp(24px,4dvh,64px)] xl:shrink-0">
+        <header class="mb-11 flex items-baseline justify-between gap-4 md:mb-16 xl:mb-[clamp(24px,4dvh,64px)] xl:shrink-0">
           <Wordmark />
+          <p class="m-0 text-right font-mono text-[8px] leading-[1.4] font-normal tracking-[0.22em] text-dim uppercase md:text-[9px]" data-header-context>
+            {contextWide === undefined ? context : (
+              <>
+                <span class="md:hidden">{context}</span>
+                <span class="hidden md:inline">{contextWide}</span>
+              </>
+            )}
+          </p>
         </header>
         <slot />
         <footer class="mt-auto flex items-center justify-between gap-3 pt-[34px] xl:shrink-0 xl:pt-[clamp(12px,2dvh,34px)]">

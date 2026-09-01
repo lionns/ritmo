@@ -27,11 +27,15 @@ const projects = portfolio === null ? [] : [...portfolio.progress, ...portfolio.
 const entries = projects.flatMap(({ recentEntries }) => recentEntries);
 ---
 
-<AppShell title="Ritmo · Tu portfolio" description="Lo que moviste y lo que puede esperar.">
+<AppShell
+  title="Ritmo · Tu portfolio"
+  description="Lo que moviste y lo que puede esperar."
+  context="14 días · minutos"
+  contextWide="28 días · altura = minutos registrados"
+>
   <PageStage>
     <section class="self-center" aria-labelledby="page-title">
-      <p class="m-0 font-mono text-[8px] leading-[1.4] font-normal tracking-[0.22em] text-dim uppercase md:text-[9px]">Portfolio · últimos 28 días</p>
-      <h1 id="page-title" class="mt-3.5 max-w-[760px] font-display text-[clamp(46px,13.2vw,64px)] leading-[0.84] font-semibold tracking-[-0.04em] md:text-[clamp(76px,9.2vw,132px)]">Lo que moviste.</h1>
+      <h1 id="page-title" class="max-w-[760px] font-display text-[clamp(46px,13.2vw,64px)] leading-[0.84] font-semibold tracking-[-0.04em] md:text-[clamp(76px,9.2vw,132px)]">Lo que moviste.</h1>
       <p class="mt-6 max-w-[470px] text-[15px] leading-[1.55] text-dim">
         Primero lo que tuvo movimiento. Después, lo que puede esperar sin convertirse en presión.
       </p>

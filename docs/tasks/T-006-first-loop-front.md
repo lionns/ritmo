@@ -94,22 +94,19 @@ implements: [US-3, NFR-1]
 
 ## Review
 
-- **2026-08-31, rounds 1–2 (settled).** Tailwind refactor and vendored fonts verified; regression
-  checked on a running server (both pages 200, 28/14 marks, `AC-G1` order, 388ms, 58/56px targets,
-  both palettes, POST-then-render). Round 2 refused validation on two owner-screen findings — the
-  columns of `/` shared no vertical anchor, and the responsive table specified width only. Owner
-  answered with the `100dvh` stage, denser dark glass, chart opacity off the legend, and panel
-  reading hierarchy. Martian Mono from Google Fonts was withdrawn on check.
+- **2026-08-31 (settled).** Tailwind refactor and vendored fonts verified; regression checked on a
+  running server. Round 2 refused validation — the columns of `/` shared no vertical anchor and the
+  responsive table specified width only. Owner answered with the `100dvh` stage, denser dark glass,
+  chart opacity off the legend, and panel reading hierarchy.
 - **2026-09-01, owner rounds.** The owner recognised markers drawn in the approved canvas that the
-  screens never had — `design-handoff.md` had no project-row section at all, so no build from it
-  could have produced them, and the row had shipped as six blocks under four mono labels. The
-  handoff now carries § The Project Row; the row is marks, title and one sentence. Owner settled:
-  the marks are a path not a score, four is the cap, the whole row is the prefilled link, and the
-  outlined circle is the next step drawn always — `data-model.md:233` holds, since without a task
-  list the next action is the only thing that says what to do, so `AC-2` is now repair copy for
-  data that violates the invariant. A hierarchy regression was found and fixed the same day: the
-  rewrite had cut the row's semantic gaps to 6px, which § Responsive Behavior forbids, on every
-  laptop (the compact query is `(min-width:1200px) and (max-height:1200px)`).
+  screens never had — `design-handoff.md` had no project-row section, so no build from it could
+  have produced them, and the row had shipped as six blocks under four mono labels. It is now
+  marks, title and one sentence, written into § The Project Row. Owner settled: the marks are a
+  path not a score, four is the cap, the row is the prefilled link, and the outlined circle is the
+  next step drawn always — `data-model.md:233` holds, since without a task list the next action is
+  the only thing that says what to do, so `AC-2` is now repair copy for invalid data. A hierarchy
+  regression was fixed the same day: the rewrite had cut the row's semantic gaps to 6px, which
+  § Responsive Behavior forbids, on every laptop.
 - For the next-action task, not touched here: `closeNextAction` closes without requiring a
   replacement, and `seed-local.mjs` seeds four projects with two next actions — both can produce
   the state the invariant forbids.
@@ -127,14 +124,17 @@ implements: [US-3, NFR-1]
 - Medium · `project-row.ts:19` · proper nouns are lowercased — `"Notion"` renders `"notion"` · no
   heuristic separates a name from a verb, so it is binary: transform and mangle names, or join
   verbatim and accept a capital after the comma. Owner's.
-- Fixed this round · doubled terminal punctuation, a leading `¿` defeating the lowercasing, a blank
-  act rendering `"Cuando X, ."`, the weak unconditional-mark guard (now shape-based, mutation-tested).
-- The three Low from the earlier round, closed 2026-09-01: the dead `::-webkit-scrollbar` block is
-  gone (the standard properties already carry the handoff's thumb/track contract), the unconditional
-  `scrollbar-gutter` no longer offsets a panel that does not scroll, and a veiled chart now takes its
-  legend with it. Owner then settled the legend key itself: swatches are `3px` pills at 7/9/14px
-  holding the chart's real `9:12` ratio, not circles with a shadow faking a height. Written into
-  § The Hero Chart; covered by a test that reads the ratio from `hero-chart.ts` rather than pinning it.
+- Fixed · doubled terminal punctuation, a leading `¿` defeating the lowercasing, a blank act rendering `"Cuando X, ."`, the weak unconditional-mark guard (now shape-based, mutation-tested).
+- The three Low, closed 2026-09-01: dead `::-webkit-scrollbar` block gone (the standard properties
+  already carry the handoff's thumb/track contract), `scrollbar-gutter` no longer offsets a panel
+  that does not scroll, and the chart legend is out of the figure entirely. A key of three bars was
+  built first and **rejected on sight by the owner** — right, and recommending it was the
+  implementer's error: a key sized for a `9px` line cannot teach the `9:12` difference honestly, and
+  a chart drawn at `0.30` as ground carries neither caption nor taxonomy. The four artboards settled
+  it: the header's right slot is a per-screen context label (`REGISTRO`, `DOMINGO · S34`, …) that
+  both pages were duplicating as a body eyebrow. `AppShell` owns the slot; key, figcaption and
+  eyebrows are gone. `AC-3`'s legend now sits in the header, still naming days and unit, each mark
+  keeping its `<title>`. Written into § The Hero Chart and § Navigation Map.
 - Assessment: validation not granted. `AC-5` unchecked, findings 1–3 are the owner's, and this review was written by the code's own author.
 
 ## Validation

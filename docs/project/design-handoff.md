@@ -136,67 +136,17 @@ The bars behind every screen are data, not texture. **Settled with the owner on 
   3. **Minutes logged** → accent mark, height proportional.
   Without state 2, a day with three untimed entries would render identical to an empty day — the
   chart would lie about exactly the thing the product exists to protect.
-- **Always labelled.** `28 DIAS · ALTURA = MINUTOS REGISTRADOS` / `14 DIAS · MINUTOS`, in the mono
-  label style. An unlabelled height is not a datum.
+- **Always labelled, from the header.** `28 DIAS · ALTURA = MINUTOS REGISTRADOS` /
+  `14 DIAS · MINUTOS`, in the mono label style, in the header slot below — not under the chart. An
+  unlabelled height is not a datum, but a chart drawn at `0.30` as ground does not carry a caption
+  and a three-state key as well; that weight belongs to content. **Settled with the owner on
+  2026-09-01**, after a key of three swatches was built and rejected on sight: the states differ by
+  height and colour, and any key small enough for a `9px` label line is too small to teach the
+  `9:12` difference honestly. What a reader needs at a glance is nothing-versus-something, which
+  colour already carries; the exact state of one day is in that mark's `<title>`, on hover and for
+  assistive technology.
 - **Opacity 0.30 applies to marks, never labels.** The legend remains full-opacity `dim`, at 9px
   mobile / 10px desktop; settled after owner readability testing on 2026-08-31.
-- **The legend's swatches are bars, because the marks are bars.** Settled with the owner on
-  2026-09-01. Three states exist so a day with untimed entries cannot read as an empty day, and
-  nothing else on the screen explains that difference — so the legend names it, and must look like
-  what it names. Each swatch is a `3px` pill, bottom-aligned with its label, at `7px` / `9px` /
-  `14px`, holding the real `9:12` ratio between the empty stub and the untimed floor rather than
-  exaggerating it for legibility. Colour does the first split (`faint-text` against `accent`) and
-  height the second, which is how the chart itself separates them. Circles are wrong here: the marks
-  have no circular state, and a circle cannot show the height the whole chart encodes. The approved
-  canvas draws no swatches at all — this adds to it deliberately, for the three states it predates.
-- **A veiled chart takes its legend with it.** On the form screens of § Interaction States the marks
-  drop to `0.06`, and a legible label for invisible bars names nothing while spending accent that
-  belongs to the one field. The legend is removed, not faded — faded would leave unreadable text on
-  screen instead of taking it away.
-
-## The Project Row
-
-Every project inside the glass panel. Drawn in the approved canvas (`L-Escritorio` and `L-Movil`,
-page `page-ux`) but never written down until now, so the first implementation could not build it.
-**Settled with the owner on 2026-09-01**, reading the artboards back.
-
-- **Three elements, in this order:** the marker row, the project title, one sentence. Nothing else.
-  No area label, no field labels, no per-field rows. The artboards carry four fewer text blocks than
-  a labelled form does, and that difference is the design.
-- **The markers, above the title.** A small path, left to right: one **filled `accent` circle per
-  recent progress entry**, then one **`faint` outlined circle** — the next step, always drawn — then
-  a **`faint` diamond** for the objective. A project with nothing logged opens at its empty circle.
-  The outline is not conditional: `data-model.md` requires every active project to carry exactly one
-  open next action, so the step always exists, and all three rows of the canvas draw it.
-  | Mark | Geometry | Desktop | Mobile |
-  |---|---|---|---|
-  | Progress | circle, filled `accent` | 12px | 11px |
-  | Open next action | circle, `1.5px` border in `faint`, no fill | 12px | 11px |
-  | Objective | square rotated `45deg`, filled `faint`, `margin-left: 5px` | 9px | 8px |
-  Row is `flex`, `align-items: center`, `gap: 10px`.
-- **Filled circles cap at four.** Owner's number, not the canvas's — the artboards only ever draw
-  two. Four is the 28-day window read as weeks, and it holds the row near 65px inside a 400–480px
-  panel. Past four the row stops growing.
-- **The markers are a path, not a score.** They carry no number, no streak and no target, and a
-  missed period removes nothing that was there (`NFR-7`, `AC-X4`). If a count is ever rendered
-  beside them, that rule is the one it breaks.
-- **The sentence is the next action, read as language.** `trigger` and `act` join into one line in
-  `dim`: the trigger already carries its own *Cuando* / *Si* / *El sábado*, so the rendering joins
-  them with a comma, lowercases the first letter of `act` unless that word is capitalised in its own
-  right, and closes with a period. `Cuando pase el despliegue de la mañana, verifico la réplica.`
-  A project with no open next action shows the prompt to write one instead, also in `dim`.
-- **The marks are `aria-hidden`.** Everything they encode is already in text on the same screen:
-  the section heading says whether the project moved, and the sentence says whether a next action is
-  open. Only the count of advances is theirs alone, and `NFR-7` does not want that spoken any more
-  than it wants it drawn. Shape already carries the states for anyone reading them (§ Accessibility
-  Notes, "Progress dots pair fill with an outline shape").
-- **Spacing.** `14px` above and below the row on mobile, `16px` on desktop, a `hair` rule between
-  rows, and **`8px` between the marks, the title and the sentence**. Those three 8px gaps are the
-  hierarchy of the row; compact height mode takes its space from the outer padding (down to `12px`)
-  and never from them.
-- **The whole row is the link** to `/registrar?project=<id>`, which is what preserves the prefilled
-  project without spending a visible element on it (`NFR-1`). The canvas draws a single accent
-  button in the headline column; a second call to action per card was never in it.
 
 ## Navigation Map
 
@@ -214,6 +164,12 @@ Six routes, three levels deep. Settled with the owner on 2026-08-30 after drawin
 **`/semana` is one route with two states, not two routes.** Opening the week and closing it are the
 same ritual at different moments; splitting them creates two places the owner has to remember to
 visit.
+
+**The header is the wordmark and one mono label, on the baseline, opposite each other.** The label
+names where you are and is different on every screen — `28 DIAS · ALTURA = MINUTOS REGISTRADOS` on
+the portfolio, `REGISTRO` on the log, `DOMINGO · S34` on the close, `VIAJES · SIN MOVIMIENTO` on a
+dormant project. All four artboards draw it, so a page repeating that label inside its own body is
+saying the same thing twice. `8px` mobile / `9px` desktop, `0.22em`, `dim`.
 
 **No persistent navigation chrome.** No tab bar, no top nav. The wordmark returns to `/`; everything
 else is reached from where it is relevant. Two reasons this beat a persistent bar, both of which only
