@@ -42,6 +42,38 @@ describe("the open next-action rule", () => {
     );
     assert.deepEqual(await store.findOpenNextAction(project.id), replacement);
   });
+
+  it("rejects a replacement born before the action closes", async () => {
+    const store = new MemoryStore();
+    await store.createProject(project);
+    await createNextAction(store, firstAction);
+
+    await assert.rejects(
+      closeNextAction(store, firstAction.id, "2026-09-01T12:00:00.000Z", {
+        ...firstAction,
+        id: "action-2",
+      }),
+      /cannot open before/,
+    );
+    assert.deepEqual(await store.findOpenNextAction(project.id), firstAction);
+  });
+
+  it("maps an atomic replace miss to a rule error", async () => {
+    const store = new MemoryStore();
+    await store.createProject(project);
+    await createNextAction(store, firstAction);
+    store.missNextReplace = true;
+
+    await assert.rejects(
+      closeNextAction(store, firstAction.id, "2026-09-01T12:00:00.000Z", {
+        ...firstAction,
+        id: "action-2",
+        createdAt: "2026-09-01T12:00:01.000Z",
+      }),
+      /already closed/,
+    );
+    assert.deepEqual(await store.findOpenNextAction(project.id), firstAction);
+  });
 });
 
 const project: Project = {
@@ -70,6 +102,7 @@ const firstAction: NextAction = {
 class MemoryStore implements Store {
   readonly projects = new Map<string, Project>();
   readonly actions = new Map<string, NextAction>();
+  missNextReplace = false;
 
   async createOwner(_value: Owner) { throw new Error("not used"); }
   async getOwner(_id: string) { return null; }
@@ -88,19 +121,23 @@ class MemoryStore implements Store {
   async findOpenNextAction(projectId: string) {
     return [...this.actions.values()].find((value) => value.projectId === projectId && value.closedAt === null) ?? null;
   }
-  async readOpenNextActions(projectIds: string[]) {
+  async readOpenNextActionsWithProgress(projectIds: string[]) {
     return [...this.actions.values()].filter(
       (value) => projectIds.includes(value.projectId) && value.closedAt === null,
-    );
+    ).map((action) => ({ action, progressSincePlan: 0 }));
   }
   async replaceNextAction(id: string, closedAt: string, replacement: NextAction) {
+    if (this.missNextReplace) {
+      this.missNextReplace = false;
+      return false;
+    }
     const value = this.actions.get(id);
-    if (value === undefined || value.closedAt !== null) throw new Error("not open");
+    if (value === undefined || value.closedAt !== null) return false;
     if (this.actions.has(replacement.id)) throw new Error("duplicate action");
     this.actions.set(id, { ...value, closedAt });
     this.actions.set(replacement.id, replacement);
+    return true;
   }
   async createEntry(_value: Entry) { throw new Error("not used"); }
   async readRecentEntries(_projectIds: string[], _occurredSince: string) { return []; }
-  async countProgressSinceOpenNextActions(_projectIds: string[]) { return []; }
 }

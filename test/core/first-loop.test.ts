@@ -200,17 +200,26 @@ class MemoryStore implements Store {
       (value) => value.projectId === projectId && value.closedAt === null,
     ) ?? null;
   }
-  async readOpenNextActions(projectIds: string[]) {
-    return [...this.actions.values()].filter(
-      (value) => projectIds.includes(value.projectId) && value.closedAt === null,
-    );
+  async readOpenNextActionsWithProgress(projectIds: string[]) {
+    return [...this.actions.values()]
+      .filter((action) => projectIds.includes(action.projectId) && action.closedAt === null)
+      .map((action) => ({
+        action,
+        progressSincePlan: [...this.entries.values()].filter(
+          (value) =>
+            value.projectId === action.projectId &&
+            value.kind === "progress" &&
+            value.occurredAt >= action.createdAt,
+        ).length,
+      }));
   }
   async replaceNextAction(id: string, closedAt: string, replacement: NextAction) {
     const value = this.actions.get(id);
-    if (value === undefined || value.closedAt !== null) throw new Error("not open");
+    if (value === undefined || value.closedAt !== null) return false;
     if (this.actions.has(replacement.id)) throw new Error("duplicate action");
     this.actions.set(id, { ...value, closedAt });
     this.actions.set(replacement.id, replacement);
+    return true;
   }
   async createEntry(value: Entry) { this.entries.set(value.id, value); }
   async readRecentEntries(projectIds: string[], occurredSince: string) {
@@ -219,18 +228,5 @@ class MemoryStore implements Store {
         (value) => projectIds.includes(value.projectId) && value.occurredAt >= occurredSince,
       )
       .sort((left, right) => right.occurredAt.localeCompare(left.occurredAt));
-  }
-  async countProgressSinceOpenNextActions(projectIds: string[]) {
-    return [...this.actions.values()]
-      .filter((action) => projectIds.includes(action.projectId) && action.closedAt === null)
-      .map((action) => ({
-        projectId: action.projectId,
-        count: [...this.entries.values()].filter(
-          (value) =>
-            value.projectId === action.projectId &&
-            value.kind === "progress" &&
-            value.occurredAt >= action.createdAt,
-        ).length,
-      }));
   }
 }

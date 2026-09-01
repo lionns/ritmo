@@ -57,8 +57,7 @@ interface EntryRow {
   note: string | null;
 }
 
-interface ProgressSincePlanRow {
-  project_id: string;
+interface OpenNextActionWithProgressRow extends NextActionRow {
   progress_since_plan: number;
 }
 
@@ -188,26 +187,40 @@ export class D1Store implements Store {
     return row === null ? null : toNextAction(row);
   }
 
-  async readOpenNextActions(projectIds: string[]): Promise<NextAction[]> {
+  async readOpenNextActionsWithProgress(
+    projectIds: string[],
+  ): Promise<Array<{ action: NextAction; progressSincePlan: number }>> {
     if (projectIds.length === 0) return [];
     const placeholders = projectIds.map(() => "?").join(", ");
     const { results } = await this.#database
       .prepare(
-        `SELECT * FROM next_actions
-         WHERE closed_at IS NULL AND project_id IN (${placeholders})
-         ORDER BY project_id`,
+        `SELECT next_actions.*,
+                COUNT(entries.id) AS progress_since_plan
+         FROM next_actions
+         LEFT JOIN entries
+           ON entries.project_id = next_actions.project_id
+          AND entries.owner_id = next_actions.owner_id
+          AND entries.kind = 'progress'
+          AND entries.occurred_at >= next_actions.created_at
+         WHERE next_actions.closed_at IS NULL
+           AND next_actions.project_id IN (${placeholders})
+         GROUP BY next_actions.id
+         ORDER BY next_actions.project_id`,
       )
       .bind(...projectIds)
-      .all<NextActionRow>();
-    return results.map(toNextAction);
+      .all<OpenNextActionWithProgressRow>();
+    return results.map((row) => ({
+      action: toNextAction(row),
+      progressSincePlan: row.progress_since_plan,
+    }));
   }
 
   async replaceNextAction(
     id: string,
     closedAt: string,
     replacement: NextAction,
-  ): Promise<void> {
-    await this.#database.batch([
+  ): Promise<boolean> {
+    const [closeResult, insertResult] = await this.#database.batch([
       this.#database
         .prepare(
           `UPDATE next_actions SET closed_at = ?
@@ -218,7 +231,8 @@ export class D1Store implements Store {
         .prepare(
           `INSERT INTO next_actions
             (id, owner_id, project_id, trigger, act, obstacle, estimate_minutes, created_at, closed_at)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+           SELECT ?, ?, ?, ?, ?, ?, ?, ?, ?
+           WHERE changes() = 1`,
         )
         .bind(
           replacement.id,
@@ -232,6 +246,7 @@ export class D1Store implements Store {
           replacement.closedAt,
         ),
     ]);
+    return closeResult.meta.changes === 1 && insertResult.meta.changes === 1;
   }
 
   async createEntry(entry: Entry): Promise<void> {
@@ -270,33 +285,6 @@ export class D1Store implements Store {
     return results.map(toEntry);
   }
 
-  async countProgressSinceOpenNextActions(
-    projectIds: string[],
-  ): Promise<Array<{ projectId: string; count: number }>> {
-    if (projectIds.length === 0) return [];
-    const placeholders = projectIds.map(() => "?").join(", ");
-    const { results } = await this.#database
-      .prepare(
-        `SELECT next_actions.project_id,
-                COUNT(entries.id) AS progress_since_plan
-         FROM next_actions
-         LEFT JOIN entries
-           ON entries.project_id = next_actions.project_id
-          AND entries.owner_id = next_actions.owner_id
-          AND entries.kind = 'progress'
-          AND entries.occurred_at >= next_actions.created_at
-         WHERE next_actions.closed_at IS NULL
-           AND next_actions.project_id IN (${placeholders})
-         GROUP BY next_actions.project_id
-         ORDER BY next_actions.project_id`,
-      )
-      .bind(...projectIds)
-      .all<ProgressSincePlanRow>();
-    return results.map((row) => ({
-      projectId: row.project_id,
-      count: row.progress_since_plan,
-    }));
-  }
 }
 
 function toOwner(row: OwnerRow): Owner {

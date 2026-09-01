@@ -35,18 +35,19 @@ export async function readPortfolio(
     clock.now().getTime() - RECENT_PROGRESS_DAYS * DAY_MILLISECONDS,
   ).toISOString();
   const areaIds = [...new Set(projects.map(({ areaId }) => areaId))];
-  const [entries, actions, areas, progressCounts] = await Promise.all([
+  const [entries, actionReads, areas] = await Promise.all([
     store.readRecentEntries(projectIds, occurredSince),
-    store.readOpenNextActions(projectIds),
+    store.readOpenNextActionsWithProgress(projectIds),
     store.readAreas(areaIds),
-    store.countProgressSinceOpenNextActions(projectIds),
   ]);
 
   const entriesByProject = groupEntries(entries);
-  const actionsByProject = new Map(actions.map((action) => [action.projectId, action]));
+  const actionsByProject = new Map(
+    actionReads.map(({ action }) => [action.projectId, action]),
+  );
   const areasById = new Map(areas.map((area) => [area.id, area]));
   const progressByProject = new Map(
-    progressCounts.map(({ projectId, count }) => [projectId, count]),
+    actionReads.map(({ action, progressSincePlan }) => [action.projectId, progressSincePlan]),
   );
   const assembled = projects.map((project) =>
     assembleProject(

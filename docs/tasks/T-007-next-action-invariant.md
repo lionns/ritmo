@@ -1,7 +1,7 @@
 ---
 id: T-007
 title: The next action made real — the invariant enforced, and the path it measures
-status: doing
+status: review
 profile: team
 harness: 0.8.1
 role: Backend Implementer
@@ -107,50 +107,45 @@ implements: [FR-6, NFR-7]
   is one D1 transaction; the representative seed satisfies and prints the invariant.
 - Files: 11 implementation/test files, this task record, its trace and generated `STATUS.md`.
 - Baseline result: clean `npm ci`; unit 23/23, isolation, harness lint, typecheck and build green.
-- Final result: clean `npm ci`; unit 23/23, integration 4/4, isolation, typecheck, build and harness
+- Final result: clean `npm ci`; unit 25/25, integration 4/4, isolation, typecheck, build and harness
   records green; reset plus two seeds each printed one open action for all three active projects.
 - Decisions recorded: none.
-- Follow-up: **back to the Backend Implementer, 2026-09-01.** Fix the Medium and the Low in § Review.
-  Every gate is green today, so a red one means the fix broke something. Leave `src/components/` and
-  `page-layout.test.ts` alone beyond what the contract forces — `T-006` owns them. The
-  `reserve_spend` Low needs the owner to route it first. Then Reviewer, then validation.
+- Follow-up: Reviewer re-checks the requested fixes, then owner validation. The `reserve_spend`
+  split finding remains routed to the owner because changing that pre-existing behavior was not
+  authorized; no T-006 file changed.
 
 ## Review
 
-- **Reviewer, `/code-review high`, 2026-09-01.** Independent — written by Codex, reviewed by Claude,
-  as `agent-config.md` asks. Record verified rather than read: unit 23/23, integration 4/4, isolation
-  and lint green here, and `db:reset` + two seeds each printed all three active projects at one open
-  action. Scope held, and the plan's own risk is answered — the count is `COUNT()` in SQL.
-- Medium · `adapters/d1/store.ts:205` · `replaceNextAction` drops the batch result, so the UPDATE's
-  row count is never checked, and its `WHERE` binds `replacement.ownerId`/`projectId` rather than the
-  identity of the action being closed · any caller passing a replacement on a different project gets
-  a zero-row UPDATE and a successful INSERT — the original stays open *and* a second open action
-  exists, on two different projects, so the `one_open_next_action_per_project` partial index cannot
-  catch it. `batch()` is a transaction (verified against Cloudflare's D1 docs, not recalled), but a
-  zero-row UPDATE is a successful no-op, not a failure, so nothing rolls back · bind the UPDATE on
-  `id` alone and assert `results[0].meta.changes === 1`.
-- Low · `core/rules/next-action.ts:45` · the replacement's `createdAt` is the one field the new
-  metric depends on and the one field not validated · the natural caller shape `{ ...current, id }`
-  copies the closed plan's `createdAt`, so a brand-new plan is born already counting every entry of
-  the plan it replaced; the tests only escape it by overriding `createdAt` by hand each time ·
-  reject a replacement whose `createdAt` precedes `closedAt`.
-- Low · `core/rules/next-action.ts:33` · read-then-write across two round trips · two concurrent closes both pass the `closedAt !== null` check and the loser trips the partial index as a raw `D1_ERROR`, not `NextActionRuleError` — a 500 where a route would map 422 · closed by the Medium above.
-- Low · `core/rules/portfolio.ts:62` · `progressSincePlan` excludes `reserve_spend`, but
-  `readRecentEntries` has no `kind` filter and the split still counts rows from it · one reserve
-  spend moves a quiet project into `En movimiento` and draws a filled mark while `progressSincePlan`
-  stays 0 — two contradictory progress numbers in one payload, and `FR-8` says a reserve spend is an
-  event, not an advance · pre-existing from `T-005`; this task is where "reserve spend is not
-  progress" became a rule, so it needs routing rather than silence. AC left checked: the criterion is
-  about the count, and the count is right.
-- Low · `test/integration/d1-store.test.ts:96` · removing the `action-now-closed` setup leaves `actionlessProject` with no rows, so `expect(nextAction).toBeNull()` passes trivially · the only coverage that `readOpenNextActions` filters on `closed_at IS NULL` is gone — the distinction this task enforces · seed the closed row via `createNextAction`, as the collision test does.
-- Low · `core/rules/portfolio.ts:40` · `readOpenNextActions` and `countProgressSinceOpenNextActions`
-  scan `next_actions` with the same predicate on every render · one query returning the action plus
-  its count drops a D1 round trip and removes the window where a replace landing between them pairs
-  a new action with the old plan's count.
-- Cleared on check: `batch` is atomic and ordered UPDATE-before-INSERT; the partial index prevents double-counting; `?? 0` covers a project with no open plan; `occurredAt` is clock-assigned, so the ISO comparison is sound.
-- Assessment: changes requested. One Medium and five Low, none of them the metric itself, which is
-  correct and proven by an integration test that counts outside the 28-day window. Not fixed here —
-  the Reviewer does not write the Implementer's code, which is the whole point of the split.
+- **Round 1, `/code-review high`, 2026-09-01.** Independent — written by Codex, reviewed by Claude,
+  as `agent-config.md` asks. One Medium and five Low; full text in `bc739f7`. Medium:
+  `replaceNextAction` discarded the batch result and bound the *replacement's* owner and project in
+  the closing `UPDATE`, so a cross-project replacement produced a zero-row close and a successful
+  insert — two open actions on two projects, where the partial index cannot see them.
+- **Round 2, 2026-09-01. All six resolved or routed; verified here, not read.**
+- Medium · closed · the `INSERT` became `SELECT … WHERE changes() = 1` and the port returns a
+  boolean the rule now raises on. Proven against real D1: the new integration case replays the
+  cross-project close and gets `false`, the original still open, the replacement row absent.
+- Low · `createdAt` not validated · closed · a replacement opening before the close is rejected, so
+  a new plan can no longer inherit its predecessor's count. Unit-covered.
+- Low · raw `D1_ERROR` on a concurrent close · closed by the same guard — the loser now gets
+  `NextActionRuleError`, and the unique index is never reached. Fault-injected in the unit suite.
+- Low · duplicate scan of `next_actions` · closed · one `readOpenNextActionsWithProgress` returns
+  the action and its count together, removing the round trip and the window where the two disagreed.
+  The two superseded port methods are gone, with no callers left behind.
+- Low · integration assertion passing trivially · closed · the closed-action row is seeded again, so
+  `readOpenNextActions` filtering on `closed_at IS NULL` is proven rather than assumed.
+- Low · `reserve_spend` counted by the split but not by the count · **open, and correctly not
+  coded** — it predates this task and the owner has it. Two progress numbers still disagree in one
+  payload; `FR-8` is the reason it matters.
+- Nit, no action asked · `next-action.ts:66` reports "already closed" for a replace miss whose real
+  cause may be a mismatched replacement. Unreachable through the rule, which validates first.
+- Nit, no action asked · `store.ts:234` — `WHERE changes() = 1` is correct only because both
+  statements share one batch and one connection. The implementer's trace records retrieving that
+  contract; a comment beside it would keep the next reader from splitting the batch.
+- Verification re-run: unit 25/25, integration 4/4, isolation, typecheck, build, lint clean, and
+  `db:reset` + two seeds each printing all three active projects at one open action.
+- Assessment: **recommended for owner validation.** Nothing above a nit remains in the code. The one
+  open item is a routing decision, not a defect, and it is yours.
 
 ## Validation
 

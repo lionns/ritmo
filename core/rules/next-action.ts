@@ -56,6 +56,14 @@ export async function closeNextAction(
   if (replacement.closedAt !== null) {
     throw new NextActionRuleError(`Replacement next action ${replacement.id} must be open`);
   }
+  if (replacement.createdAt < closedAt) {
+    throw new NextActionRuleError(
+      `Replacement next action ${replacement.id} cannot open before ${closedAt}`,
+    );
+  }
 
-  await store.replaceNextAction(actionId, closedAt, replacement);
+  const replaced = await store.replaceNextAction(actionId, closedAt, replacement);
+  if (!replaced) {
+    throw new NextActionRuleError(`Next action ${actionId} is already closed`);
+  }
 }

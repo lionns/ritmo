@@ -68,6 +68,23 @@ describe("D1Store with the next-action rule", () => {
       }),
     ).rejects.toThrow();
     expect(await store.findOpenNextAction(project.id)).toEqual(replacement);
+
+    const otherProject = { ...project, id: "project-other" };
+    await store.createProject(otherProject);
+    const mismatchedReplacement = {
+      ...replacement,
+      id: "action-mismatched-replacement",
+      projectId: otherProject.id,
+    };
+    expect(
+      await store.replaceNextAction(
+        replacement.id,
+        "2026-09-01T12:30:00.000Z",
+        mismatchedReplacement,
+      ),
+    ).toBe(false);
+    expect(await store.findOpenNextAction(project.id)).toEqual(replacement);
+    expect(await store.getNextAction(mismatchedReplacement.id)).toBeNull();
   });
 
   it("drives POST entries and GET portfolio through the real D1 adapter", async () => {
@@ -92,6 +109,12 @@ describe("D1Store with the next-action rule", () => {
       ...action,
       id: "action-quiet",
       projectId: quietProject.id,
+    });
+    await store.createNextAction({
+      ...action,
+      id: "action-now-closed",
+      projectId: actionlessProject.id,
+      closedAt: "2026-09-01T11:00:00.000Z",
     });
     const createdResponse = await postEntry({
       projectId: project.id,
