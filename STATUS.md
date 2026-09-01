@@ -10,11 +10,11 @@ Harness `0.8.1` · profile `team`
 |---|---|---|
 | [T-004](docs/tasks/T-004-harness-loose-ends.md) | `ready` | Close the three low-severity findings the T-002 review left in the harness tooling, keeping |
 | [T-006](docs/tasks/T-006-first-loop-front.md) | `review` | Build the landing surface and the log form from the approved design, against the endpoints |
-| [T-007](docs/tasks/T-007-next-action-invariant.md) | `review` | Make the "exactly one open next action" invariant something the rules enforce rather than |
 | [T-001](docs/tasks/T-001-skeleton-and-next-action.md) | `done` | Stand up the three-layer tree with every quality-gate command real and green, and prove it by |
 | [T-002](docs/tasks/T-002-split-task-budget.md) | `done` | Replace the single task-file budget with a plan budget and a record budget, enforced by |
 | [T-003](docs/tasks/T-003-loose-ends.md) | `done` | Close the six low-severity findings the T-001 review left open, so the schema states the |
 | [T-005](docs/tasks/T-005-first-loop-back.md) | `done` | Give the front two endpoints and the contracts behind them, so a real portfolio can be read |
+| [T-007](docs/tasks/T-007-next-action-invariant.md) | `done` | Make the "exactly one open next action" invariant something the rules enforce rather than |
 
 ## Next
 
@@ -26,6 +26,7 @@ None. All decisions are accepted or superseded.
 
 ## Journal — last 5
 
+- 2026-09-01 | T-007 | done | the next-action invariant enforced, and a path that time cannot erase | 13 files | unit 25/25, isolation, typecheck, build, integration 4/4 | -
 - 2026-08-31 | T-005 | done | portfolio read and entry write, live on a running worker | 20 files | unit 9/9, isolation, typecheck, build, integration 3/3 | -
 - 2026-08-31 | T-003 | done | six loose ends closed, and the core type boundary made whole | 12 files | unit 7/7, isolation, typecheck, build, integration 2/2 | -
 - 2026-08-31 | T-002 | done | task budgets split, and the budget contract derived from source | 15 files | unit 7/7, isolation, typecheck, build, integration 1/1 | D-015,D-016

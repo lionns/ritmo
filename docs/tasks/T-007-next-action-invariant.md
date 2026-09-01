@@ -1,7 +1,7 @@
 ---
 id: T-007
 title: The next action made real — the invariant enforced, and the path it measures
-status: review
+status: done
 profile: team
 harness: 0.8.1
 role: Backend Implementer
@@ -110,9 +110,10 @@ implements: [FR-6, NFR-7]
 - Final result: clean `npm ci`; unit 25/25, integration 4/4, isolation, typecheck, build and harness
   records green; reset plus two seeds each printed one open action for all three active projects.
 - Decisions recorded: none.
-- Follow-up: Reviewer re-checks the requested fixes, then owner validation. The `reserve_spend`
-  split finding remains routed to the owner because changing that pre-existing behavior was not
-  authorized; no T-006 file changed.
+- Follow-up: `T-006` switches the row's marks from `recentEntries.length` to `progressSincePlan`,
+  which is what stops them decaying. One item stays open and is the owner's to route: the
+  progress/outstanding split still counts `reserve_spend` rows, so a reserve spend moves a project
+  into `En movimiento` while the count stays at zero (`FR-8`).
 
 ## Review
 
@@ -149,5 +150,5 @@ implements: [FR-6, NFR-7]
 
 ## Validation
 
-- Validated by:
-- Date:
+- Validated by: Juan Sebastián León Velásquez
+- Date: 2026-09-01
