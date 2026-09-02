@@ -36,7 +36,7 @@ async function inspect(file) {
   const repoPath = relative(root, file).replaceAll("\\", "/");
   const lines = source.split("\n");
   const isCore = repoPath.startsWith("core/");
-  const isFront = /^src\/(?:components\/|layouts\/|pages\/(?!api\/))/.test(repoPath);
+  const isFront = /^src\/(?:components\/|layouts\/|lib\/|pages\/(?!api\/))/.test(repoPath);
 
   lines.forEach((line, index) => {
     const lineNumber = index + 1;

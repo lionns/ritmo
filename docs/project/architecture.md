@@ -86,7 +86,8 @@ ritmo/
 │   ├── pages/api/   THE BACK — endpoints. May reach adapters and core.
 │   ├── pages/       THE FRONT — routes. May import contracts only.
 │   ├── components/  atoms/ · molecules/ · organisms/   (atomic design)
-│   └── layouts/     templates, in atomic-design terms
+│   ├── layouts/     templates, in atomic-design terms
+│   └── lib/         testable front helpers. May import contracts and other front files.
 ├── test/
 │   ├── core/        node --test, nothing installed
 │   └── integration/ the Worker against a local D1
@@ -113,14 +114,14 @@ Six routes, three levels deep, plus the API. The map, the reachability rules and
 There is no persistent navigation chrome: the wordmark returns to `/` and every other route is
 reached from the surface where it is relevant.
 
-**The arrows only point inward, and there are three of them** (`D-009`, superseding `D-003`):
+**The arrows only point inward, and there are three of them** (`D-017`, superseding `D-009`):
 
 | Layer | May import | Enforced |
 | --- | --- | --- |
 | `core/` | nothing | no `cloudflare:*`, no adapters |
 | `adapters/` | `core/`, `cloudflare:*` | the only directory allowed the platform |
 | `src/pages/api/` | `contracts/`, `adapters/`, `core/` | this is the back |
-| `src/pages/`, `src/components/` | `contracts/` only | **a template importing an adapter fails the baseline** |
+| `src/pages/`, `src/components/`, `src/layouts/`, `src/lib/` | `contracts/`, other front files | **a front file importing an adapter or core fails the baseline** |
 
 `npm run check:core` enforces all four rows. This is what let the store move from a VPS file to D1 in
 an afternoon without the rules noticing, and it is what keeps Cloudflare in one directory rather than

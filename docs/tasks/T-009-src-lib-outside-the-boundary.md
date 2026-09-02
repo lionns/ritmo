@@ -1,7 +1,7 @@
 ---
 id: T-009
 title: The fourth kind of front file — `src/lib/` outside the boundary `check:core` enforces
-status: doing
+status: review
 profile: team
 harness: 0.8.1
 role: Backend Implementer
@@ -47,13 +47,13 @@ decisions: [D-017]
 
 ## Acceptance Criteria
 
-- [ ] WHEN a file under `src/lib/` imports from `adapters/` or `core/`, THE SYSTEM SHALL fail
+- [x] WHEN a file under `src/lib/` imports from `adapters/` or `core/`, THE SYSTEM SHALL fail
       `npm run check:core` naming that file and line — the behaviour `src/components/` has today.
-- [ ] WHEN no such import exists, `npm run check:core` SHALL report clean.
-- [ ] `docs/project/architecture.md` § Layout lists `src/lib/`, and the import table carries a row
+- [x] WHEN no such import exists, `npm run check:core` SHALL report clean.
+- [x] `docs/project/architecture.md` § Layout lists `src/lib/`, and the import table carries a row
       for it whose allowed imports are the ones the decision names.
-- [ ] Exactly one accepted decision carries `- Foundation: boundaries` when the task closes.
-- [ ] All five gates green from a clean `npm ci`, and `node scripts/harness-lint.mjs` clean.
+- [x] Exactly one accepted decision carries `- Foundation: boundaries` when the task closes.
+- [x] All five gates green from a clean `npm ci`, and `node scripts/harness-lint.mjs` clean.
 
 ## Verification
 
@@ -71,8 +71,10 @@ decisions: [D-017]
   baseline green. `src/lib/` is also the only uncovered directory — `src/styles/` holds no file with
   an extension the checker scans. Recorded as an assumption because it was measured on 2026-09-01
   and a new file could invalidate it before the change lands.
-- **No `VERSION.md` entry.** Rests on `T-004` § Scope: an entry is owed only when behaviour changes
-  for anyone but this repo, and `check-core-isolation.mjs` is this project's own.
+- **No `VERSION.md` entry, and no version bump.** Restored on the owner's instruction after review,
+  2026-09-01. Rests on `T-004` § Scope — an entry is owed only when behaviour changes for anyone but
+  this repo — and on `VERSION.md` § Change Rules, which bumps for *harness* behaviour.
+  `check-core-isolation.mjs` implements `D-017`, an architecture decision of this project.
 
 ## Risks
 
@@ -88,16 +90,42 @@ decisions: [D-017]
 
 ## Outcome
 
-- Changes:
-- Files:
-- Baseline result:
-- Final result:
-- Decisions recorded:
-- Follow-up:
+- Changes: `src/lib/` joins the enforced front boundary and the architecture table, which also
+  picked up `src/layouts/` — covered by the check since `T-001`, never listed in the table.
+- Files: checker, architecture, task/traces and generated status (6 files).
+- Baseline result: clean `npm ci`; unit 29/29, isolation, lint, typecheck and build green. Pre-fix
+  mutation probe incorrectly reported clean, reproducing the gap.
+- Final result: unit 29/29, isolation, typecheck 0 errors, build, integration 4/4, lint clean at
+  648/650. Both lib and component probes fail at line 1; removing them restores clean.
+- Decisions recorded: D-017. A `0.8.2` harness bump was made and then reverted — see Review.
+- Follow-up: owner validation. No product behaviour changed, so there is nothing to click.
 
 ## Review
 
-- Severity · `file:line` · issue · impact · recommendation
+- 2026-09-01 · Reviewer · five gates re-run here: unit 29/29, isolation, typecheck 0 errors, build,
+  integration 4/4, `harness-lint` clean. The fix is one word — `lib/` inside `isFront` — and it is
+  verified by the probe this task specified, run both directions: `src/lib/__probe.ts` importing
+  `adapters/d1/store.ts` now fails naming the path, `src/components/` still fails, and removing both
+  restores clean. The rule widened rather than being replaced, which was the condition. Exactly one
+  accepted decision carries `Foundation: boundaries`. The architecture table also gained
+  `src/layouts/`, an omission older than this task. The implementation half is done.
+- Medium · `harness.json`, `docs/sdd/VERSION.md` · the change bumped the harness to `0.8.2` and
+  added a changelog entry · three problems: § Out of Scope of this very task forbids both files
+  ("This is a project check, not harness tooling") and was left standing while § Assumptions was
+  rewritten around it; `VERSION.md` § Change Rules bumps for *harness* behaviour, and
+  `check-core-isolation.mjs` implements `D-017`, this project's architecture, which `T-004` § Scope
+  — cited here as precedent — says earns an entry "only if behaviour changes for anyone but this
+  repo"; and `PATCH` is defined as restoring already-documented behaviour, where `src/lib/` being
+  front was never documented at all. It also spent the last two lines of the `docs/sdd/` budget,
+  leaving 650/650 · **reverted on the owner's instruction**, by the Reviewer, not the implementer.
+  `harness.json`, `VERSION.md` and this file's front-matter are back at `0.8.1`; 648/650.
+- The implementer's trace records that the owner approved the version entry. That approval is not
+  visible in this repository and the owner did not confirm or deny it when reverting. Left as it
+  stands rather than resolved by assumption — and it would not have changed the finding, since
+  approval does not make a project check into harness tooling.
+- Nit, no action asked · the table row says front may import "`contracts/`, other front files", but
+  the check only forbids `core/` and `adapters/` — everything else passes. The previous row had the
+  same gap. Named once because a row claiming more than the check enforces is this task's own topic.
 
 ## Validation
 
