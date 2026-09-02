@@ -1,6 +1,5 @@
-import { spawnSync } from "node:child_process";
-
 import { LOCAL_OWNER_ID } from "../adapters/local-owner.ts";
+import { openDatabase } from "../adapters/sqlite/database.ts";
 
 const DAY_MILLISECONDS = 24 * 60 * 60 * 1_000;
 const now = new Date();
@@ -95,19 +94,11 @@ const statements = [
    ORDER BY projects.id`,
 ];
 
-console.log("Seeding local D1 only.");
+console.log("Seeding the local SQLite database.");
 console.log(
   "Assumption: the seeded owner stands in for authentication; this build must not be deployed.",
 );
-const result = spawnSync(
-  "./node_modules/.bin/wrangler",
-  ["d1", "execute", "ritmo", "--local", "--command", `${statements.join(";\n")};`],
-  {
-    cwd: process.cwd(),
-    env: { ...process.env, WRANGLER_WRITE_LOGS: "false" },
-    stdio: "inherit",
-  },
-);
-if (result.error !== undefined) throw result.error;
-if (result.status !== 0) process.exit(result.status ?? 1);
+const database = openDatabase();
+database.exec(`${statements.join(";\n")};`);
+database.close();
 console.log("Seed complete: 1 owner, 3 areas, 4 projects, 3 next actions, 10 entries.");

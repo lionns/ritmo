@@ -1,24 +1,23 @@
 # Architecture
 
 The foundation lives in `docs/decisions/` as accepted decisions carrying `- Foundation: <topic>`.
-This file summarizes what was decided there; it is not where architecture gets chosen. Every
-statement below traces to `D-001` … `D-007`.
+This file summarizes what was decided there; it is not where architecture gets chosen.
 
 ## Stack
 
-TypeScript end to end (`D-001`). The server runs on the Cloudflare Workers runtime — V8 isolates
-with Web APIs, **not Node** — so Node built-ins exist only through the opt-in compatibility layer,
-and only partially. Storage is Cloudflare D1, which is SQLite (`D-002`). Tooling is `wrangler` for
-deploys and migrations, `tsc` for types, and Node's built-in test runner for the core (`D-006`).
+TypeScript end to end. The server runs on the pinned Node `24.20.0` line on the owner's machine
+(`D-018`). Storage is a SQLite file through the built-in `node:sqlite` module (`D-019`). Local
+scripts apply migrations and seed the file; `tsc` checks types and Node's built-in runner tests the
+core (`D-006`).
 
-No routing library and no test framework; Astro and Tailwind are the accepted build-time
-dependencies (`D-008`), plus Cloudflare's local test tooling for the adapter tests (`D-006`).
+No routing library. Astro and Tailwind remain the interface dependencies, with Vitest confined to
+the integration gate (`D-021`, `D-022`).
 
 ## Frontend
 
-Astro with SSR on Workers via `@astrojs/cloudflare`, Tailwind for styles, components organised by
-atomic design (`D-008`, superseding `D-007`). Static assets are served by Workers, where they are
-free and unlimited.
+Astro with SSR via the standalone `@astrojs/node` adapter, Tailwind for styles, components
+organised by atomic design (`D-021`). The Node process serves both the rendered routes and static
+assets while it is running.
 
 **Zero client JavaScript by default.** React is permitted only as an island, in a component that
 demonstrably needs it, never as the rendering base — an island that exists for convenience is a
@@ -40,8 +39,8 @@ adapters and core. `adapters/http/` is not a router: it holds session verificati
 error mapping, so endpoints stay thin.
 
 **No template ever reads data.** `.astro` routes and components consume `/api/*` and import
-`contracts/` for the types. Neither Express nor Hono appears: Express needs `node:http` and cannot
-run here, and a router would duplicate what Astro already does.
+`contracts/` for the types. Neither Express nor Hono appears. Node now provides `node:http`, but a
+second router would still duplicate what Astro already does.
 
 **The boundary is checked, not trusted.** No file in the core may import from `@cloudflare/*` or
 `cloudflare:*`, name the `Env` binding type, or touch any platform API; a zero-dependency script
@@ -49,23 +48,24 @@ enforces it in the baseline gate. Platform coupling arrives one well-excused imp
 invisible until someone tries to move, so it is caught the day it happens rather than the day it
 hurts.
 
-**10 ms of CPU per invocation shapes the domain** (`D-001`). Waiting on the database is free;
-computing is not. Every derived value therefore runs over a bounded window — four weeks for
-dormancy, roughly eight for the attribution pattern, the last twenty closed actions for calibration.
+Derived values still run over bounded windows — four weeks for dormancy, roughly eight for the
+attribution pattern, the last twenty closed actions for calibration. Node has no Workers CPU
+ceiling; the bounds now protect work as the owner's log grows (`D-018`).
 
 ## Data
 
-D1, one database, schema and migrations as in `data-model.md`: ten tables, `TEXT` and `INTEGER`
-types, ISO-8601 strings for timestamps. Partial unique indexes carry the validation rules that prose
-could not enforce — one open `NextAction` per project is an index, not a convention. Derived values
-are computed, never stored, so they cannot drift from the log.
+One SQLite file, schema and migrations as in `data-model.md`: ten product tables, `TEXT` and
+`INTEGER` types, ISO-8601 strings for timestamps. A local migration table records each ordered SQL
+file once. Partial unique indexes carry the validation rules that prose could not enforce — one
+open `NextAction` per project is an index, not a convention. Derived values are computed, never
+stored, so they cannot drift from the log.
 
-D1 has no interactive transactions; atomic multi-statement work uses its batch API. Nothing in the
-model currently needs more than that.
+Multi-statement writes use SQLite transactions. `replaceNextAction` closes the old action and
+inserts its replacement inside one transaction, so either both changes land or neither does.
 
-Durability is Cloudflare's, which means the owner holds no copy unless one is made: `FR-21` — a full
-export to a downloadable SQLite file — is a requirement, and the condition the privacy reversal in
-`D-005` rests on.
+The owner holds `data/ritmo.sqlite` and therefore owns its durability (`D-019`). A consistent backup
+must use `VACUUM INTO` or a backup API against a quiesced database; copying the live file is not a
+backup. `FR-21` remains the requirement to produce that consistent copy on demand.
 
 ## Layout
 
@@ -74,12 +74,12 @@ you what it may depend on.
 
 ```
 ritmo/
-├── core/          the rules. Pure TypeScript, no I/O, no Cloudflare. Imports nothing.
+├── core/          the rules. Pure TypeScript, no I/O or platform imports. Imports nothing.
 │   ├── model/     the ten entities as types
 │   ├── rules/     reserves, derived state, stale rate, consistency, calibration
 │   └── ports/     the interfaces the core needs — Store, Clock
-├── adapters/      the outside world. The only place `cloudflare:*` may be imported.
-│   ├── d1/        Store against D1, plus the migrations
+├── adapters/      the outside world. The only place storage/platform I/O may be imported.
+│   ├── sqlite/    Store, connection and migration applier against node:sqlite
 │   └── http/      session, form parsing, error mapping. Not a router — Astro routes.
 ├── contracts/     the API request and response types. The only thing both sides share.
 ├── src/           Astro.
@@ -90,9 +90,10 @@ ritmo/
 │   └── lib/         testable front helpers. May import contracts and other front files.
 ├── test/
 │   ├── core/        node --test, nothing installed
-│   └── integration/ the Worker against a local D1
-├── migrations/    SQL, applied by wrangler
-├── scripts/       check-core-isolation.mjs + the harness scripts
+│   └── integration/ the API handlers and store against a real SQLite file
+├── migrations/    ordered SQL, applied once by the local migration applier
+├── data/          the ignored owner-held SQLite file
+├── scripts/       local reset/seed + boundary and harness scripts
 └── docs/          the harness and the specification
 ```
 
@@ -118,21 +119,20 @@ reached from the surface where it is relevant.
 
 | Layer | May import | Enforced |
 | --- | --- | --- |
-| `core/` | nothing | no `cloudflare:*`, no adapters |
-| `adapters/` | `core/`, `cloudflare:*` | the only directory allowed the platform |
+| `core/` | nothing | no platform built-ins, no adapters |
+| `adapters/` | `core/`, `node:*` | the only directory allowed storage/platform I/O |
 | `src/pages/api/` | `contracts/`, `adapters/`, `core/` | this is the back |
 | `src/pages/`, `src/components/`, `src/layouts/`, `src/lib/` | `contracts/`, other front files | **a front file importing an adapter or core fails the baseline** |
 
-`npm run check:core` enforces all four rows. This is what let the store move from a VPS file to D1 in
-an afternoon without the rules noticing, and it is what keeps Cloudflare in one directory rather than
-in every page.
+`npm run check:core` enforces all four rows. This is what let the store move from D1 to a local file
+without the rules noticing, and it keeps platform I/O behind one adapter boundary.
 
 ### Where to start reading
 
 1. `core/rules/` — this is the product. Everything else is plumbing to get data in and out of it.
 2. `core/ports/` — the complete list of what the rules need from the world. Short by design.
 3. `contracts/` — the whole API surface in one place, types only.
-4. `adapters/d1/` — how the needs are met today. Replaceable.
+4. `adapters/sqlite/` — how the needs are met today. Replaceable.
 5. `src/pages/api/` then `src/pages/` — the back, then the front that consumes it.
 
 A change that adds a rule touches `core/` and its test. A change that only alters how something is
@@ -141,16 +141,13 @@ whether the rule was in the wrong place.
 
 ## Security
 
-One owner, authenticated with a passkey or a password fallback, holding a stateless signed cookie —
-no session table and no session store, which suits a runtime with no long-lived process (`D-004`).
-Passkey credentials do persist, one row per device in `credentials`, so a lost phone is revoked by
-deleting its row. No OAuth and no external identity provider: nothing about who the owner is reaches
-a third party.
+The local-only stage binds use to the owner's machine and does not implement authentication
+(`D-020`). `D-004` remains the accepted design for a stateless signed cookie and per-device passkey
+credentials, and becomes mandatory before any future decision exposes the process to a network.
 
 Ownership is an explicit column on every owned row rather than an implied singleton (`NFR-3`), so a
 second party would be an insert rather than a migration.
 
-**What is knowingly given up:** the data lives on Cloudflare, which holds the encryption keys and
-can technically read it (`D-005`). Self-hosting was never the safer option, only the more controlled
-one — a VPS patched in uneven time is more exposed, not less. What was ceded is control over access,
-and `FR-21` is what keeps the owner from being locked in.
+**What is knowingly given up:** nothing runs while the owner's machine or process is off, and the
+owner is responsible for database durability (`D-019`, `D-020`). The local server is not a hosting
+configuration; exposing it would reopen authentication, certificates and operational security.

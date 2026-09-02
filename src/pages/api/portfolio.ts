@@ -1,8 +1,9 @@
 import type { APIRoute } from "astro";
 
-import { runtimeStore } from "../../../adapters/d1/store.ts";
+import { runtimeStore } from "../../../adapters/sqlite/store.ts";
 import { LOCAL_OWNER_ID } from "../../../adapters/local-owner.ts";
 import type { Clock } from "../../../core/ports/clock.ts";
+import type { Store } from "../../../core/ports/store.ts";
 import {
   readPortfolio,
   type PortfolioProject as CorePortfolioProject,
@@ -16,9 +17,9 @@ import type {
 const clock: Clock = { now: () => new Date() };
 const responseHeaders = { "Cache-Control": "no-store" };
 
-export async function handleGetPortfolio(): Promise<Response> {
+export async function handleGetPortfolio(injectedStore?: Store): Promise<Response> {
   try {
-    const store = runtimeStore();
+    const store = injectedStore ?? runtimeStore();
     const owner = await store.getOwner(LOCAL_OWNER_ID);
     if (owner === null) {
       return Response.json(
@@ -48,7 +49,7 @@ export async function handleGetPortfolio(): Promise<Response> {
   }
 }
 
-export const GET: APIRoute = handleGetPortfolio;
+export const GET: APIRoute = () => handleGetPortfolio();
 
 function toContractProject(value: CorePortfolioProject): PortfolioProject {
   return {

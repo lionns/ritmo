@@ -62,13 +62,10 @@ async function inspect(file) {
       }
     }
 
-    if (isCore && /(?:@cloudflare\/|cloudflare:)/.test(line)) {
-      report(repoPath, lineNumber, "Cloudflare import/reference in core");
-    }
     if (isCore && /\bEnv\b/.test(line)) {
       report(repoPath, lineNumber, "Env type in core");
     }
-    if (isCore && /\b(?:AnalyticsEngineDataset|D1Database|DurableObjectNamespace|ExecutionContext|Fetcher|KVNamespace|R2Bucket|Request|Response|VectorizeIndex|WebSocketPair|caches|crypto|fetch|navigator)\b/.test(line)) {
+    if (isCore && /\b(?:AnalyticsEngineDataset|Cloudflare|D1Database|DurableObjectNamespace|ExecutionContext|Fetcher|KVNamespace|R2Bucket|Request|Response|VectorizeIndex|WebSocketPair|caches|crypto|fetch|navigator)\b/.test(line)) {
       report(repoPath, lineNumber, "platform global in core");
     }
   });

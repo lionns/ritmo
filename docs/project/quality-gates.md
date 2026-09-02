@@ -3,9 +3,9 @@
 Commands run from the repo root. Name the real commands — the harness gates invoke these verbatim.
 Dependencies install with `npm ci` against the committed lockfile, never `npm install` (`D-013`).
 
-Every command below follows from an accepted foundation decision: `node --test` and the absence of a
-test framework from `D-006`, the core isolation check from `D-003`, `tsc` and the Workers runtime
-from `D-001`, and the local D1 integration from `D-002`.
+Every command below follows from an accepted foundation decision: `node --test` for the core from
+`D-006`, the boundary check from `D-017`, `tsc` and the Node runtime from `D-018`, and the real
+SQLite integration from `D-019`.
 
 ## Baseline Checks
 
@@ -16,9 +16,9 @@ Run these before starting new implementation. Any required failure blocks the ta
 | Tests | `npm test` | yes | `node --test`, no framework (D-006) |
 | Core isolation | `npm run check:core` | yes | No `@cloudflare/*`, `cloudflare:*` or `Env` reaches the core (D-003) |
 | Harness records | `node scripts/harness-lint.mjs` | yes | Budgets and record shape |
-| Type check | `npm run typecheck` | yes | `wrangler types` via `pretypecheck`, then `astro check && tsc --noEmit` (D-008) |
+| Type check | `npm run typecheck` | yes | `astro check && tsc --noEmit` (D-021) |
 | Lint | — | | Formatting is not gated; no dependency earns it here |
-| Build | `npm run build` | yes | `astro build` (D-008); a template that does not compile is not a green baseline |
+| Build | `npm run build` | yes | `astro build` with the Node adapter (D-021) |
 
 ## Final Acceptance Checks
 
@@ -43,7 +43,7 @@ pass a check that runs it together with what already exists.
 
 | Check | Command or Procedure | Required | Notes |
 | --- | --- | --- | --- |
-| Integration | `npm run test:integration` | yes | Runs the Worker against a local D1 with the real schema and real migrations — the one place the adapters, the schema and the rules meet (D-002, D-006) |
+| Integration | `npm run test:integration` | yes | Runs the store and API handlers against a real SQLite file with the real migrations — the one place the adapter, schema and rules meet (D-019, D-022) |
 | End-to-end | — | | No browser automation; the surface is server-rendered HTML (D-008) |
 
 ## Manual Validation

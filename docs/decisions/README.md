@@ -20,7 +20,7 @@ rather than editing. Template in `../sdd/TEMPLATES.md`.
 | [D-011](D-011-ids-ulid.md) | 2026-08-30 | ULID text ids, generated behind a port | `accepted` | none |
 | [D-012](D-012-tests-dependency-count.md) | 2026-08-31 | node --test for the core, and the five dependencies the platform really costs | `superseded` | D-006 |
 | [D-013](D-013-version-pinning.md) | 2026-08-31 | Exact pins, a committed lockfile, and upgrades as their own task | `accepted` | none |
-| [D-014](D-014-types-node-dev-dependency.md) | 2026-08-31 | `@types/node`, the sixth dev dependency | `accepted` | D-012 |
+| [D-014](D-014-types-node-dev-dependency.md) | 2026-08-31 | `@types/node`, the sixth dev dependency | `superseded` | D-012 |
 | [D-015](D-015-task-budget-plan-and-record.md) | 2026-08-31 | Split the task budget: the plan is bounded, the record is not the same thing | `accepted` | none |
 | [D-016](D-016-budget-contract-both-ways.md) | 2026-08-31 | The linter and `harness.json` must agree on which budgets exist | `accepted` | none |
 | [D-017](D-017-boundaries-src-lib-is-front.md) | 2026-09-01 | `src/lib/` is front, and the check has to be able to say so | `accepted` | D-009 |
@@ -28,3 +28,4 @@ rather than editing. Template in `../sdd/TEMPLATES.md`.
 | [D-019](D-019-data-local-sqlite.md) | 2026-09-02 | SQLite in the process, and the durability that comes back with it | `accepted` | D-002 |
 | [D-020](D-020-deploy-local-on-demand.md) | 2026-09-02 | No deploy: the owner starts it to use it | `accepted` | D-005 |
 | [D-021](D-021-interface-astro-node-adapter.md) | 2026-09-02 | The same Astro, on the Node adapter | `accepted` | D-008 |
+| [D-022](D-022-tests-four-dev-dependencies.md) | 2026-09-02 | Four dev dependencies after the platform test harness leaves | `accepted` | D-014 |

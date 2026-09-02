@@ -1,6 +1,6 @@
 # D-014 — `@types/node`, the sixth dev dependency
 
-- Status: accepted
+- Status: superseded
 - Date: 2026-08-31
 - Supersedes: D-012
 - Tasks: T-001

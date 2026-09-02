@@ -1,21 +1,39 @@
-import { env } from "cloudflare:workers";
-import { beforeEach, describe, expect, it } from "vitest";
+import { mkdtempSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import type { DatabaseSync } from "node:sqlite";
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
-import { D1Store } from "../../adapters/d1/store.ts";
 import { LOCAL_OWNER_ID } from "../../adapters/local-owner.ts";
+import { applyMigrations, openDatabase } from "../../adapters/sqlite/database.ts";
+import { SqliteStore } from "../../adapters/sqlite/store.ts";
 import type { Area, Entry, NextAction, Owner, Project } from "../../core/model/entities.ts";
 import { closeNextAction, createNextAction } from "../../core/rules/next-action.ts";
 import type { CreateEntryErrorResponse, CreateEntryResponse } from "../../contracts/entries.ts";
 import type { PortfolioResponse } from "../../contracts/portfolio.ts";
-import worker from "./worker.ts";
+import { testApplication } from "./worker.ts";
 
-describe("D1Store with the next-action rule", () => {
-  const store = new D1Store(env.DB);
+let database: DatabaseSync;
+let store: SqliteStore;
+let fetchApplication: ReturnType<typeof testApplication>;
+let temporaryDirectory: string;
+let databaseSequence = 0;
+
+describe("SqliteStore with the next-action rule", () => {
+  beforeAll(() => {
+    temporaryDirectory = mkdtempSync(join(tmpdir(), "ritmo-integration-"));
+  });
 
   beforeEach(async () => {
+    database = openDatabase(join(temporaryDirectory, `${databaseSequence++}.sqlite`));
+    store = new SqliteStore(database);
+    fetchApplication = testApplication(store);
     await store.createOwner(owner);
     await store.createArea(area);
   });
+
+  afterEach(() => database.close());
+  afterAll(() => rmSync(temporaryDirectory, { recursive: true }));
 
   it("stores and reads a project and its sole open next action", async () => {
     await store.createOwner({ ...owner, id: "owner-2" });
@@ -121,7 +139,7 @@ describe("D1Store with the next-action rule", () => {
       what: "Stored without effort or note",
     });
     expect(createdResponse.status).toBe(201);
-    const created = await createdResponse.json<CreateEntryResponse>();
+    const created = (await createdResponse.json()) as CreateEntryResponse;
     expect(created.id).toMatch(/^[0-9A-HJKMNP-TV-Z]{26}$/);
 
     const portfolioResponse = await fetchWorker("/api/portfolio");
@@ -130,7 +148,7 @@ describe("D1Store with the next-action rule", () => {
     expect(portfolioText.indexOf('"progress"')).toBeLessThan(
       portfolioText.indexOf('"outstanding"'),
     );
-    const portfolio = await portfolioResponse.json<PortfolioResponse>();
+    const portfolio = (await portfolioResponse.json()) as PortfolioResponse;
     expect(portfolio.progress.map(({ id }) => id)).toEqual([project.id]);
     expect(portfolio.progress[0].recentEntries).toEqual([
       expect.objectContaining({
@@ -162,7 +180,7 @@ describe("D1Store with the next-action rule", () => {
       const rejectedResponse = await postEntry({ projectId, what: "Must not be stored" });
       expect(rejectedResponse.status).toBeGreaterThanOrEqual(400);
       expect(rejectedResponse.status).toBeLessThan(500);
-      const rejected = await rejectedResponse.json<CreateEntryErrorResponse>();
+      const rejected = (await rejectedResponse.json()) as CreateEntryErrorResponse;
       expect(rejected.error).toContain(projectId);
       expect(await entryCount()).toBe(countBeforeRejections);
     }
@@ -204,7 +222,7 @@ describe("D1Store with the next-action rule", () => {
 
     const response = await fetchWorker("/api/portfolio");
     expect(response.status).toBe(200);
-    const portfolio = await response.json<PortfolioResponse>();
+    const portfolio = (await response.json()) as PortfolioResponse;
     const result = portfolio.outstanding.find(({ id }) => id === oldProject.id);
 
     expect(result?.recentEntries).toEqual([]);
@@ -213,21 +231,29 @@ describe("D1Store with the next-action rule", () => {
   });
 
   it("enforces foreign keys and one week per owner and start date", async () => {
-    expect(await env.DB.prepare("PRAGMA foreign_keys").first("foreign_keys")).toBe(1);
+    expect(database.prepare("PRAGMA foreign_keys").get()).toEqual({ foreign_keys: 1 });
 
-    await env.DB.prepare("INSERT INTO weeks (id, owner_id, starts_on) VALUES (?, ?, ?)")
-      .bind("week-1", owner.id, "2026-08-31")
-      .run();
+    database.prepare("INSERT INTO weeks (id, owner_id, starts_on) VALUES (?, ?, ?)")
+      .run("week-1", owner.id, "2026-08-31");
     await expect(
-      env.DB.prepare("INSERT INTO weeks (id, owner_id, starts_on) VALUES (?, ?, ?)")
-        .bind("week-2", owner.id, "2026-08-31")
-        .run(),
+      Promise.resolve().then(() =>
+        database.prepare("INSERT INTO weeks (id, owner_id, starts_on) VALUES (?, ?, ?)")
+          .run("week-2", owner.id, "2026-08-31"),
+      ),
     ).rejects.toThrow();
     await expect(
-      env.DB.prepare("INSERT INTO weeks (id, owner_id, starts_on) VALUES (?, ?, ?)")
-        .bind("orphan-week", "missing-owner", "2026-09-07")
-        .run(),
+      Promise.resolve().then(() =>
+        database.prepare("INSERT INTO weeks (id, owner_id, starts_on) VALUES (?, ?, ?)")
+          .run("orphan-week", "missing-owner", "2026-09-07"),
+      ),
     ).rejects.toThrow();
+  });
+
+  it("records each real migration once", () => {
+    applyMigrations(database);
+    expect(database.prepare("SELECT name FROM _ritmo_migrations ORDER BY name").all()).toEqual([
+      { name: "0001_initial_schema.sql" },
+    ]);
   });
 });
 
@@ -240,13 +266,14 @@ async function postEntry(body: Record<string, unknown>): Promise<Response> {
 }
 
 async function fetchWorker(path: string, init?: RequestInit): Promise<Response> {
-  return worker.fetch(new Request(`http://example.test${path}`, init));
+  return fetchApplication(new Request(`http://example.test${path}`, init));
 }
 
 async function entryCount(): Promise<number> {
-  return (
-    (await env.DB.prepare("SELECT COUNT(*) AS count FROM entries").first<number>("count")) ?? 0
-  );
+  const row = database.prepare("SELECT COUNT(*) AS count FROM entries").get() as
+    | { count: number }
+    | undefined;
+  return row?.count ?? 0;
 }
 
 const owner: Owner = { id: LOCAL_OWNER_ID, activeCap: 3, capRaises: [] };

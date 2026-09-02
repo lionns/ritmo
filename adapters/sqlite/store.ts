@@ -1,4 +1,4 @@
-import { env } from "cloudflare:workers";
+import type { DatabaseSync, SQLInputValue } from "node:sqlite";
 
 import type {
   Area,
@@ -8,6 +8,7 @@ import type {
   Project,
 } from "../../core/model/entities.ts";
 import type { Store } from "../../core/ports/store.ts";
+import { openDatabase } from "./database.ts";
 
 interface OwnerRow {
   id: string;
@@ -61,67 +62,59 @@ interface OpenNextActionWithProgressRow extends NextActionRow {
   progress_since_plan: number;
 }
 
-export function runtimeStore(): D1Store {
-  return new D1Store(env.DB);
+let runtimeDatabase: DatabaseSync | undefined;
+
+export function runtimeStore(): SqliteStore {
+  runtimeDatabase ??= openDatabase();
+  return new SqliteStore(runtimeDatabase);
 }
 
-export class D1Store implements Store {
-  readonly #database: D1Database;
+export class SqliteStore implements Store {
+  readonly #database: DatabaseSync;
 
-  constructor(database: D1Database) {
+  constructor(database: DatabaseSync) {
     this.#database = database;
   }
 
   async createOwner(owner: Owner): Promise<void> {
-    await this.#database
+    this.#database
       .prepare("INSERT INTO owners (id, active_cap, cap_raises) VALUES (?, ?, ?)")
-      .bind(owner.id, owner.activeCap, JSON.stringify(owner.capRaises))
-      .run();
+      .run(owner.id, owner.activeCap, JSON.stringify(owner.capRaises));
   }
 
   async getOwner(id: string): Promise<Owner | null> {
-    const row = await this.#database
-      .prepare("SELECT * FROM owners WHERE id = ?")
-      .bind(id)
-      .first<OwnerRow>();
-    return row === null ? null : toOwner(row);
+    const row = this.#database.prepare("SELECT * FROM owners WHERE id = ?").get(id);
+    return row === undefined ? null : toOwner(row as unknown as OwnerRow);
   }
 
   async createArea(area: Area): Promise<void> {
-    await this.#database
-      .prepare(
-        "INSERT INTO areas (id, owner_id, name, counts_against_cap) VALUES (?, ?, ?, ?)",
-      )
-      .bind(area.id, area.ownerId, area.name, area.countsAgainstCap ? 1 : 0)
-      .run();
+    this.#database
+      .prepare("INSERT INTO areas (id, owner_id, name, counts_against_cap) VALUES (?, ?, ?, ?)")
+      .run(area.id, area.ownerId, area.name, area.countsAgainstCap ? 1 : 0);
   }
 
   async getArea(id: string): Promise<Area | null> {
-    const row = await this.#database
-      .prepare("SELECT * FROM areas WHERE id = ?")
-      .bind(id)
-      .first<AreaRow>();
-    return row === null ? null : toArea(row);
+    const row = this.#database.prepare("SELECT * FROM areas WHERE id = ?").get(id);
+    return row === undefined ? null : toArea(row as unknown as AreaRow);
   }
 
   async readAreas(areaIds: string[]): Promise<Area[]> {
     if (areaIds.length === 0) return [];
     const placeholders = areaIds.map(() => "?").join(", ");
-    const { results } = await this.#database
+    const rows = this.#database
       .prepare(`SELECT * FROM areas WHERE id IN (${placeholders}) ORDER BY id`)
-      .bind(...areaIds)
-      .all<AreaRow>();
-    return results.map(toArea);
+      .all(...areaIds);
+    return (rows as unknown as AreaRow[]).map(toArea);
   }
 
   async createProject(project: Project): Promise<void> {
-    await this.#database
+    this.#database
       .prepare(
         `INSERT INTO projects
           (id, owner_id, area_id, objective_id, title, state, external_deadline, deadline_source)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
       )
-      .bind(
+      .run(
         project.id,
         project.ownerId,
         project.areaId,
@@ -130,34 +123,29 @@ export class D1Store implements Store {
         project.state,
         project.externalDeadline,
         project.deadlineSource,
-      )
-      .run();
+      );
   }
 
   async getProject(id: string): Promise<Project | null> {
-    const row = await this.#database
-      .prepare("SELECT * FROM projects WHERE id = ?")
-      .bind(id)
-      .first<ProjectRow>();
-    return row === null ? null : toProject(row);
+    const row = this.#database.prepare("SELECT * FROM projects WHERE id = ?").get(id);
+    return row === undefined ? null : toProject(row as unknown as ProjectRow);
   }
 
   async listActiveProjects(ownerId: string): Promise<Project[]> {
-    const { results } = await this.#database
+    const rows = this.#database
       .prepare("SELECT * FROM projects WHERE owner_id = ? AND state = 'active' ORDER BY id")
-      .bind(ownerId)
-      .all<ProjectRow>();
-    return results.map(toProject);
+      .all(ownerId);
+    return (rows as unknown as ProjectRow[]).map(toProject);
   }
 
   async createNextAction(action: NextAction): Promise<void> {
-    await this.#database
+    this.#database
       .prepare(
         `INSERT INTO next_actions
           (id, owner_id, project_id, trigger, act, obstacle, estimate_minutes, created_at, closed_at)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       )
-      .bind(
+      .run(
         action.id,
         action.ownerId,
         action.projectId,
@@ -167,24 +155,19 @@ export class D1Store implements Store {
         action.estimateMinutes,
         action.createdAt,
         action.closedAt,
-      )
-      .run();
+      );
   }
 
   async getNextAction(id: string): Promise<NextAction | null> {
-    const row = await this.#database
-      .prepare("SELECT * FROM next_actions WHERE id = ?")
-      .bind(id)
-      .first<NextActionRow>();
-    return row === null ? null : toNextAction(row);
+    const row = this.#database.prepare("SELECT * FROM next_actions WHERE id = ?").get(id);
+    return row === undefined ? null : toNextAction(row as unknown as NextActionRow);
   }
 
   async findOpenNextAction(projectId: string): Promise<NextAction | null> {
-    const row = await this.#database
+    const row = this.#database
       .prepare("SELECT * FROM next_actions WHERE project_id = ? AND closed_at IS NULL")
-      .bind(projectId)
-      .first<NextActionRow>();
-    return row === null ? null : toNextAction(row);
+      .get(projectId);
+    return row === undefined ? null : toNextAction(row as unknown as NextActionRow);
   }
 
   async readOpenNextActionsWithProgress(
@@ -192,7 +175,7 @@ export class D1Store implements Store {
   ): Promise<Array<{ action: NextAction; progressSincePlan: number }>> {
     if (projectIds.length === 0) return [];
     const placeholders = projectIds.map(() => "?").join(", ");
-    const { results } = await this.#database
+    const rows = this.#database
       .prepare(
         `SELECT next_actions.*,
                 COUNT(entries.id) AS progress_since_plan
@@ -207,9 +190,8 @@ export class D1Store implements Store {
          GROUP BY next_actions.id
          ORDER BY next_actions.project_id`,
       )
-      .bind(...projectIds)
-      .all<OpenNextActionWithProgressRow>();
-    return results.map((row) => ({
+      .all(...projectIds);
+    return (rows as unknown as OpenNextActionWithProgressRow[]).map((row) => ({
       action: toNextAction(row),
       progressSincePlan: row.progress_since_plan,
     }));
@@ -220,44 +202,43 @@ export class D1Store implements Store {
     closedAt: string,
     replacement: NextAction,
   ): Promise<boolean> {
-    const [closeResult, insertResult] = await this.#database.batch([
-      this.#database
+    this.#database.exec("BEGIN IMMEDIATE");
+    try {
+      const closeResult = this.#database
         .prepare(
           `UPDATE next_actions SET closed_at = ?
            WHERE id = ? AND owner_id = ? AND project_id = ? AND closed_at IS NULL`,
         )
-        .bind(closedAt, id, replacement.ownerId, replacement.projectId),
+        .run(closedAt, id, replacement.ownerId, replacement.projectId);
+      if (closeResult.changes !== 1) {
+        this.#database.exec("ROLLBACK");
+        return false;
+      }
+
       this.#database
         .prepare(
           `INSERT INTO next_actions
             (id, owner_id, project_id, trigger, act, obstacle, estimate_minutes, created_at, closed_at)
-           SELECT ?, ?, ?, ?, ?, ?, ?, ?, ?
-           WHERE changes() = 1`,
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         )
-        .bind(
-          replacement.id,
-          replacement.ownerId,
-          replacement.projectId,
-          replacement.trigger,
-          replacement.act,
-          replacement.obstacle,
-          replacement.estimateMinutes,
-          replacement.createdAt,
-          replacement.closedAt,
-        ),
-    ]);
-    return closeResult.meta.changes === 1 && insertResult.meta.changes === 1;
+        .run(...nextActionValues(replacement));
+      this.#database.exec("COMMIT");
+      return true;
+    } catch (error) {
+      this.#database.exec("ROLLBACK");
+      throw error;
+    }
   }
 
   async createEntry(entry: Entry): Promise<void> {
-    await this.#database
+    this.#database
       .prepare(
         `INSERT INTO entries
           (id, owner_id, kind, project_id, credits_objective_id, occurred_at, what,
            effort_minutes, note)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       )
-      .bind(
+      .run(
         entry.id,
         entry.ownerId,
         entry.kind,
@@ -267,24 +248,35 @@ export class D1Store implements Store {
         entry.what,
         entry.effortMinutes,
         entry.note,
-      )
-      .run();
+      );
   }
 
   async readRecentEntries(projectIds: string[], occurredSince: string): Promise<Entry[]> {
     if (projectIds.length === 0) return [];
     const placeholders = projectIds.map(() => "?").join(", ");
-    const { results } = await this.#database
+    const rows = this.#database
       .prepare(
         `SELECT * FROM entries
          WHERE project_id IN (${placeholders}) AND occurred_at >= ?
          ORDER BY occurred_at DESC, id DESC`,
       )
-      .bind(...projectIds, occurredSince)
-      .all<EntryRow>();
-    return results.map(toEntry);
+      .all(...projectIds, occurredSince);
+    return (rows as unknown as EntryRow[]).map(toEntry);
   }
+}
 
+function nextActionValues(action: NextAction): SQLInputValue[] {
+  return [
+    action.id,
+    action.ownerId,
+    action.projectId,
+    action.trigger,
+    action.act,
+    action.obstacle,
+    action.estimateMinutes,
+    action.createdAt,
+    action.closedAt,
+  ];
 }
 
 function toOwner(row: OwnerRow): Owner {
