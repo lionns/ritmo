@@ -9,6 +9,12 @@ import { applyMigrations, openDatabase } from "../../adapters/sqlite/database.ts
 import { closeRuntimeDatabase, SqliteStore } from "../../adapters/sqlite/store.ts";
 import type { Area, Entry, NextAction, Owner, Project } from "../../core/model/entities.ts";
 import { closeNextAction, createNextAction } from "../../core/rules/next-action.ts";
+import type {
+  CreateAreaResponse,
+  ProjectMutationResponse,
+  SettingsResponse,
+  SetupResponse,
+} from "../../contracts/capture.ts";
 import type { CreateEntryErrorResponse, CreateEntryResponse } from "../../contracts/entries.ts";
 import type { PortfolioResponse } from "../../contracts/portfolio.ts";
 import { handlePostEntry } from "../../src/pages/api/entries.ts";
@@ -107,6 +113,102 @@ describe("SqliteStore with the next-action rule", () => {
     expect(await store.getNextAction(mismatchedReplacement.id)).toBeNull();
   });
 
+  it("starts from an empty database and captures setup, areas, projects, and progress", async () => {
+    database.close();
+    database = openDatabase(join(temporaryDirectory, `${databaseSequence++}-empty.sqlite`));
+    store = new SqliteStore(database);
+    fetchApplication = testApplication(store);
+
+    const emptyResponse = await fetchWorker("/api/portfolio");
+    expect(emptyResponse.status).toBe(200);
+    expect(await emptyResponse.json()).toEqual(expect.objectContaining({
+      setupRequired: true,
+      activeCap: null,
+      areas: [],
+      progress: [],
+      outstanding: [],
+      shelved: [],
+    }));
+
+    const setupResponse = await postJson("/api/setup", { activeCap: 2 });
+    expect(setupResponse.status).toBe(201);
+    const setup = (await setupResponse.json()) as SetupResponse;
+    expect(setup.activeCap).toBe(2);
+    expect(await store.getOnlyOwner()).toEqual({
+      id: setup.ownerId,
+      activeCap: 2,
+      capRaises: [],
+    });
+
+    const cappedAreaResponse = await postJson("/api/areas", {
+      name: "Studio",
+      countsAgainstCap: true,
+    });
+    const fixedAreaResponse = await postJson("/api/areas", {
+      name: "Trabajo fijo",
+      countsAgainstCap: false,
+    });
+    expect(cappedAreaResponse.status).toBe(201);
+    expect(fixedAreaResponse.status).toBe(201);
+    const cappedArea = ((await cappedAreaResponse.json()) as CreateAreaResponse).area;
+    const fixedArea = ((await fixedAreaResponse.json()) as CreateAreaResponse).area;
+
+    const first = await createProjectViaApi("First", cappedArea.id);
+    const second = await createProjectViaApi("Second", cappedArea.id);
+    const overflow = await createProjectViaApi("Overflow", cappedArea.id);
+    const fixedJob = await createProjectViaApi("Fixed job", fixedArea.id);
+    expect(first.project.state).toBe("active");
+    expect(second.project.state).toBe("active");
+    expect(overflow.project.state).toBe("shelved");
+    expect(overflow.activeCount).toBe(2);
+    expect(fixedJob.project.state).toBe("active");
+    expect(fixedJob.activeCount).toBe(2);
+
+    const portfolioBeforeEntry = (await (
+      await fetchWorker("/api/portfolio")
+    ).json()) as PortfolioResponse;
+    expect(portfolioBeforeEntry.setupRequired).toBe(false);
+    expect(portfolioBeforeEntry.activeCap).toBe(2);
+    expect(portfolioBeforeEntry.activeCount).toBe(2);
+    expect(portfolioBeforeEntry.shelved.map(({ id }) => id)).toEqual([
+      overflow.project.id,
+    ]);
+
+    const settingsResponse = await fetchWorker("/api/settings");
+    expect(settingsResponse.status).toBe(200);
+    const settings = (await settingsResponse.json()) as SettingsResponse;
+    expect(settings.areas).toEqual(expect.arrayContaining([cappedArea, fixedArea]));
+    const raisedResponse = await patchJson("/api/settings", { activeCap: 3 });
+    expect(raisedResponse.status).toBe(200);
+    expect((await raisedResponse.json()) as SettingsResponse).toEqual(
+      expect.objectContaining({
+        activeCap: 3,
+        capRaises: [{ amount: 1, raisedAt: expect.any(String) }],
+      }),
+    );
+    const promotedResponse = await patchJson("/api/projects", {
+      id: overflow.project.id,
+      state: "active",
+    });
+    expect(promotedResponse.status).toBe(200);
+    expect(((await promotedResponse.json()) as ProjectMutationResponse).project.state).toBe(
+      "active",
+    );
+
+    const entryResponse = await postEntry({
+      projectId: first.project.id,
+      what: "Moved from a blank database",
+    });
+    expect(entryResponse.status).toBe(201);
+    const portfolioAfterEntry = (await (
+      await fetchWorker("/api/portfolio")
+    ).json()) as PortfolioResponse;
+    expect(portfolioAfterEntry.progress[0]).toEqual(expect.objectContaining({
+      id: first.project.id,
+      recentEntries: [expect.objectContaining({ what: "Moved from a blank database" })],
+    }));
+  });
+
   it("drives POST entries and GET portfolio through the real SQLite adapter", async () => {
     const quietProject: Project = { ...project, id: "project-quiet", title: "Quiet project" };
     const actionlessProject: Project = {
@@ -176,6 +278,7 @@ describe("SqliteStore with the next-action rule", () => {
         ({ id }) => id === shelvedProject.id,
       ),
     ).toBe(false);
+    expect(portfolio.shelved.map(({ id }) => id)).toEqual([shelvedProject.id]);
 
     const countBeforeRejections = await entryCount();
     for (const projectId of ["missing-project", shelvedProject.id]) {
@@ -297,6 +400,28 @@ async function postEntry(body: Record<string, unknown>): Promise<Response> {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
   });
+}
+
+async function postJson(path: string, body: Record<string, unknown>): Promise<Response> {
+  return fetchWorker(path, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+}
+
+async function patchJson(path: string, body: Record<string, unknown>): Promise<Response> {
+  return fetchWorker(path, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+}
+
+async function createProjectViaApi(title: string, areaId: string): Promise<ProjectMutationResponse> {
+  const response = await postJson("/api/projects", { title, areaId });
+  expect(response.status).toBe(201);
+  return response.json() as Promise<ProjectMutationResponse>;
 }
 
 async function fetchWorker(path: string, init?: RequestInit): Promise<Response> {

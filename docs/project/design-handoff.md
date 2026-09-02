@@ -250,6 +250,47 @@ not another question, when the owner enters from its portfolio row.
   fixed ninety-minute guess and drew heights the next render did not keep. The chart remains the
   confirmation and the hero remains veiled on this form.
 
+## Setup and Capture
+
+No new route. Setup and project capture are states of `/`; the cap and areas stay in `/ajustes`, as
+§ Navigation Map already assigns them. All three use the existing two-column stage: one display
+question at left, one glass surface at right, and the veiled chart behind form work.
+
+**First run on `/`.** With no owner row, the headline is the question: “En una semana mala,
+¿cuántos proyectos puedes tocar de verdad?” The right panel has one required positive-integer field
+under `PROYECTOS EN UNA SEMANA MALA` and “Guardar límite”. It has no value and no numeric
+placeholder: FR-13 requires an answer, not a suggested default. Its helper says what the number
+does, without calling an average week normal or desirable. Success reloads `/` into the empty
+portfolio; it is not an onboarding celebration.
+
+**Areas and the cap on `/ajustes`.** One glass panel stacks the current cap, its edit field, then
+the area form and existing areas. An area asks for a name and one checkbox: “Cuenta dentro del
+límite”. The helper names the exception directly: leave it clear for the fixed job, whose projects
+do not compete for this cap (FR-15). Fields keep the 58/56px targets and the shared focus treatment.
+
+**Projects on `/`.** The portfolio panel always ends with `NUEVO PROYECTO`: title, area, and one
+button. With no areas it shows the factual next action, “Crea un área en Ajustes antes del primer
+proyecto.” The form remains after the first project. There is no objective or deadline field here;
+both are explicitly outside this capture slice.
+
+Immediately after setup, `EN MOVIMIENTO` stays in place and the empty sentence reads “Aún no hay
+proyectos en movimiento.” The project capture block follows it in the same glass surface, so the
+empty state points at the next object the owner can actually create rather than asking for progress
+against a project that does not exist.
+
+**The cap response is a count, not feedback.** After creation the inline status reads either
+“Activo. X de Y proyectos en áreas con límite.” or “Archivado. X de Y proyectos en áreas con
+límite.” No “solo”, “todavía”, congratulations, apology, warning colour, or debt language. Projects
+in uncapped areas say “Activo. Esta área no cuenta dentro del límite.” Shelved projects remain in a
+plain `ARCHIVADOS` section of the portfolio, with their area and latest movement, and do not link to
+the progress form.
+
+On mobile the forms stay in document flow and controls are full width. At `≥1200px` the project
+form stays inside the portfolio glass, which is already the bounded scroll surface; setup and
+settings keep one panel opposite the display question. Loading changes only the button label, errors
+sit in the form's live region as facts plus the corrective action, and no capture success uses a
+toast.
+
 ## Navigation Map
 
 Six routes, three levels deep. Settled with the owner on 2026-08-30 after drawing both options.

@@ -89,7 +89,7 @@ describe("the first-loop page composition", () => {
     assert.match(shell, /tracking-\[0\.22em\][^"]*text-dim uppercase[^"]*md:text-\[9px\]/);
     for (const page of ["index", "registrar"] as const) {
       const pageSource = source(`src/pages/${page}.astro`);
-      assert.match(pageSource, /context="/, `${page} must name itself in the header`);
+      assert.match(pageSource, /context=(?:"|\{)/, `${page} must name itself in the header`);
       // The body must not repeat the header's label as an eyebrow above the headline.
       assert.doesNotMatch(pageSource, /<p class="m-0 font-mono[^"]*uppercase/);
     }
@@ -127,8 +127,8 @@ describe("the first-loop page composition", () => {
     assert.equal(markLines.filter((l) => l.includes("mark-open")).length, 1);
     assert.doesNotMatch(markLines[openAt], /&&|\?|nextAction|map\(/);
     assert.doesNotMatch(markLines[openAt - 1].trim(), /(&&|\?|=>|\{)$/);
-    // No mono field labels, no area label, no second call to action.
-    assert.doesNotMatch(card, />Cuando<|>Entonces<|project\.area/);
+    // No mono field labels and no second call to action. Shelved rows may name their area.
+    assert.doesNotMatch(card, />Cuando<|>Entonces</);
     assert.doesNotMatch(card, /Registrar avance/);
     assert.doesNotMatch(card, /font-mono/);
     // The last entry's text is on the row, so writing one always changes `/` (AC-5).
@@ -164,5 +164,18 @@ describe("the first-loop page composition", () => {
     assert.equal(sentence("Cuando X", "Esperar…"), "Cuando X, Esperar…");
     // An act that is only whitespace must not render a bare comma and period.
     assert.equal(sentence("Cuando X", "   "), "Cuando X.");
+  });
+
+  it("asks for an owner answer before exposing capture", () => {
+    const page = source("src/pages/index.astro");
+    const setup = source("src/components/organisms/SetupForm.astro");
+    const capture = source("src/components/organisms/ProjectCapture.astro");
+
+    assert.match(page, /En una semana mala, ¿cuántos proyectos puedes tocar de verdad\?/);
+    assert.match(setup, /name="activeCap"/);
+    assert.doesNotMatch(setup, /name="activeCap"[^>]*(?:value|placeholder)=/);
+    assert.match(capture, /Nuevo proyecto/);
+    assert.match(capture, /Crea un área en/);
+    assert.match(capture, /\{activeCount\} de \{activeCap\}/);
   });
 });

@@ -56,6 +56,9 @@ describe("the first portfolio loop", () => {
       ),
       false,
     );
+    assert.deepEqual(portfolio.shelved.map(({ project }) => project.id), [
+      shelvedProject.id,
+    ]);
   });
 
   it("accepts an entry without effort or note and rejects missing or shelved projects", async () => {
@@ -181,18 +184,40 @@ class MemoryStore implements Store {
 
   async createOwner(value: Owner) { this.owners.set(value.id, value); }
   async getOwner(id: string) { return this.owners.get(id) ?? null; }
+  async getOnlyOwner() {
+    const owners = [...this.owners.values()];
+    if (owners.length > 1) throw new Error("more than one owner");
+    return owners[0] ?? null;
+  }
+  async updateOwnerCap(id: string, activeCap: number, capRaises: Owner["capRaises"]) {
+    const value = this.owners.get(id);
+    if (value !== undefined) this.owners.set(id, { ...value, activeCap, capRaises });
+  }
   async createArea(value: Area) { this.areas.set(value.id, value); }
   async getArea(id: string) { return this.areas.get(id) ?? null; }
+  async listAreas(ownerId: string) {
+    return [...this.areas.values()].filter((value) => value.ownerId === ownerId);
+  }
   async readAreas(areaIds: string[]) {
     return [...this.areas.values()].filter((value) => areaIds.includes(value.id));
   }
   async createProject(value: Project) { this.projects.set(value.id, value); }
   async getProject(id: string) { return this.projects.get(id) ?? null; }
+  async listProjects(ownerId: string) {
+    return [...this.projects.values()].filter((value) => value.ownerId === ownerId);
+  }
   async listActiveProjects(ownerId: string) {
     return [...this.projects.values()].filter(
       (value) => value.ownerId === ownerId && value.state === "active",
     );
   }
+  async setProjectState(id: string, ownerId: string, state: Project["state"]) {
+    const value = this.projects.get(id);
+    if (value !== undefined && value.ownerId === ownerId) {
+      this.projects.set(id, { ...value, state });
+    }
+  }
+  async hasClosedWeek(_ownerId: string) { return false; }
   async createNextAction(value: NextAction) { this.actions.set(value.id, value); }
   async getNextAction(id: string) { return this.actions.get(id) ?? null; }
   async findOpenNextAction(projectId: string) {

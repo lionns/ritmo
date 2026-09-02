@@ -4,42 +4,53 @@ import { countProgressMarks, readAsSentence } from "../../lib/project-row.ts";
 
 interface Props {
   project: PortfolioProject;
-  kind: "progress" | "outstanding";
+  kind: "progress" | "outstanding" | "shelved";
 }
 
 const { project, kind } = Astro.props;
 const latestEntry = project.recentEntries[0];
-const progressMarks = countProgressMarks(project.progressSincePlan);
+const progressMarks = project.state === "active" ? countProgressMarks(project.progressSincePlan) : 0;
 const logHref = `/registrar?project=${encodeURIComponent(project.id)}`;
+const areaName = project.area.name;
 const line = project.nextAction === null
   ? "Escribe la próxima acción cuando esté clara."
   : readAsSentence(project.nextAction);
 ---
 
-<a
-  class="project-card block min-h-[58px] border-b border-hair pt-3.5 pb-3.5 no-underline last:border-b-0 hover:[&_.project-line]:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent md:min-h-14 md:pt-4 md:pb-4"
-  href={logHref}
-  data-project-kind={kind}
->
-  <span class="project-marks flex items-center gap-2.5" aria-hidden="true">
-    {
-      Array.from({ length: progressMarks }, (_unused, index) => (
-        <span class="mark-progress block size-[11px] rounded-full bg-accent md:size-3" data-mark-index={index} />
-      ))
-    }
-    <span class="mark-open block size-[11px] rounded-full border-[1.5px] border-faint md:size-3" />
-    <span class="mark-goal ml-[5px] block size-2 rotate-45 bg-faint md:size-[9px]" />
-  </span>
-  <h3 class="project-title mt-2 mb-0 text-[17px] leading-[1.15] font-semibold tracking-[-0.02em] text-ink md:text-xl">{project.title}</h3>
-  <span class="project-line mt-2 block min-h-[26px] text-sm leading-[1.45] text-dim transition-colors duration-[120ms] motion-reduce:transition-none md:text-[15px]">{line}</span>
-  {
-    latestEntry && (
-      <span class="project-latest mt-1.5 block text-sm leading-[1.45] text-dim md:text-[15px]">
-        <span class="text-faint-text">Último:</span> {latestEntry.what}
+{
+  project.state === "shelved" ? (
+    <div class="project-card min-h-[58px] border-b border-hair py-3.5 last:border-b-0 md:min-h-14 md:py-4" data-project-kind={kind}>
+      <h3 class="m-0 text-[17px] leading-[1.15] font-semibold tracking-[-0.02em] text-ink md:text-xl">{project.title}</h3>
+      <p class="mt-2 mb-0 text-sm leading-[1.45] text-dim md:text-[15px]">Archivado · {areaName}</p>
+      {latestEntry && <p class="mt-1.5 mb-0 text-sm leading-[1.45] text-dim md:text-[15px]"><span class="text-faint-text">Último:</span> {latestEntry.what}</p>}
+    </div>
+  ) : (
+    <a
+      class="project-card block min-h-[58px] border-b border-hair pt-3.5 pb-3.5 no-underline last:border-b-0 hover:[&_.project-line]:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent md:min-h-14 md:pt-4 md:pb-4"
+      href={logHref}
+      data-project-kind={kind}
+    >
+      <span class="project-marks flex items-center gap-2.5" aria-hidden="true">
+        {
+          Array.from({ length: progressMarks }, (_unused, index) => (
+            <span class="mark-progress block size-[11px] rounded-full bg-accent md:size-3" data-mark-index={index} />
+          ))
+        }
+        <span class="mark-open block size-[11px] rounded-full border-[1.5px] border-faint md:size-3" />
+        <span class="mark-goal ml-[5px] block size-2 rotate-45 bg-faint md:size-[9px]" />
       </span>
-    )
-  }
-</a>
+      <h3 class="project-title mt-2 mb-0 text-[17px] leading-[1.15] font-semibold tracking-[-0.02em] text-ink md:text-xl">{project.title}</h3>
+      <span class="project-line mt-2 block min-h-[26px] text-sm leading-[1.45] text-dim transition-colors duration-[120ms] motion-reduce:transition-none md:text-[15px]">{line}</span>
+      {
+        latestEntry && (
+          <span class="project-latest mt-1.5 block text-sm leading-[1.45] text-dim md:text-[15px]">
+            <span class="text-faint-text">Último:</span> {latestEntry.what}
+          </span>
+        )
+      }
+    </a>
+  )
+}
 
 <style>
   /* design-handoff.md § Responsive Behavior: density may remove empty space, not reading

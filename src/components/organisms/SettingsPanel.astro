@@ -1,0 +1,84 @@
+---
+import type { SettingsResponse } from "../../../contracts/capture.ts";
+
+interface Props {
+  settings: SettingsResponse;
+}
+
+const { settings } = Astro.props;
+---
+
+<section class="glass-panel p-[22px] md:p-7" aria-labelledby="settings-heading">
+  <h2 id="settings-heading" class="font-mono text-[8px] leading-[1.4] tracking-[0.22em] text-dim uppercase md:text-[9px]">Límite activo</h2>
+  <form class="mt-4" data-cap-form>
+    <label class="mb-2 block text-sm font-medium text-dim" for="active-cap">Proyectos en una semana mala</label>
+    <div class="grid gap-3 md:grid-cols-[1fr_auto]">
+      <input class="min-h-[58px] rounded-field border border-glass-border bg-[color-mix(in_srgb,var(--page-bg)_72%,transparent)] px-4 font-mono text-xl font-light text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent md:min-h-14" id="active-cap" name="activeCap" type="number" min="1" step="1" value={settings.activeCap} required />
+      <button class="min-h-[58px] rounded-[29px] border border-glass-border px-6 text-base font-semibold text-ink transition-[filter] hover:brightness-[1.06] active:brightness-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent md:min-h-14" type="submit">Guardar</button>
+    </div>
+    <p class="mt-3 min-h-[24px] text-sm leading-normal text-dim" data-cap-status aria-live="polite"></p>
+  </form>
+
+  <section class="mt-[34px] border-t border-hair pt-6" aria-labelledby="areas-heading">
+    <h2 id="areas-heading" class="font-mono text-[8px] leading-[1.4] tracking-[0.22em] text-dim uppercase md:text-[9px]">Áreas</h2>
+    <form class="mt-4" data-area-form>
+      <label class="mb-2 block text-sm font-medium text-dim" for="area-name">Nombre</label>
+      <input class="min-h-[58px] w-full rounded-field border border-glass-border bg-[color-mix(in_srgb,var(--page-bg)_72%,transparent)] px-4 text-base text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent md:min-h-14" id="area-name" name="name" required />
+      <label class="mt-4 flex min-h-[58px] items-center gap-3 rounded-field border border-glass-border px-4 text-sm text-ink md:min-h-14">
+        <input class="size-5 accent-accent" name="countsAgainstCap" type="checkbox" />
+        Cuenta dentro del límite
+      </label>
+      <p class="mt-3 text-sm leading-normal text-dim">Déjalo sin marcar para el trabajo fijo: sus proyectos no compiten por este límite.</p>
+      <button class="mt-5 min-h-[58px] w-full rounded-[29px] bg-accent px-7 text-[17px] font-semibold text-accent-ink transition-[filter] hover:brightness-[1.06] active:brightness-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent md:min-h-14" type="submit">Crear área</button>
+      <p class="mt-3 min-h-[24px] text-sm leading-normal text-dim" data-area-status aria-live="polite"></p>
+    </form>
+    {
+      settings.areas.length > 0 && (
+        <ul class="mt-5 list-none border-t border-hair p-0">
+          {settings.areas.map((area) => (
+            <li class="flex min-h-14 items-center justify-between gap-4 border-b border-hair py-3 text-sm">
+              <span class="font-medium text-ink">{area.name}</span>
+              <span class="text-right text-dim">{area.countsAgainstCap ? "Dentro del límite" : "Fuera del límite"}</span>
+            </li>
+          ))}
+        </ul>
+      )
+    }
+  </section>
+</section>
+
+<script>
+  const capForm = document.querySelector<HTMLFormElement>("[data-cap-form]");
+  const capStatus = document.querySelector<HTMLElement>("[data-cap-status]");
+  capForm?.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const field = capForm.elements.namedItem("activeCap");
+    if (!(field instanceof HTMLInputElement)) return;
+    await submit("/api/settings", "PATCH", { activeCap: Number(field.value) }, capStatus, "Límite guardado.");
+  });
+
+  const areaForm = document.querySelector<HTMLFormElement>("[data-area-form]");
+  const areaStatus = document.querySelector<HTMLElement>("[data-area-status]");
+  areaForm?.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const name = areaForm.elements.namedItem("name");
+    const counts = areaForm.elements.namedItem("countsAgainstCap");
+    if (!(name instanceof HTMLInputElement) || !(counts instanceof HTMLInputElement)) return;
+    const saved = await submit("/api/areas", "POST", { name: name.value, countsAgainstCap: counts.checked }, areaStatus, "Área creada.");
+    if (saved) window.location.reload();
+  });
+
+  async function submit(url: string, method: string, body: object, status: HTMLElement | null, success: string): Promise<boolean> {
+    if (status !== null) status.textContent = "Guardando…";
+    try {
+      const response = await fetch(url, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+      const result: unknown = await response.json();
+      if (!response.ok) throw new Error(typeof result === "object" && result !== null && "error" in result && typeof result.error === "string" ? result.error : "No se pudo guardar");
+      if (status !== null) status.textContent = success;
+      return true;
+    } catch (error) {
+      if (status !== null) status.textContent = `${error instanceof Error ? error.message : "No se pudo guardar"}. Revisa los datos e inténtalo otra vez.`;
+      return false;
+    }
+  }
+</script>

@@ -106,16 +106,31 @@ class MemoryStore implements Store {
 
   async createOwner(_value: Owner) { throw new Error("not used"); }
   async getOwner(_id: string) { return null; }
+  async getOnlyOwner() { return null; }
+  async updateOwnerCap(_id: string, _activeCap: number, _capRaises: Owner["capRaises"]) {
+    throw new Error("not used");
+  }
   async createArea(_value: Area) { throw new Error("not used"); }
   async getArea(_id: string) { return null; }
+  async listAreas(_ownerId: string) { return []; }
   async readAreas(_areaIds: string[]) { return []; }
   async createProject(value: Project) { this.projects.set(value.id, value); }
   async getProject(id: string) { return this.projects.get(id) ?? null; }
+  async listProjects(ownerId: string) {
+    return [...this.projects.values()].filter((value) => value.ownerId === ownerId);
+  }
   async listActiveProjects(ownerId: string) {
     return [...this.projects.values()].filter(
       (value) => value.ownerId === ownerId && value.state === "active",
     );
   }
+  async setProjectState(id: string, ownerId: string, state: Project["state"]) {
+    const value = this.projects.get(id);
+    if (value !== undefined && value.ownerId === ownerId) {
+      this.projects.set(id, { ...value, state });
+    }
+  }
+  async hasClosedWeek(_ownerId: string) { return false; }
   async createNextAction(value: NextAction) { this.actions.set(value.id, value); }
   async getNextAction(id: string) { return this.actions.get(id) ?? null; }
   async findOpenNextAction(projectId: string) {

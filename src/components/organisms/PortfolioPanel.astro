@@ -1,13 +1,18 @@
 ---
-import type { PortfolioProject } from "../../../contracts/portfolio.ts";
+import type { PortfolioArea, PortfolioProject } from "../../../contracts/portfolio.ts";
 import ProjectCard from "../molecules/ProjectCard.astro";
+import ProjectCapture from "./ProjectCapture.astro";
 
 interface Props {
   progress: PortfolioProject[];
   outstanding: PortfolioProject[];
+  shelved: PortfolioProject[];
+  areas: PortfolioArea[];
+  activeCount: number;
+  activeCap: number;
 }
 
-const { progress, outstanding } = Astro.props;
+const { progress, outstanding, shelved, areas, activeCount, activeCap } = Astro.props;
 ---
 
 <section
@@ -17,7 +22,7 @@ const { progress, outstanding } = Astro.props;
   <h2 id="portfolio-heading" class="m-0 font-mono text-[8px] leading-[1.4] font-normal tracking-[0.22em] text-dim uppercase md:text-[9px]">En movimiento</h2>
   {
     progress.length === 0 ? (
-      <p class="mt-5 mb-1 text-sm leading-normal text-dim">Aún no hay nada aquí. Escribe la primera línea.</p>
+      <p class="mt-5 mb-1 text-sm leading-normal text-dim">Aún no hay proyectos en movimiento.</p>
     ) : (
       <div class="portfolio-progress mt-1.5">
         {progress.map((project) => <ProjectCard project={project} kind="progress" />)}
@@ -34,6 +39,17 @@ const { progress, outstanding } = Astro.props;
       </section>
     )
   }
+  {
+    shelved.length > 0 && (
+      <section class="portfolio-shelved mt-[34px] border-t border-hair pt-6" aria-labelledby="shelved-heading">
+        <h2 id="shelved-heading" class="m-0 font-mono text-[8px] leading-[1.4] font-normal tracking-[0.22em] text-dim uppercase md:text-[9px]">Archivados</h2>
+        <div class="mt-1.5">
+          {shelved.map((project) => <ProjectCard project={project} kind="shelved" />)}
+        </div>
+      </section>
+    )
+  }
+  <ProjectCapture areas={areas} activeCount={activeCount} activeCap={activeCap} />
 </section>
 
 <style>
@@ -54,6 +70,11 @@ const { progress, outstanding } = Astro.props;
     }
 
     .portfolio-outstanding {
+      margin-top: 16px;
+      padding-top: 16px;
+    }
+
+    .portfolio-shelved {
       margin-top: 16px;
       padding-top: 16px;
     }

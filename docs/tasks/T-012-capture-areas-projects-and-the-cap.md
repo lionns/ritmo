@@ -1,7 +1,7 @@
 ---
 id: T-012
 title: Capture — your own areas, your own projects, and a cap you answered
-status: ready
+status: review
 profile: team
 harness: 0.8.1
 role: Backend Implementer
@@ -60,21 +60,21 @@ implements: [US-1, US-2, FR-1, FR-13, FR-15, FR-17]
 
 ## Acceptance Criteria
 
-- [ ] WHEN `npm run db:reset` is run with no seed and `/` is opened, THE SYSTEM SHALL ask the
+- [x] WHEN `npm run db:reset` is run with no seed and `/` is opened, THE SYSTEM SHALL ask the
       bad-week question rather than answering 503, and SHALL NOT offer a pre-filled number.
-- [ ] WHEN the owner answers it, THE SYSTEM SHALL create the `owners` row with that `activeCap` and
+- [x] WHEN the owner answers it, THE SYSTEM SHALL create the `owners` row with that `activeCap` and
       record nothing in `capRaises`, and `/` SHALL then render an empty portfolio.
-- [ ] WHEN a project is created and the areas that count against the cap already hold `activeCap`
+- [x] WHEN a project is created and the areas that count against the cap already hold `activeCap`
       active projects, THE SYSTEM SHALL create it `shelved` and state the count plainly.
-- [ ] WHEN a project is created in an area whose `countsAgainstCap` is false, THE SYSTEM SHALL
+- [x] WHEN a project is created in an area whose `countsAgainstCap` is false, THE SYSTEM SHALL
       create it `active` regardless of the cap (`FR-15`).
-- [ ] Shelved projects render in the portfolio rather than disappearing (`FR-17`), and no copy added
+- [x] Shelved projects render in the portfolio rather than disappearing (`FR-17`), and no copy added
       by this task softens, congratulates or apologises for the number (`US-2`, `NFR-7`).
-- [ ] `grep -rn "seedId\|LOCAL_OWNER_ID" src/` returns nothing: the product no longer depends on
+- [x] `grep -rn "seedId\|LOCAL_OWNER_ID" src/` returns nothing: the product no longer depends on
       seeded identifiers to function.
-- [ ] `npm run check:core` stays green, and the cap rule is covered in `test/core/` without a
+- [x] `npm run check:core` stays green, and the cap rule is covered in `test/core/` without a
       database.
-- [ ] All five gates green from a clean `npm ci`, and `node scripts/harness-lint.mjs` clean.
+- [x] All five gates green from a clean `npm ci`, and `node scripts/harness-lint.mjs` clean.
 
 ## Verification
 
@@ -111,16 +111,51 @@ implements: [US-1, US-2, FR-1, FR-13, FR-15, FR-17]
 
 ## Outcome
 
-- Changes:
-- Files:
-- Baseline result:
-- Final result:
-- Decisions recorded:
-- Follow-up:
+- Changes: empty-database setup; owner-derived API identity; cap and area settings; capped and
+  uncapped project capture; pre-first-week state changes; visible shelved projects; empty state.
+- Files: store port/SQLite adapter, project and portfolio rules, capture/portfolio contracts, four
+  API surfaces, setup/settings/project UI, design handoff, unit and real-SQLite integration tests.
+- Baseline result: 29/29 unit, isolation, harness lint, typecheck 0, Node build, integration 6/6.
+- Final result: 33/33 unit, isolation, typecheck 0, Node build, integration 7/7; identifier grep and
+  diff check clean. Built HTTP flow passed on a throwaway empty database through setup, two area
+  types, capped overflow, shelved rendering, and a progress entry. No controllable browser was
+  available, so visual interaction remains for owner validation.
+- Decisions recorded: none; implementation follows D-019 and D-021.
+- Follow-up: owner validation. The two Medium and the Low are routed to the `/semana` task, which
+  is where `FR-14`'s week boundary gets built and where they become reachable; none is fixable here
+  without deciding whether `FR-14` governs creation. Next in sequence is the next-action cycle.
 
 ## Review
 
-- Severity · `file:line` · issue · impact · recommendation
+- 2026-09-02 · Reviewer, round 1 · five gates re-run here: unit 33/33, isolation, typecheck 0
+  errors, Node build, integration 7/7, `harness-lint` clean. Reviewed from an empty database rather
+  than from the diff, because that is what the task promises: `db:reset` with no seed, then the
+  built server. `/` asked the bad-week question with no `value` and no numeric placeholder, a second
+  `POST /api/setup` returned 409, two areas and three projects against a cap of 2 produced
+  `active (1/2)`, `active (2/2)`, `shelved (2/2)`, a project in the uncapped area came back active
+  (`FR-15`), and an entry against an owner-created project moved today's mark from 9px `empty` to
+  104px `timed`. Shelved projects render in an `ARCHIVADOS` section with their area. The copy is a
+  count and nothing else — no softening, congratulation or apology (`US-2`, `NFR-7`). The
+  `seedId|LOCAL_OWNER_ID` grep is empty and `npm run seed` still works, as § Out of Scope required.
+  The cap rule's tests bind: mutating `>=` and then dropping `countsAgainstCap` each fail exactly
+  one test. § Setup and Capture is written and matches what was built.
+- Medium · `core/rules/project.ts` · the `FR-14` guard is one-sided. `changeProjectState` checks
+  `hasClosedWeek`, but `createProjectWithinCap` and `updateActiveCap` do not · verified live with a
+  week row closed by hand: raising the cap from 3 to 5 and creating a project returned it `active`,
+  so the active set changed inside a week `FR-14` says is fixed. The task's assumption covered state
+  *changes* only, so this does not deviate from the plan — but a reader sees a guard and infers the
+  boundary is enforced · **not reachable today**, since nothing in the product closes a week ·
+  routed to the `/semana` task, which must settle whether `FR-14` governs creation as well.
+- Medium · `core/rules/project.ts:102` · after the first closed week the cap can only rise.
+  `updateActiveCap` refuses a cap below the active count, lowering that count needs shelving, and
+  shelving is blocked once a week has closed · so the cap becomes monotonically non-decreasing,
+  which `FR-13` contradicts when it asks that the cap be audited against stale rate, and it is the
+  same trap the task's own assumption was written to avoid. `capRaises` recording only raises is
+  consistent with the asymmetry · also latent, and also `/semana`'s to settle.
+- Low · refusing to lower the cap at all is undocumented — neither § Setup and Capture nor this task
+  states it, so an owner who over-answers the first question has no written path back.
+- **Recommended for owner validation.** Both Medium are design gaps to close before `/semana`
+  exists, not defects in what was built.
 
 ## Validation
 

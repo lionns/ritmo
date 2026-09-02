@@ -1,0 +1,53 @@
+<form class="glass-panel p-[22px] md:p-7" data-setup-form>
+  <label class="mb-[9px] block font-mono text-[8px] leading-[1.4] tracking-[0.2em] text-dim uppercase" for="setup-cap">
+    Proyectos en una semana mala
+  </label>
+  <input
+    class="min-h-[58px] w-full rounded-field border border-glass-border bg-[color-mix(in_srgb,var(--page-bg)_72%,transparent)] px-4 font-mono text-xl font-light text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent md:min-h-14"
+    id="setup-cap"
+    name="activeCap"
+    type="number"
+    min="1"
+    step="1"
+    inputmode="numeric"
+    required
+    autofocus
+  />
+  <p class="mt-3 text-sm leading-normal text-dim">
+    Ese número limita los proyectos activos de las áreas que elijas. El trabajo fijo puede quedar fuera.
+  </p>
+  <button class="mt-6 inline-flex min-h-[58px] w-full items-center justify-center rounded-[29px] border-0 bg-accent px-7 text-[17px] font-semibold text-accent-ink transition-[filter] duration-[120ms] hover:brightness-[1.06] active:brightness-90 disabled:cursor-wait disabled:saturate-[0.35] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent md:min-h-14 md:w-auto md:min-w-[218px] md:rounded-[28px] md:text-base" type="submit">
+    Guardar límite
+  </button>
+  <p class="mt-3 min-h-[42px] text-sm leading-normal text-dim" data-setup-status aria-live="polite"></p>
+</form>
+
+<script>
+  const form = document.querySelector<HTMLFormElement>("[data-setup-form]");
+  const status = document.querySelector<HTMLElement>("[data-setup-status]");
+  form?.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const field = form.elements.namedItem("activeCap");
+    const button = form.querySelector<HTMLButtonElement>("button[type='submit']");
+    if (!(field instanceof HTMLInputElement)) return;
+    if (button !== null) button.disabled = true;
+    if (status !== null) status.textContent = "Guardando…";
+    try {
+      const response = await fetch("/api/setup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ activeCap: Number(field.value) }),
+      });
+      const body: unknown = await response.json();
+      if (!response.ok) throw new Error(readError(body, "No se pudo guardar el límite"));
+      window.location.assign("/");
+    } catch (error) {
+      if (status !== null) status.textContent = `${error instanceof Error ? error.message : "No se pudo guardar"}. Revisa el número e inténtalo otra vez.`;
+      if (button !== null) button.disabled = false;
+    }
+  });
+
+  function readError(body: unknown, fallback: string): string {
+    return typeof body === "object" && body !== null && "error" in body && typeof body.error === "string" ? body.error : fallback;
+  }
+</script>

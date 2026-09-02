@@ -92,6 +92,23 @@ export class SqliteStore implements Store {
     return row === undefined ? null : toOwner(row as unknown as OwnerRow);
   }
 
+  async getOnlyOwner(): Promise<Owner | null> {
+    const rows = this.#database.prepare("SELECT * FROM owners ORDER BY id LIMIT 2").all();
+    if (rows.length > 1) throw new Error("Ritmo has more than one owner");
+    return rows.length === 0 ? null : toOwner(rows[0] as unknown as OwnerRow);
+  }
+
+  async updateOwnerCap(
+    id: string,
+    activeCap: number,
+    capRaises: Owner["capRaises"],
+  ): Promise<void> {
+    const result = this.#database
+      .prepare("UPDATE owners SET active_cap = ?, cap_raises = ? WHERE id = ?")
+      .run(activeCap, JSON.stringify(capRaises), id);
+    if (result.changes !== 1) throw new Error(`Owner ${id} does not exist`);
+  }
+
   async createArea(area: Area): Promise<void> {
     this.#database
       .prepare("INSERT INTO areas (id, owner_id, name, counts_against_cap) VALUES (?, ?, ?, ?)")
@@ -101,6 +118,13 @@ export class SqliteStore implements Store {
   async getArea(id: string): Promise<Area | null> {
     const row = this.#database.prepare("SELECT * FROM areas WHERE id = ?").get(id);
     return row === undefined ? null : toArea(row as unknown as AreaRow);
+  }
+
+  async listAreas(ownerId: string): Promise<Area[]> {
+    const rows = this.#database
+      .prepare("SELECT * FROM areas WHERE owner_id = ? ORDER BY id")
+      .all(ownerId);
+    return (rows as unknown as AreaRow[]).map(toArea);
   }
 
   async readAreas(areaIds: string[]): Promise<Area[]> {
@@ -136,11 +160,35 @@ export class SqliteStore implements Store {
     return row === undefined ? null : toProject(row as unknown as ProjectRow);
   }
 
+  async listProjects(ownerId: string): Promise<Project[]> {
+    const rows = this.#database
+      .prepare("SELECT * FROM projects WHERE owner_id = ? ORDER BY id")
+      .all(ownerId);
+    return (rows as unknown as ProjectRow[]).map(toProject);
+  }
+
   async listActiveProjects(ownerId: string): Promise<Project[]> {
     const rows = this.#database
       .prepare("SELECT * FROM projects WHERE owner_id = ? AND state = 'active' ORDER BY id")
       .all(ownerId);
     return (rows as unknown as ProjectRow[]).map(toProject);
+  }
+
+  async setProjectState(
+    id: string,
+    ownerId: string,
+    state: Project["state"],
+  ): Promise<void> {
+    const result = this.#database
+      .prepare("UPDATE projects SET state = ? WHERE id = ? AND owner_id = ?")
+      .run(state, id, ownerId);
+    if (result.changes !== 1) throw new Error(`Project ${id} does not exist`);
+  }
+
+  async hasClosedWeek(ownerId: string): Promise<boolean> {
+    return this.#database
+      .prepare("SELECT 1 FROM weeks WHERE owner_id = ? AND closed_at IS NOT NULL LIMIT 1")
+      .get(ownerId) !== undefined;
   }
 
   async createNextAction(action: NextAction): Promise<void> {

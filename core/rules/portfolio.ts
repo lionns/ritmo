@@ -16,6 +16,7 @@ export interface PortfolioProject {
 export interface Portfolio {
   progress: PortfolioProject[];
   outstanding: PortfolioProject[];
+  shelved: PortfolioProject[];
 }
 
 export class PortfolioRuleError extends Error {
@@ -27,17 +28,18 @@ export async function readPortfolio(
   clock: Clock,
   ownerId: string,
 ): Promise<Portfolio> {
-  const projects = await store.listActiveProjects(ownerId);
+  const projects = await store.listProjects(ownerId);
   const projectIds = projects.map(({ id }) => id);
-  if (projectIds.length === 0) return { progress: [], outstanding: [] };
+  if (projectIds.length === 0) return { progress: [], outstanding: [], shelved: [] };
 
   const occurredSince = new Date(
     clock.now().getTime() - RECENT_PROGRESS_DAYS * DAY_MILLISECONDS,
   ).toISOString();
   const areaIds = [...new Set(projects.map(({ areaId }) => areaId))];
+  const activeProjectIds = projects.filter(({ state }) => state === "active").map(({ id }) => id);
   const [entries, actionReads, areas] = await Promise.all([
     store.readRecentEntries(projectIds, occurredSince),
-    store.readOpenNextActionsWithProgress(projectIds),
+    store.readOpenNextActionsWithProgress(activeProjectIds),
     store.readAreas(areaIds),
   ]);
 
@@ -59,13 +61,17 @@ export async function readPortfolio(
     ),
   );
 
-  const progress = assembled
+  const active = assembled.filter(({ project }) => project.state === "active");
+  const progress = active
     .filter(({ recentEntries }) => recentEntries.length > 0)
     .sort((left, right) =>
       right.recentEntries[0].occurredAt.localeCompare(left.recentEntries[0].occurredAt),
     );
-  const outstanding = assembled.filter(({ recentEntries }) => recentEntries.length === 0);
-  return { progress, outstanding };
+  const outstanding = active.filter(({ recentEntries }) => recentEntries.length === 0);
+  const shelved = assembled
+    .filter(({ project }) => project.state === "shelved")
+    .sort((left, right) => left.project.id.localeCompare(right.project.id));
+  return { progress, outstanding, shelved };
 }
 
 function groupEntries(entries: Entry[]): Map<string, Entry[]> {
@@ -93,7 +99,7 @@ function assembleProject(
 ): PortfolioProject {
   const area = areasById.get(project.areaId);
   if (area === undefined) {
-    throw new PortfolioRuleError(`Active project ${project.id} has no area ${project.areaId}`);
+    throw new PortfolioRuleError(`Project ${project.id} has no area ${project.areaId}`);
   }
   return {
     project,

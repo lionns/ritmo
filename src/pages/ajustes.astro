@@ -1,0 +1,38 @@
+---
+import type { CaptureErrorResponse, SettingsResponse } from "../../contracts/capture.ts";
+import HeroChart from "../components/molecules/HeroChart.astro";
+import PageStage from "../components/organisms/PageStage.astro";
+import SettingsPanel from "../components/organisms/SettingsPanel.astro";
+import AppShell from "../layouts/AppShell.astro";
+
+Astro.response.headers.set("Cache-Control", "no-store");
+
+let settings: SettingsResponse | null = null;
+let loadError: string | null = null;
+try {
+  const response = await fetch(new URL("/api/settings", Astro.url), { headers: { Accept: "application/json" } });
+  const body = await response.json() as SettingsResponse | CaptureErrorResponse;
+  if (!response.ok || "error" in body) loadError = response.status === 409 ? "Responde primero la pregunta de la semana mala." : "No se pudieron leer los ajustes.";
+  else settings = body;
+} catch {
+  loadError = "No se pudieron leer los ajustes. Revisa la conexión y recarga.";
+}
+---
+
+<AppShell title="Ajustes · Ritmo" description="El límite activo y las áreas del portfolio." context="Ajustes">
+  <div class="pointer-events-none fixed inset-0 -z-10 bg-[color-mix(in_srgb,var(--page-bg)_80%,transparent)]" aria-hidden="true"></div>
+  <PageStage chartVeiled>
+    <section class="self-center" aria-labelledby="page-title">
+      <h1 id="page-title" class="max-w-[760px] font-display text-[clamp(46px,13.2vw,64px)] leading-[0.84] font-semibold tracking-[-0.04em] md:text-[clamp(76px,9.2vw,132px)]">La estructura.</h1>
+      <p class="mt-6 max-w-[470px] text-[15px] leading-[1.55] text-dim">El límite que respondiste y las áreas que ordenan el portfolio.</p>
+      <a class="mt-3 inline-flex min-h-[58px] items-center text-sm font-medium text-dim underline-offset-[5px] hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent md:min-h-14" href="/">Volver al portfolio</a>
+    </section>
+    {settings === null ? (
+      <section class="glass-panel p-6" aria-live="polite">
+        <p class="text-sm leading-normal text-dim">{loadError}</p>
+        <a class="mt-3 inline-flex min-h-[58px] items-center text-sm font-medium text-ink underline-offset-4 md:min-h-14" href="/">Ir al inicio</a>
+      </section>
+    ) : <SettingsPanel settings={settings} />}
+    <HeroChart slot="chart" entries={[]} />
+  </PageStage>
+</AppShell>

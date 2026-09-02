@@ -1,7 +1,6 @@
 import type { APIRoute } from "astro";
 
 import { runtimeStore } from "../../../adapters/sqlite/store.ts";
-import { LOCAL_OWNER_ID } from "../../../adapters/local-owner.ts";
 import type { Clock } from "../../../core/ports/clock.ts";
 import type { Store } from "../../../core/ports/store.ts";
 import {
@@ -20,19 +19,37 @@ const responseHeaders = { "Cache-Control": "no-store" };
 export async function handleGetPortfolio(injectedStore?: Store): Promise<Response> {
   try {
     const store = injectedStore ?? runtimeStore();
-    const owner = await store.getOwner(LOCAL_OWNER_ID);
+    const owner = await store.getOnlyOwner();
     if (owner === null) {
       return Response.json(
-        { error: "Seeded owner is missing; run npm run seed" } satisfies PortfolioErrorResponse,
-        { status: 503, headers: responseHeaders },
+        {
+          setupRequired: true,
+          ownerId: null,
+          activeCap: null,
+          activeCount: 0,
+          areas: [],
+          progress: [],
+          outstanding: [],
+          shelved: [],
+        } satisfies PortfolioResponse,
+        { headers: responseHeaders },
       );
     }
 
-    const portfolio = await readPortfolio(store, clock, owner.id);
+    const [portfolio, areas] = await Promise.all([
+      readPortfolio(store, clock, owner.id),
+      store.listAreas(owner.id),
+    ]);
+    const allActive = [...portfolio.progress, ...portfolio.outstanding];
     const response: PortfolioResponse = {
+      setupRequired: false,
       ownerId: owner.id,
+      activeCap: owner.activeCap,
+      activeCount: allActive.filter(({ area }) => area.countsAgainstCap).length,
+      areas: areas.map(({ id, name, countsAgainstCap }) => ({ id, name, countsAgainstCap })),
       progress: portfolio.progress.map(toContractProject),
       outstanding: portfolio.outstanding.map(toContractProject),
+      shelved: portfolio.shelved.map(toContractProject),
     };
     return Response.json(response, { headers: responseHeaders });
   } catch (error) {
@@ -55,7 +72,12 @@ function toContractProject(value: CorePortfolioProject): PortfolioProject {
   return {
     id: value.project.id,
     title: value.project.title,
-    area: { id: value.area.id, name: value.area.name },
+    state: value.project.state,
+    area: {
+      id: value.area.id,
+      name: value.area.name,
+      countsAgainstCap: value.area.countsAgainstCap,
+    },
     recentEntries: value.recentEntries.map((entry) => ({
       id: entry.id,
       kind: entry.kind,

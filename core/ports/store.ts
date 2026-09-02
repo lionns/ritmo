@@ -8,12 +8,18 @@ export interface OpenNextActionWithProgress {
 export interface Store {
   createOwner(owner: Owner): Promise<void>;
   getOwner(id: string): Promise<Owner | null>;
+  getOnlyOwner(): Promise<Owner | null>;
+  updateOwnerCap(id: string, activeCap: number, capRaises: Owner["capRaises"]): Promise<void>;
   createArea(area: Area): Promise<void>;
   getArea(id: string): Promise<Area | null>;
+  listAreas(ownerId: string): Promise<Area[]>;
   readAreas(areaIds: string[]): Promise<Area[]>;
   createProject(project: Project): Promise<void>;
   getProject(id: string): Promise<Project | null>;
+  listProjects(ownerId: string): Promise<Project[]>;
   listActiveProjects(ownerId: string): Promise<Project[]>;
+  setProjectState(id: string, ownerId: string, state: Project["state"]): Promise<void>;
+  hasClosedWeek(ownerId: string): Promise<boolean>;
   createNextAction(action: NextAction): Promise<void>;
   getNextAction(id: string): Promise<NextAction | null>;
   findOpenNextAction(projectId: string): Promise<NextAction | null>;

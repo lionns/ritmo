@@ -1,7 +1,6 @@
 import type { APIRoute } from "astro";
 
 import { runtimeStore } from "../../../adapters/sqlite/store.ts";
-import { LOCAL_OWNER_ID } from "../../../adapters/local-owner.ts";
 import { UlidGenerator } from "../../../adapters/ulid.ts";
 import type { Clock } from "../../../core/ports/clock.ts";
 import type { Store } from "../../../core/ports/store.ts";
@@ -20,9 +19,9 @@ export async function handlePostEntry(request: Request, injectedStore?: Store): 
 
   try {
     const store = injectedStore ?? runtimeStore();
-    const owner = await store.getOwner(LOCAL_OWNER_ID);
+    const owner = await store.getOnlyOwner();
     if (owner === null) {
-      return errorResponse("Seeded owner is missing; run npm run seed", 503);
+      return errorResponse("Complete setup before recording progress", 409);
     }
 
     const clock: Clock = { now: () => new Date() };
