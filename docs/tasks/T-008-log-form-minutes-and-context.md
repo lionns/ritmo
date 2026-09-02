@@ -66,10 +66,12 @@ implements: [US-4, FR-4]
       title as context and its open next action above the field, and SHALL NOT render the select.
 - [x] WHEN `/registrar` is opened with no `project` parameter, THE SYSTEM SHALL render the select as
       it does today.
-- [ ] Accent coverage is measured after the change and still reads ~2% of the screen (`AC-9`): the
-      selected chip and the save button are both accent, and `design-handoff.md` § Navigation Map
-      says two highlighted things are none. If the measurement fails, the chip's selected state is a
-      finding for the owner, not a silent redesign.
+- [x] `/registrar` renders exactly one accent-filled **control**, the save button — the veiled hero
+      marks are ground, not a highlighted thing (§ Interaction States). The selected chip reads as
+      `accent` border, `accent` text and a 300→400 weight step, carries no accent fill, and keeps
+      the unselected chip's border width so a tap reflows nothing. This replaces the earlier
+      "~2% of the screen" wording, which was never measurable: at 390px the save button alone
+      covers 5.4%. § The 2% rule enumerates the elements; § Navigation Map is the count.
 - [x] `npm run check:core` stays green, proving the form still reaches data only through `contracts/`.
 - [x] All five gates stay green from a clean `npm ci`.
 
@@ -110,50 +112,58 @@ implements: [US-4, FR-4]
 ## Outcome
 
 - Changes: prefilled project heading and next-action context; optional `15 / 30 / 60 / 120` toggle
-  chips; typed request omission; 12px optimistic floor with SSR-owned proportional height; § The
-  Log Form handoff and contract tests.
+  chips with outlined/weighted selection; typed request omission; 12px optimistic floor with
+  SSR-owned proportional height; § The Log Form handoff and contract tests.
 - Files: form/page/chart, `entry-form.ts`, its test, handoff, task/traces and generated status
   (10 files).
 - Baseline result: clean `npm ci`; unit 25/25, isolation, lint, typecheck and build green.
 - Final result: clean `npm ci`; unit 29/29, isolation, lint, typecheck/build, integration 4/4. Live
-  SSR/API probe: exact owner-settled chips; untimed mark 12px; 60-minute mark 104px.
+  SSR/API probe: exact owner-settled chips; untimed mark 12px; 60-minute mark 104px. Built form has
+  one accent-filled control; selected chip is glass with accent border/text and 300→400 weight.
 - Decisions recorded: none.
-- Follow-up: owner validation — accent coverage and the 390px under-20s flow.
+- Follow-up: Reviewer round 4, then owner validation of the 390px under-20s flow.
 
 ## Review
 
-- 2026-09-01 · Reviewer, rounds 1-2, all closed. Medium · the optimistic bar scaled to a fixed
-  90-minute cap while `hero-chart.ts:65` scales to the window maximum, so on this task's own seed
-  data a 45-minute entry drew 58px and reloaded at 95px, and same-day totals drifted. Medium · that
-  rule sat inline in the client script where no test reached it, which is why five green gates said
-  nothing about the first. Low · a timed day could carry `data-state="untimed"`. Low · § The Log
-  Form's **Confirmation** promised a timed entry rises above the floor at once, which the fix made
-  false — corrected in the handoff; round 1's handback said "the handoff wording is the owner's"
-  meaning only the colour sentence, and that routing was mine and too broad. Low · the floor was a
-  bare `12` beside a private `UNTIMED_HEIGHT`. Three nits raised without asking for action (dead
-  branch at `:12`, document-scoped chip query at `:105`, literal caps at `:67`) stay open.
-- 2026-09-01 · Reviewer, round 3 · five gates re-run here, green: unit 29/29, isolation, lint,
-  typecheck, build, integration 4/4. Both round-2 Low closed. The floor is defined once and verified
-  in the build rather than the source — the client minifies to `Math.max(12,e)`, the server chart to
-  `Math.max(12, Math.round(12 + …))`, and `buildChartDays` does not ride the cross-import into the
-  client (`dist/client/_astro/` carries CSS only). The owner's values landed with all seven call
-  sites typed; the re-probe is internally consistent, since the seed's tallest day is 50 minutes and
-  a 60-minute entry makes 60 the new maximum, which is the 104px recorded.
+- 2026-09-01 · Reviewer, rounds 1-3, five gates re-run each round; round 3 green at unit 29/29,
+  isolation, lint, typecheck, build, integration 4/4. Two Medium, two Low, three nits, all closed.
+  Medium · the optimistic bar scaled to a fixed 90-minute cap while `hero-chart.ts:65` scales to the
+  window maximum, so a 45-minute entry drew 58px and reloaded at 95px. Medium · that rule sat inline
+  where no test reached it, which is why five green gates said nothing about the first. Low · a
+  timed day could carry `data-state="untimed"`. Low · § The Log Form promised a timed entry rises
+  above the floor at once, which the fix made false — corrected in the handoff; round 1's handback
+  said "the handoff wording is the owner's" meaning only the colour sentence, and that routing was
+  mine and too broad. Low · the floor was a bare `12` beside a private `UNTIMED_HEIGHT`. Three nits
+  raised without asking for action (`:12`, `:105`, `:67`) stay open. Round 3 verified the floor in
+  the build rather than the source, and that `buildChartDays` does not follow the new cross-import
+  into the client; the re-probe's 104px is arithmetically the only value it could be.
 - Medium · `check-core-isolation.mjs:39` · `isFront` matches `src/components/`, `src/layouts/` and
   `src/pages/` but not `src/lib/`, so a file there may import an adapter and the check reports clean
   · mutation-probed both ways: `src/lib/__probe.ts` importing `adapters/d1/store.ts` passes, the
-  identical import under `src/components/` fails. `D-009` names `.astro` routes and components as
-  the front and the regex mirrors it, so the gap is the decision's before it is the script's. This
-  task's criterion "`check:core` stays green, **proving** the form reaches data only through
-  `contracts/`" therefore over-claims: the gate is green and `entry-form.ts` is in fact clean, but
-  nothing looked at it · **routed to `T-009`**, not fixed here — `scripts/` needs approval and a
-  decision, and `src/lib/` predates this task (`T-006` put the first file there).
-- Nit · exporting `UNTIMED_HEIGHT` was round 2's recommendation and Codex did exactly that; the
-  cleaner shape was to move `confirmOptimisticChartMark` into `hero-chart.ts`, where the constant
-  could have stayed private. Costs nothing at runtime. Named in `T-009` § Out of Scope, not asked for.
-- Recommended for owner validation. Two things remain the owner's: the `AC-9` accent measurement —
-  which is the last unchecked criterion, and `harness-lint` refuses `done` while it is unchecked —
-  and whether "colour is not its only channel" earns a second visual channel on the selected chip.
+  identical import under `src/components/` fails. `D-009` names only routes and components, so the
+  gap is the decision's before the script's. This task's `check:core` criterion therefore over-claims
+  — the gate is green and `entry-form.ts` is in fact clean, but nothing looked at it · **routed to
+  `T-009`**; `scripts/` needs approval and a decision, and `src/lib/` arrived with `T-006`.
+- 2026-09-01 · the accent criterion, settled by the owner rather than measured. Measuring showed it
+  could not be met by anything: at 390px the save button alone covers 5.4%, 2.7x the whole "~2%"
+  budget, and that was true before this task. The rule's checkable content is § Navigation Map's
+  count, not an area. The owner dropped the chip's accent fill, which closes the count and makes
+  "colour is not its only channel" true — weight becomes the second channel.
+- 2026-09-01 · Reviewer, round 4 · five gates re-run here, green: unit 29/29, isolation, lint,
+  typecheck, build, integration 4/4. The chip matches § The Log Form: no `bg-accent`, `accent`
+  border and text, 1px border in both states so nothing reflows, and `bg-accent` now appears once
+  in the whole `/registrar` tree — the save button. The 300→400 step is real: `AppShell.astro:31`
+  loads exactly those two Martian Mono weights, which is also why the resting chip had to drop to
+  300. Three imprecisions were mine and are fixed here, not by the implementer: the handoff said
+  "a weight step" without naming it or the fallback, and this criterion said "element" where the
+  veiled chart marks are also accent-filled — the implementer's own Outcome said "control", which
+  was the more accurate word. **Recommended for owner validation.**
+- Correction: this review called `AC-2`, `AC-5` and `AC-9` fabricated. They are not — they are
+  `T-006`'s criteria by position, and all three fit their context. I searched
+  `acceptance-criteria.json`, missed them, and did not try the other reading. What survives is
+  smaller: a bare `AC-N` is ambiguous against that file's `AC-G*`/`AC-X*` ids and breaks silently if
+  a criterion is inserted into `T-006`. Left as it stands, at the owner's call. Separately, `T-006`
+  checked its own ninth criterion — "accent covers roughly 2%" — without measuring it.
 
 ## Validation
 

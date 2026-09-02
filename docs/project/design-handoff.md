@@ -232,9 +232,17 @@ not another question, when the owner enters from its portfolio row.
   § The Project Row draws its marks from that count.
 - **Optional means absent:** a selected chip submits `effortMinutes` as its number. With no selected
   chip, the request omits the property rather than sending zero or `null`.
-- **Target and state:** chips are at least 58px tall on mobile and 56px on desktop. Selection uses
-  the accent fill plus the pressed state, so colour is not its only channel; focus keeps the shared
-  2px accent outline. The artboard's 52px chip yields to § Interaction States.
+- **Target and state:** chips are at least 58px tall on mobile and 56px on desktop; the artboard's
+  52px chip yields to § Interaction States. **Selection carries no accent fill** — settled with the
+  owner on 2026-09-01. The save button is the one accent-filled element on this screen, and a filled
+  chip beside it is exactly the pair § Navigation Map refused a tab bar over. Selected reads as an
+  `accent` border, `accent` text and a weight step on the same glass; unselected keeps
+  `glass-border` and `ink`. Border width is identical in both, so a tap reflows nothing. The step is
+  **300 to 400** — the two Martian Mono weights the shell loads — which is why the resting chip drops
+  to 300 rather than the selected one rising: there is no heavier face to rise to. Weight is the
+  second channel, so colour does not carry the state alone; where the webfont fails to load, the
+  monospace fallback may not carry 300 and the state falls back to colour. Focus keeps the shared
+  2px accent outline, which sits outside the border with its own offset and stays distinguishable.
 - **Confirmation:** saving raises today's mark to the 12px floor and turns it accent, whether or not
   minutes were given. Proportional height belongs to the server and arrives on the next render — the
   client cannot reproduce a scale set by the tallest day in the window. **Corrected 2026-09-01:**

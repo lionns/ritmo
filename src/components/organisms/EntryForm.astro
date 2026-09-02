@@ -70,7 +70,7 @@ const initialProject = selectedProject?.id ?? projects[0]?.id;
       {
         EFFORT_MINUTE_OPTIONS.map((minutes) => (
           <button
-            class="min-h-[58px] cursor-pointer rounded-field border border-glass-border bg-[color-mix(in_srgb,var(--page-bg)_72%,transparent)] px-2 font-mono text-sm text-ink transition-[filter] duration-[120ms] hover:brightness-[1.06] active:brightness-90 aria-pressed:border-accent aria-pressed:bg-accent aria-pressed:text-accent-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent motion-reduce:transition-none md:min-h-14"
+            class="min-h-[58px] cursor-pointer rounded-field border border-glass-border bg-[color-mix(in_srgb,var(--page-bg)_72%,transparent)] px-2 font-mono text-sm font-light text-ink transition-[filter] duration-[120ms] hover:brightness-[1.06] active:brightness-90 aria-pressed:border-accent aria-pressed:font-normal aria-pressed:text-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent motion-reduce:transition-none md:min-h-14"
             type="button"
             data-effort-minutes={minutes}
             aria-label={`${minutes} minutos`}
