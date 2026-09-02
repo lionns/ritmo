@@ -1,6 +1,6 @@
 # D-009 — Three layers, and no data reaches a template
 
-- Status: accepted
+- Status: superseded
 - Date: 2026-08-29
 - Supersedes: D-003
 - Tasks: none
