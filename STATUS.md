@@ -9,7 +9,7 @@ Harness `0.8.1` · profile `team`
 | Task | State | Goal |
 |---|---|---|
 | [T-004](docs/tasks/T-004-harness-loose-ends.md) | `ready` | Close the three low-severity findings the T-002 review left in the harness tooling, keeping |
-| [T-014](docs/tasks/T-014-creation-moves-to-the-structure-screen.md) | `ready` | Move project creation out of the portfolio card and into `/ajustes`, split that screen into |
+| [T-014](docs/tasks/T-014-creation-moves-to-the-structure-screen.md) | `doing` | Move project creation out of the portfolio card and into `/ajustes`, split that screen into |
 | [T-001](docs/tasks/T-001-skeleton-and-next-action.md) | `done` | Stand up the three-layer tree with every quality-gate command real and green, and prove it by |
 | [T-002](docs/tasks/T-002-split-task-budget.md) | `done` | Replace the single task-file budget with a plan budget and a record budget, enforced by |
 | [T-003](docs/tasks/T-003-loose-ends.md) | `done` | Close the six low-severity findings the T-001 review left open, so the schema states the |
@@ -25,7 +25,7 @@ Harness `0.8.1` · profile `team`
 
 ## Next
 
-**T-004** (`ready`) — Close the three low-severity findings the T-002 review left in the harness tooling, keeping
+**T-014** (`doing`) — Move project creation out of the portfolio card and into `/ajustes`, split that screen into
 
 ## Open decisions
 

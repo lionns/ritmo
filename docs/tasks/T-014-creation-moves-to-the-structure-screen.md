@@ -1,7 +1,7 @@
 ---
 id: T-014
 title: Creation moves to the structure screen — `/` goes back to being read
-status: ready
+status: doing
 profile: team
 harness: 0.8.1
 role: Frontend Implementer
@@ -66,22 +66,22 @@ implements: [FR-1]
 
 ## Acceptance Criteria
 
-- [ ] WHEN `/` is rendered with at least one project, THE SYSTEM SHALL NOT render a project creation
+- [x] WHEN `/` is rendered with at least one project, THE SYSTEM SHALL NOT render a project creation
       form anywhere on the page, and the portfolio panel SHALL contain no `<form>` other than the
       per-row action disclosures.
-- [ ] WHEN `/` is rendered with no projects, THE SYSTEM SHALL state that plainly and link to
+- [x] WHEN `/` is rendered with no projects, THE SYSTEM SHALL state that plainly and link to
       `/ajustes`, with no debt, apology or encouragement language (`NFR-7`, `US-2`).
-- [ ] WHEN `/ajustes` is rendered and at least one area exists, THE SYSTEM SHALL render the project
+- [x] WHEN `/ajustes` is rendered and at least one area exists, THE SYSTEM SHALL render the project
       creation form, and creating a project there SHALL return to a state where `/` shows it.
-- [ ] `/ajustes` renders exactly **two** elements carrying `glass-panel`, `PageStage` no longer
+- [x] `/ajustes` renders exactly **two** elements carrying `glass-panel`, `PageStage` no longer
       selects by child position, and `page-layout.test.ts` asserts the new selector — checked by
       seeing a third stage child bound, not by reading the CSS.
-- [ ] WHEN `/ajustes` is rendered with no areas, the project form SHALL say an area is needed first,
+- [x] WHEN `/ajustes` is rendered with no areas, the project form SHALL say an area is needed first,
       keeping the factual sentence `T-012` already wrote rather than inventing a second one.
-- [ ] The cap response after creation still reads as a count and nothing else — `T-012`'s copy rule
+- [x] The cap response after creation still reads as a count and nothing else — `T-012`'s copy rule
       moves with the form (`US-2`).
-- [ ] `git diff --stat core/ contracts/ adapters/` is empty at the end of this task.
-- [ ] All five gates green from a clean `npm ci`, and `node scripts/harness-lint.mjs` clean.
+- [x] `git diff --stat core/ contracts/ adapters/` is empty at the end of this task.
+- [x] All five gates green from a clean `npm ci`, and `node scripts/harness-lint.mjs` clean.
 
 ## Verification
 
@@ -120,16 +120,47 @@ implements: [FR-1]
 
 ## Outcome
 
-- Changes:
-- Files:
-- Baseline result:
-- Final result:
-- Decisions recorded:
-- Follow-up:
+- Changes: moved project creation from the portfolio to `/ajustes`; split areas and projects into
+  two glass surfaces; collapsed the reference-only area list; made all stage glass children bound
+  independently of order; added the empty-portfolio signpost.
+- Files: `PageStage`, portfolio/settings/project-capture components, `/` and `/ajustes`, design
+  handoff, and page-layout tests. No API, rule, contract or adapter changed.
+- Baseline result: clean `npm ci`; unit 36/36, isolation, harness lint, typecheck 0, Node build,
+  integration 7/7. Node 26.8.1 warned against the package pin of 24.20.0.
+- Final result: unit 38/38, isolation, typecheck 0, Node build, integration 7/7, lint clean. A built
+  server on throwaway SQLite verified the empty route, two panels, area-to-project capture, three
+  projects on `/`, three cycle forms and no project-creation form; backend scope diff stayed empty.
+- Decisions recorded: none; the move follows `D-021` and the task's owner-settled handoff.
+- Follow-up: **back to the Frontend Implementer, 2026-09-02, after owner validation round 1.**
+  `/ajustes` scrolls as a page: drop `xl:auto-rows-[minmax(0,1fr)]` and the height bound on that
+  route so both cards take their content height and the page carries the only scrollbar. `/` keeps
+  its bounded panel unchanged. The split, the cap placement and the non-positional selector all
+  stay. § Setup and Capture is already corrected. Then owner validation round 2.
 
 ## Review
 
-- Severity · `file:line` · issue · impact · recommendation
+- 2026-09-02 · Reviewer, round 1 · five gates green: unit 38/38, isolation, typecheck 0 errors,
+  build, integration 7/7, lint clean. The move itself is right — creation is off `/`, the two
+  surfaces exist, the cap sits beside the projects it governs, and the selector is no longer
+  positional, which was the stated prerequisite.
+- **Medium · `PageStage.astro` · `xl:auto-rows-[minmax(0,1fr)]` gives each card exactly half the
+  stage regardless of content, so the Áreas form is clipped through the middle of “Crear área”.**
+  Traced rather than guessed: the headline takes `xl:row-span-2` in column one, both panels take
+  `xl:col-start-2` into rows one and two, equal rows size each to half the viewport, and
+  `max-height:100%; overflow-y:auto` does the cutting. A form whose submit button is sliced reads as
+  broken, not as scrollable · the owner found it on sight.
+- **Medium · the same change leaves two independent scroll surfaces stacked in one column**, which
+  is worse than the single panel this task started from: nothing says which region scrolls, page and
+  card scrollbars compete, and content hides with no affordance. This is what the owner named as
+  "no es intuitivo", and it is the more important of the two.
+- **Both are the plan's fault, not the implementer's.** This task asked for two glass surfaces and
+  for every panel to carry the bound as separate requirements, and never said how two panels share
+  the column's height. Those two rules taken literally produce exactly what shipped.
+- Settled with the owner 2026-09-02: **`/ajustes` stops being a bounded stage and scrolls as a
+  page.** § Responsive Behavior bounds the stage so the *portfolio* fits without scrolling and calls
+  internal scrolling a fallback for exceptional content — a screen of forms is neither. Panels stay
+  bounded on `/`, which is what the portfolio relies on. § Setup and Capture corrected with the
+  reasoning; `src/` is the implementer's.
 
 ## Validation
 

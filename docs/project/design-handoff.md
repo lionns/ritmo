@@ -280,22 +280,22 @@ placeholder: FR-13 requires an answer, not a suggested default. Its helper says 
 does, without calling an average week normal or desirable. Success reloads `/` into the empty
 portfolio; it is not an onboarding celebration.
 
-**Areas and the cap on `/ajustes`.** One glass panel stacks the current cap, its edit field, then
-the area form and existing areas. An area asks for a name and one checkbox: “Cuenta dentro del
-límite”. The helper names the exception directly: leave it clear for the fixed job, whose projects
-do not compete for this cap (FR-15). Fields keep the 58/56px targets and the shared focus treatment.
+**Areas and projects on `/ajustes`.** The screen spends its ceiling of two glass surfaces. `ÁREAS`
+holds the area form and a native disclosure whose summary is the area count; the list is reference,
+while both creation forms remain visible. An area asks for a name and one checkbox: “Cuenta dentro
+del límite”. The helper names the exception directly: leave it clear for the fixed job, whose
+projects do not compete for this cap (FR-15). `PROYECTOS` holds the active count, the cap edit and
+`NUEVO PROYECTO`: title, area, the four action fields from § The Project Row, and one button. Trigger
+and act are required so the first open action is part of project creation; obstacle and estimate
+remain optional. With no areas it keeps the factual next action, “Crea un área en Ajustes antes del
+primer proyecto.” There is no objective or deadline field here; both remain outside this slice.
 
-**Projects on `/`.** The portfolio panel always ends with `NUEVO PROYECTO`: title, area, the four
-action fields from § The Project Row, and one button. Trigger and act are required so the first open
-action is part of project creation; obstacle and estimate remain optional. With no areas it shows
-the factual next action, “Crea un área en Ajustes antes del primer proyecto.” The form remains after
-the first project. There is no objective or deadline field here; both are explicitly outside this
-capture slice.
-
-Immediately after setup, `EN MOVIMIENTO` stays in place and the empty sentence reads “Aún no hay
-proyectos en movimiento.” The project capture block follows it in the same glass surface, so the
-empty state points at the next object the owner can actually create rather than asking for progress
-against a project that does not exist.
+**The portfolio returns to reading.** Immediately after setup, `EN MOVIMIENTO` stays in place and
+an empty portfolio says “Aún no hay proyectos.” with a link to create the first in `/ajustes`.
+T-012 originally kept the full project form there so the empty state pointed directly at the next
+object. That reasoning was overridden after T-013 made the required first action part of capture:
+with three projects the portfolio glass held four forms and eighteen fields. Creation moved to the
+structure screen; the per-row action disclosure stays because it acts on the row it follows.
 
 **The cap response is a count, not feedback.** After creation the inline status reads either
 “Activo. X de Y proyectos en áreas con límite.” or “Archivado. X de Y proyectos en áreas con
@@ -304,11 +304,21 @@ in uncapped areas say “Activo. Esta área no cuenta dentro del límite.” She
 plain `ARCHIVADOS` section of the portfolio, with their area and latest movement, and do not link to
 the progress form.
 
-On mobile the forms stay in document flow and controls are full width. At `≥1200px` the project
-form stays inside the portfolio glass, which is already the bounded scroll surface; setup and
-settings keep one panel opposite the display question. **Every glass panel in the stage's right
-column carries that same bound**, not only the portfolio's: the areas list grows with each area the
-owner adds, and an unbounded panel walks off the stage. Added 2026-09-02, after it did.
+On mobile the forms stay in document flow and controls are full width. At `≥1200px`, `/ajustes`
+places its two glass surfaces in the stage's right column opposite one display question.
+
+**`/ajustes` is not a bounded stage; it scrolls as a page.** Settled with the owner on 2026-09-02
+after the first build of the split shipped the opposite. Both panels take the height of their
+content and the page carries the only scrollbar. **The rule this corrects:** a bounded stage plus
+two panels made every panel a scroll surface, equal rows sized each to half the viewport, and the
+Áreas form — taller than half — was clipped through the middle of its own submit button. A form
+whose button is sliced does not read as scrollable; it reads as broken, and two scroll regions
+stacked in one column hide content with no affordance either way. § Responsive Behavior bounds the
+stage so *the portfolio* fits without scrolling and calls internal scrolling a fallback for
+exceptional content; a screen of forms is neither. A panel that is a direct child of a bounded stage
+still carries the bound, independent of child position — that part of the 2026-09-02 fix stands, and
+it is what `/` relies on.
+
 Loading changes only the button label, errors sit in the form's live region as facts plus the
 corrective action, and no capture success uses a toast.
 
@@ -322,7 +332,7 @@ Six routes, three levels deep. Settled with the owner on 2026-08-30 after drawin
 | `/p/:id` | **Project.** History, next action, dormant state, log form inline. | Tapping a project. |
 | `/semana` | **The ritual.** One route, two states: proposal when the week opens (FR-10), close when it ends (US-7, US-8). | A strip below the header on `/`, shown only when the week is due. |
 | `/archivo` | **Shelved, dormant, closed.** The backlog that may never be the landing. | A footer link at the end of the portfolio list. |
-| `/ajustes` | Capacity cap (US-1), areas, tags, **export** (FR-21), passkey. | A footer link beside the archive. |
+| `/ajustes` | Capacity cap (US-1), areas, projects, tags, **export** (FR-21), passkey. | A footer link beside the archive. |
 | `/entrar` | Passkey sign-in (D-004). | Only without a session. |
 
 **`/semana` is one route with two states, not two routes.** Opening the week and closing it are the

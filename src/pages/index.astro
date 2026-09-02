@@ -53,7 +53,7 @@ const setupRequired = portfolio?.setupRequired === true;
       {readyPortfolio !== null && (
         <a
           class="mt-[30px] inline-flex min-h-[58px] w-full items-center justify-center rounded-[29px] bg-accent px-7 text-[17px] font-semibold text-accent-ink no-underline transition-[filter] duration-[120ms] hover:brightness-[1.06] active:brightness-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent motion-reduce:transition-none md:min-h-14 md:w-auto md:min-w-[218px] md:rounded-[28px] md:text-base"
-          href={projects.some(({ state }) => state === "active") ? "/registrar" : "#nuevo-proyecto"}
+          href={projects.some(({ state }) => state === "active") ? "/registrar" : "/ajustes"}
         >{projects.some(({ state }) => state === "active") ? "Registrar una línea" : "Crear un proyecto"}</a>
       )}
     </section>
@@ -73,9 +73,6 @@ const setupRequired = portfolio?.setupRequired === true;
           progress={portfolio.progress}
           outstanding={portfolio.outstanding}
           shelved={portfolio.shelved}
-          areas={portfolio.areas}
-          activeCount={portfolio.activeCount}
-          activeCap={portfolio.activeCap}
         />
       )
     }

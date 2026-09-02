@@ -22,7 +22,7 @@ describe("the first-loop page composition", () => {
     assert.doesNotMatch(chartClass, /\bfixed\b/);
   });
 
-  for (const page of ["index", "registrar"] as const) {
+  for (const page of ["index", "registrar", "ajustes"] as const) {
     it(`renders ${page} through the shared responsive stage`, () => {
       const pageSource = source(`src/pages/${page}.astro`);
 
@@ -38,8 +38,10 @@ describe("the first-loop page composition", () => {
     assert.match(shell, /xl:h-dvh/);
     assert.match(shell, /xl:h-full/);
     assert.match(stage, /min-h-0/);
+    assert.match(stage, /xl:auto-rows-\[minmax\(0,1fr\)\]/);
     assert.match(stage, /--stage-chart-height: clamp\(96px, 12dvh, 180px\)/);
-    assert.match(stage, /\.stage-main > :global\(:nth-child\(2\)\)/);
+    assert.match(stage, /\.stage-main > :global\(\.glass-panel\)/);
+    assert.doesNotMatch(stage, /:nth-child/);
     assert.match(stage, /max-height: 100%/);
     assert.match(stage, /overflow-y: auto/);
     assert.match(stage, /overscroll-behavior: contain/);
@@ -85,7 +87,7 @@ describe("the first-loop page composition", () => {
     assert.match(shell, /<header class="[^"]*items-baseline/);
     assert.match(shell, /data-header-context/);
     assert.match(shell, /tracking-\[0\.22em\][^"]*text-dim uppercase[^"]*md:text-\[9px\]/);
-    for (const page of ["index", "registrar"] as const) {
+    for (const page of ["index", "registrar", "ajustes"] as const) {
       const pageSource = source(`src/pages/${page}.astro`);
       assert.match(pageSource, /context=(?:"|\{)/, `${page} must name itself in the header`);
       // The body must not repeat the header's label as an eyebrow above the headline.
@@ -175,6 +177,22 @@ describe("the first-loop page composition", () => {
     assert.match(capture, /Nuevo proyecto/);
     assert.match(capture, /Crea un área en/);
     assert.match(capture, /\{activeCount\} de \{activeCap\}/);
+  });
+
+  it("keeps project creation on the two-panel structure screen", () => {
+    const index = source("src/pages/index.astro");
+    const settings = source("src/components/organisms/SettingsPanel.astro");
+    const portfolio = source("src/components/organisms/PortfolioPanel.astro");
+
+    assert.doesNotMatch(index, /ProjectCapture|#nuevo-proyecto/);
+    assert.doesNotMatch(portfolio, /ProjectCapture|data-project-form|<form/);
+    assert.match(portfolio, /href="\/ajustes"/);
+    assert.match(portfolio, /Aún no hay proyectos\./);
+    assert.match(settings, /<ProjectCapture/);
+    assert.equal(settings.match(/class="glass-panel/g)?.length, 2);
+    assert.match(settings, /data-area-form/);
+    assert.match(settings, /data-cap-form/);
+    assert.match(settings, /activeCount=\{activeCount\}/);
   });
 
   it("keeps the first and replacement action on one field shape", () => {

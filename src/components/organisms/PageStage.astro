@@ -7,7 +7,7 @@ const { chartVeiled = false } = Astro.props;
 ---
 
 <div class="page-stage flex min-h-0 flex-1 flex-col">
-  <main class="stage-main grid min-h-0 flex-1 items-center gap-[46px] xl:grid-cols-[minmax(0,1fr)_clamp(400px,32vw,480px)] xl:gap-16">
+  <main class="stage-main grid min-h-0 flex-1 items-center gap-[46px] xl:auto-rows-[minmax(0,1fr)] xl:grid-cols-[minmax(0,1fr)_clamp(400px,32vw,480px)] xl:gap-x-16 xl:gap-y-6">
     <slot />
   </main>
   <div
@@ -32,7 +32,7 @@ const { chartVeiled = false } = Astro.props;
       --stage-chart-height: clamp(96px, 12dvh, 180px);
     }
 
-    .stage-main > :global(:nth-child(2)) {
+    .stage-main > :global(.glass-panel) {
       min-height: 0;
       max-height: 100%;
       overflow-y: auto;
