@@ -1,7 +1,7 @@
 ---
 id: T-009
 title: The fourth kind of front file — `src/lib/` outside the boundary `check:core` enforces
-status: review
+status: done
 profile: team
 harness: 0.8.1
 role: Backend Implementer
@@ -95,10 +95,11 @@ decisions: [D-017]
 - Files: checker, architecture, task/traces and generated status (6 files).
 - Baseline result: clean `npm ci`; unit 29/29, isolation, lint, typecheck and build green. Pre-fix
   mutation probe incorrectly reported clean, reproducing the gap.
-- Final result: unit 29/29, isolation, typecheck 0 errors, build, integration 4/4, lint clean at
-  648/650. Both lib and component probes fail at line 1; removing them restores clean.
+- Final result, re-run at close: unit 29/29, isolation, typecheck 0 errors, build, integration 4/4,
+  lint clean at 648/650. Both lib and component probes fail at line 1; removing them restores clean.
 - Decisions recorded: D-017. A `0.8.2` harness bump was made and then reverted — see Review.
-- Follow-up: owner validation. No product behaviour changed, so there is nothing to click.
+- Follow-up: none. The `T-008` nits and the `confirmOptimisticChartMark` placement stay open, both
+  named in § Out of Scope and neither worth a task of its own yet.
 
 ## Review
 
@@ -129,5 +130,5 @@ decisions: [D-017]
 
 ## Validation
 
-- Validated by:
-- Date:
+- Validated by: Juan Sebastián León Velásquez
+- Date: 2026-09-01
