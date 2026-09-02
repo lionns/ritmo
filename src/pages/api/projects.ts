@@ -2,7 +2,9 @@ import type { APIRoute } from "astro";
 
 import { runtimeStore } from "../../../adapters/sqlite/store.ts";
 import { UlidGenerator } from "../../../adapters/ulid.ts";
+import type { Clock } from "../../../core/ports/clock.ts";
 import type { Store } from "../../../core/ports/store.ts";
+import { NextActionRuleError } from "../../../core/rules/next-action.ts";
 import {
   changeProjectState,
   createProjectWithinCap,
@@ -12,11 +14,13 @@ import {
 import type {
   CaptureErrorResponse,
   CreateProjectRequest,
+  CreateProjectResponse,
   ProjectMutationResponse,
   UpdateProjectStateRequest,
 } from "../../../contracts/capture.ts";
 
 const responseHeaders = { "Cache-Control": "no-store" };
+const clock: Clock = { now: () => new Date() };
 
 export async function handlePostProject(request: Request, injectedStore?: Store): Promise<Response> {
   const parsed = await parseCreateRequest(request);
@@ -25,12 +29,30 @@ export async function handlePostProject(request: Request, injectedStore?: Store)
     const store = injectedStore ?? runtimeStore();
     const owner = await store.getOnlyOwner();
     if (owner === null) return errorResponse("Complete setup before creating a project", 409);
-    const result = await createProjectWithinCap(store, new UlidGenerator(), {
+    const result = await createProjectWithinCap(store, clock, new UlidGenerator(), {
       ownerId: owner.id,
       areaId: parsed.areaId,
       title: parsed.title,
+      trigger: parsed.trigger,
+      act: parsed.act,
+      obstacle: parsed.obstacle ?? null,
+      estimateMinutes: parsed.estimateMinutes ?? null,
     });
-    return Response.json(toResponse(result), { status: 201, headers: responseHeaders });
+    return Response.json(
+      {
+        ...toResponse(result),
+        nextAction: {
+          id: result.nextAction.id,
+          projectId: result.nextAction.projectId,
+          trigger: result.nextAction.trigger,
+          act: result.nextAction.act,
+          obstacle: result.nextAction.obstacle,
+          estimateMinutes: result.nextAction.estimateMinutes,
+          createdAt: result.nextAction.createdAt,
+        },
+      } satisfies CreateProjectResponse,
+      { status: 201, headers: responseHeaders },
+    );
   } catch (error) {
     return projectError(error, "Project could not be saved");
   }
@@ -62,7 +84,9 @@ async function parseCreateRequest(request: Request): Promise<CreateProjectReques
   const areaId = "areaId" in body ? body.areaId : undefined;
   if (typeof title !== "string" || title.trim() === "") return errorResponse("title must be a non-empty string", 400);
   if (typeof areaId !== "string" || areaId.trim() === "") return errorResponse("areaId must be a non-empty string", 400);
-  return { title: title.trim(), areaId: areaId.trim() };
+  const fields = parseNextActionFields(body);
+  if (fields instanceof Response) return fields;
+  return { title: title.trim(), areaId: areaId.trim(), ...fields };
 }
 
 async function parseStateRequest(request: Request): Promise<UpdateProjectStateRequest | Response> {
@@ -100,12 +124,46 @@ function toResponse(result: ProjectCapResult): ProjectMutationResponse {
 }
 
 function projectError(error: unknown, fallback: string): Response {
-  if (error instanceof ProjectRuleError) return errorResponse(error.message, 422);
+  if (error instanceof ProjectRuleError || error instanceof NextActionRuleError) {
+    return errorResponse(error.message, 422);
+  }
   console.error(JSON.stringify({
     message: fallback,
     error: error instanceof Error ? error.message : String(error),
   }));
   return errorResponse(fallback, 500);
+}
+
+function parseNextActionFields(
+  body: Record<string, unknown>,
+): Pick<CreateProjectRequest, "trigger" | "act" | "obstacle" | "estimateMinutes"> | Response {
+  const trigger = "trigger" in body ? body.trigger : undefined;
+  const act = "act" in body ? body.act : undefined;
+  const obstacle = "obstacle" in body ? body.obstacle : undefined;
+  const estimateMinutes = "estimateMinutes" in body ? body.estimateMinutes : undefined;
+  if (typeof trigger !== "string" || trigger.trim() === "") {
+    return errorResponse("trigger must be a non-empty string", 400);
+  }
+  if (typeof act !== "string" || act.trim() === "") {
+    return errorResponse("act must be a non-empty string", 400);
+  }
+  if (obstacle !== undefined && typeof obstacle !== "string") {
+    return errorResponse("obstacle must be a string", 400);
+  }
+  if (
+    estimateMinutes !== undefined &&
+    (typeof estimateMinutes !== "number" ||
+      !Number.isInteger(estimateMinutes) ||
+      estimateMinutes <= 0)
+  ) {
+    return errorResponse("estimateMinutes must be a positive integer", 400);
+  }
+  return {
+    trigger: trigger.trim(),
+    act: act.trim(),
+    ...(obstacle === undefined || obstacle.trim() === "" ? {} : { obstacle: obstacle.trim() }),
+    ...(estimateMinutes === undefined ? {} : { estimateMinutes }),
+  };
 }
 
 function errorResponse(error: string, status: number): Response {

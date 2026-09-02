@@ -202,6 +202,10 @@ class MemoryStore implements Store {
     return [...this.areas.values()].filter((value) => areaIds.includes(value.id));
   }
   async createProject(value: Project) { this.projects.set(value.id, value); }
+  async createProjectWithNextAction(value: Project, action: NextAction) {
+    this.projects.set(value.id, value);
+    this.actions.set(action.id, action);
+  }
   async getProject(id: string) { return this.projects.get(id) ?? null; }
   async listProjects(ownerId: string) {
     return [...this.projects.values()].filter((value) => value.ownerId === ownerId);

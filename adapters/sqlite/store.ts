@@ -155,6 +155,29 @@ export class SqliteStore implements Store {
       );
   }
 
+  async createProjectWithNextAction(
+    project: Project,
+    action: NextAction,
+  ): Promise<void> {
+    if (
+      action.ownerId !== project.ownerId ||
+      action.projectId !== project.id ||
+      action.closedAt !== null
+    ) {
+      throw new Error(`Next action ${action.id} must open on project ${project.id}`);
+    }
+
+    this.#database.exec("BEGIN IMMEDIATE");
+    try {
+      await this.createProject(project);
+      await this.createNextAction(action);
+      this.#database.exec("COMMIT");
+    } catch (error) {
+      this.#database.exec("ROLLBACK");
+      throw error;
+    }
+  }
+
   async getProject(id: string): Promise<Project | null> {
     const row = this.#database.prepare("SELECT * FROM projects WHERE id = ?").get(id);
     return row === undefined ? null : toProject(row as unknown as ProjectRow);

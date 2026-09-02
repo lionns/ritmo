@@ -15,6 +15,7 @@ export interface Store {
   listAreas(ownerId: string): Promise<Area[]>;
   readAreas(areaIds: string[]): Promise<Area[]>;
   createProject(project: Project): Promise<void>;
+  createProjectWithNextAction(project: Project, action: NextAction): Promise<void>;
   getProject(id: string): Promise<Project | null>;
   listProjects(ownerId: string): Promise<Project[]>;
   listActiveProjects(ownerId: string): Promise<Project[]>;

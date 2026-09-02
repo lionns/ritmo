@@ -1,3 +1,5 @@
+import type { NextActionContract, NextActionRequestFields } from "./next-actions.ts";
+
 export interface SetupRequest {
   activeCap: number;
 }
@@ -40,7 +42,7 @@ export interface CreateAreaResponse {
   area: CaptureArea;
 }
 
-export interface CreateProjectRequest {
+export interface CreateProjectRequest extends NextActionRequestFields {
   title: string;
   areaId: string;
 }
@@ -55,6 +57,10 @@ export interface ProjectMutationResponse {
   activeCount: number;
   activeCap: number;
   countsAgainstCap: boolean;
+}
+
+export interface CreateProjectResponse extends ProjectMutationResponse {
+  nextAction: NextActionContract;
 }
 
 export interface CaptureErrorResponse {

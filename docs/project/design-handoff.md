@@ -206,9 +206,19 @@ page `page-ux`) but never written down until now, so the first implementation co
   rows, and **`8px` between the marks, the title and the sentence**. Those three 8px gaps are the
   hierarchy of the row; compact height mode takes its space from the outer padding (down to `12px`)
   and never from them.
-- **The whole row is the link** to `/registrar?project=<id>`, which is what preserves the prefilled
-  project without spending a visible element on it (`NFR-1`). The canvas draws a single accent
-  button in the headline column; a second call to action per card was never in it.
+- **The visual row is the link** to `/registrar?project=<id>`, which preserves the prefilled project
+  for the fast log (`NFR-1`). T-013 adds one control immediately after that row, inside the same
+  project item: “Escribir la próxima acción” when the action is missing, or “Cerrar y escribir la
+  siguiente” when one is open. It is a native disclosure with its own 58/56px target, not nested in
+  the log link. Opening it reveals the replacement form in place; closing is never offered without
+  the replacement fields already visible. The earlier sentence that no second call to action
+  belonged in the card described the approved canvas before the action cycle existed.
+
+**The cycle form uses the action's own shape.** “Disparador” and “Acción” are required text fields;
+“Obstáculo · opcional” and “Minutos estimados · opcional” follow. The first two examples make the
+register concrete (“Cuando abra el documento” / “Escribir el primer párrafo”) without pre-filling
+an answer. Saving reloads the portfolio so the sentence itself becomes the confirmation. A repair
+uses the same fields and control; no special warning marks a project created before T-013.
 
 ## The Log Form
 
@@ -275,10 +285,12 @@ the area form and existing areas. An area asks for a name and one checkbox: “C
 límite”. The helper names the exception directly: leave it clear for the fixed job, whose projects
 do not compete for this cap (FR-15). Fields keep the 58/56px targets and the shared focus treatment.
 
-**Projects on `/`.** The portfolio panel always ends with `NUEVO PROYECTO`: title, area, and one
-button. With no areas it shows the factual next action, “Crea un área en Ajustes antes del primer
-proyecto.” The form remains after the first project. There is no objective or deadline field here;
-both are explicitly outside this capture slice.
+**Projects on `/`.** The portfolio panel always ends with `NUEVO PROYECTO`: title, area, the four
+action fields from § The Project Row, and one button. Trigger and act are required so the first open
+action is part of project creation; obstacle and estimate remain optional. With no areas it shows
+the factual next action, “Crea un área en Ajustes antes del primer proyecto.” The form remains after
+the first project. There is no objective or deadline field here; both are explicitly outside this
+capture slice.
 
 Immediately after setup, `EN MOVIMIENTO` stays in place and the empty sentence reads “Aún no hay
 proyectos en movimiento.” The project capture block follows it in the same glass surface, so the

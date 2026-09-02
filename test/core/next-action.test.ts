@@ -3,7 +3,11 @@ import { describe, it } from "node:test";
 
 import type { Area, Entry, NextAction, Owner, Project } from "../../core/model/entities.ts";
 import type { Store } from "../../core/ports/store.ts";
-import { closeNextAction, createNextAction } from "../../core/rules/next-action.ts";
+import {
+  closeNextAction,
+  createNextAction,
+  writeNextAction,
+} from "../../core/rules/next-action.ts";
 
 describe("the open next-action rule", () => {
   it("rejects a second open action and names the existing id", async () => {
@@ -74,6 +78,72 @@ describe("the open next-action rule", () => {
     );
     assert.deepEqual(await store.findOpenNextAction(project.id), firstAction);
   });
+
+  it("writes the first action with optional fields absent", async () => {
+    const store = new MemoryStore();
+    await store.createProject(project);
+
+    const written = await writeNextAction(
+      store,
+      { now: () => new Date("2026-09-02T10:00:00.000Z") },
+      { next: () => "action-written" },
+      {
+        ownerId: project.ownerId,
+        projectId: project.id,
+        currentActionId: null,
+        trigger: "When the document opens",
+        act: "Write the first paragraph",
+        obstacle: null,
+        estimateMinutes: null,
+      },
+    );
+
+    assert.equal(written.obstacle, null);
+    assert.equal(written.estimateMinutes, null);
+    assert.deepEqual(await store.findOpenNextAction(project.id), written);
+  });
+
+  it("refuses empty required fields before changing the open action", async () => {
+    const store = new MemoryStore();
+    await store.createProject(project);
+    await createNextAction(store, firstAction);
+
+    await assert.rejects(
+      writeNextAction(
+        store,
+        { now: () => new Date("2026-09-02T10:00:00.000Z") },
+        { next: () => "action-invalid" },
+        {
+          ownerId: project.ownerId,
+          projectId: project.id,
+          currentActionId: firstAction.id,
+          trigger: "  ",
+          act: "Write the first paragraph",
+          obstacle: null,
+          estimateMinutes: null,
+        },
+      ),
+      /trigger is required/,
+    );
+    await assert.rejects(
+      writeNextAction(
+        store,
+        { now: () => new Date("2026-09-02T10:00:00.000Z") },
+        { next: () => "action-invalid" },
+        {
+          ownerId: project.ownerId,
+          projectId: project.id,
+          currentActionId: firstAction.id,
+          trigger: "When the document opens",
+          act: "  ",
+          obstacle: null,
+          estimateMinutes: null,
+        },
+      ),
+      /act is required/,
+    );
+    assert.deepEqual(await store.findOpenNextAction(project.id), firstAction);
+  });
 });
 
 const project: Project = {
@@ -115,6 +185,10 @@ class MemoryStore implements Store {
   async listAreas(_ownerId: string) { return []; }
   async readAreas(_areaIds: string[]) { return []; }
   async createProject(value: Project) { this.projects.set(value.id, value); }
+  async createProjectWithNextAction(value: Project, action: NextAction) {
+    this.projects.set(value.id, value);
+    this.actions.set(action.id, action);
+  }
   async getProject(id: string) { return this.projects.get(id) ?? null; }
   async listProjects(ownerId: string) {
     return [...this.projects.values()].filter((value) => value.ownerId === ownerId);

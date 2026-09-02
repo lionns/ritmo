@@ -131,7 +131,7 @@ describe("the first-loop page composition", () => {
     // The last entry's text is on the row, so writing one always changes `/` (AC-5).
     assert.match(card, /project-latest[^"]*text-dim/);
     assert.match(card, /latestEntry\.what/);
-    // The whole row carries the prefilled link (NFR-1), at a real target height.
+    // The visual row carries the prefilled link (NFR-1), at a real target height.
     assert.match(card, /<a\n\s+class="project-card[^"]*min-h-\[58px\][^"]*md:min-h-14/);
     assert.match(card, /href=\{logHref\}/);
   });
@@ -175,5 +175,25 @@ describe("the first-loop page composition", () => {
     assert.match(capture, /Nuevo proyecto/);
     assert.match(capture, /Crea un área en/);
     assert.match(capture, /\{activeCount\} de \{activeCap\}/);
+  });
+
+  it("keeps the first and replacement action on one field shape", () => {
+    const fields = source("src/components/molecules/NextActionFields.astro");
+    const capture = source("src/components/organisms/ProjectCapture.astro");
+    const cycle = source("src/components/organisms/NextActionCycle.astro");
+    const inputFor = (name: string) =>
+      [...fields.matchAll(/<input[\s\S]*?\/>/g)]
+        .map(([input]) => input)
+        .find((input) => input.includes(`name="${name}"`)) ?? "";
+
+    assert.match(capture, /<NextActionFields idPrefix="project-action" \/>/);
+    assert.match(inputFor("trigger"), /\brequired\b/);
+    assert.match(inputFor("act"), /\brequired\b/);
+    assert.doesNotMatch(inputFor("obstacle"), /\brequired\b/);
+    assert.doesNotMatch(inputFor("estimateMinutes"), /\brequired\b/);
+    assert.match(cycle, /Escribir la próxima acción/);
+    assert.match(cycle, /Cerrar y escribir la siguiente/);
+    assert.match(cycle, /name="currentActionId"/);
+    assert.match(cycle, /fetch\("\/api\/next-actions"/);
   });
 });

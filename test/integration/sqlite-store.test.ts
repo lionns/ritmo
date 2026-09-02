@@ -11,11 +11,16 @@ import type { Area, Entry, NextAction, Owner, Project } from "../../core/model/e
 import { closeNextAction, createNextAction } from "../../core/rules/next-action.ts";
 import type {
   CreateAreaResponse,
+  CreateProjectResponse,
   ProjectMutationResponse,
   SettingsResponse,
   SetupResponse,
 } from "../../contracts/capture.ts";
 import type { CreateEntryErrorResponse, CreateEntryResponse } from "../../contracts/entries.ts";
+import type {
+  NextActionErrorResponse,
+  WriteNextActionResponse,
+} from "../../contracts/next-actions.ts";
 import type { PortfolioResponse } from "../../contracts/portfolio.ts";
 import { handlePostEntry } from "../../src/pages/api/entries.ts";
 import { handleGetPortfolio } from "../../src/pages/api/portfolio.ts";
@@ -111,6 +116,16 @@ describe("SqliteStore with the next-action rule", () => {
     ).toBe(false);
     expect(await store.findOpenNextAction(project.id)).toEqual(replacement);
     expect(await store.getNextAction(mismatchedReplacement.id)).toBeNull();
+
+    const rolledBackProject = { ...project, id: "project-rolled-back" };
+    await expect(
+      store.createProjectWithNextAction(rolledBackProject, {
+        ...action,
+        id: "action-id-collision",
+        projectId: rolledBackProject.id,
+      }),
+    ).rejects.toThrow();
+    expect(await store.getProject(rolledBackProject.id)).toBeNull();
   });
 
   it("starts from an empty database and captures setup, areas, projects, and progress", async () => {
@@ -153,7 +168,27 @@ describe("SqliteStore with the next-action rule", () => {
     const cappedArea = ((await cappedAreaResponse.json()) as CreateAreaResponse).area;
     const fixedArea = ((await fixedAreaResponse.json()) as CreateAreaResponse).area;
 
-    const first = await createProjectViaApi("First", cappedArea.id);
+    const invalidProjectResponse = await postJson("/api/projects", {
+      title: "No action",
+      areaId: cappedArea.id,
+    });
+    expect(invalidProjectResponse.status).toBe(400);
+    expect(await store.listProjects(setup.ownerId)).toEqual([]);
+
+    const missingActResponse = await postJson("/api/projects", {
+      title: "No act",
+      areaId: cappedArea.id,
+      trigger: "When the document opens",
+    });
+    expect(missingActResponse.status).toBe(400);
+    expect(await store.listProjects(setup.ownerId)).toEqual([]);
+
+    const first = await createProjectViaApi("First", cappedArea.id, {
+      trigger: "When the document opens",
+      act: "Write the first paragraph",
+      obstacle: "The scope is too broad",
+      estimateMinutes: 25,
+    });
     const second = await createProjectViaApi("Second", cappedArea.id);
     const overflow = await createProjectViaApi("Overflow", cappedArea.id);
     const fixedJob = await createProjectViaApi("Fixed job", fixedArea.id);
@@ -163,6 +198,17 @@ describe("SqliteStore with the next-action rule", () => {
     expect(overflow.activeCount).toBe(2);
     expect(fixedJob.project.state).toBe("active");
     expect(fixedJob.activeCount).toBe(2);
+    expect(first.nextAction).toEqual(expect.objectContaining({
+      projectId: first.project.id,
+      trigger: "When the document opens",
+      act: "Write the first paragraph",
+      obstacle: "The scope is too broad",
+      estimateMinutes: 25,
+    }));
+    expect(second.nextAction.estimateMinutes).toBeNull();
+    expect(await store.findOpenNextAction(first.project.id)).toEqual(
+      expect.objectContaining({ id: first.nextAction.id }),
+    );
 
     const portfolioBeforeEntry = (await (
       await fetchWorker("/api/portfolio")
@@ -173,6 +219,44 @@ describe("SqliteStore with the next-action rule", () => {
     expect(portfolioBeforeEntry.shelved.map(({ id }) => id)).toEqual([
       overflow.project.id,
     ]);
+    expect(
+      portfolioBeforeEntry.outstanding.find(({ id }) => id === first.project.id)?.nextAction,
+    ).toEqual(expect.objectContaining({
+      trigger: "When the document opens",
+      act: "Write the first paragraph",
+    }));
+
+    const replacementResponse = await postJson("/api/next-actions", {
+      projectId: first.project.id,
+      currentActionId: first.nextAction.id,
+      trigger: "When the outline is visible",
+      act: "Draft section two",
+    });
+    expect(replacementResponse.status).toBe(201);
+    const replacement = (await replacementResponse.json()) as WriteNextActionResponse;
+    expect(replacement.replacedActionId).toBe(first.nextAction.id);
+    expect((await store.getNextAction(first.nextAction.id))?.closedAt).not.toBeNull();
+    expect(await store.findOpenNextAction(first.project.id)).toEqual(
+      expect.objectContaining({
+        id: replacement.nextAction.id,
+        trigger: "When the outline is visible",
+        estimateMinutes: null,
+      }),
+    );
+
+    const duplicateCloseResponse = await postJson("/api/next-actions", {
+      projectId: first.project.id,
+      currentActionId: first.nextAction.id,
+      trigger: "When this should fail",
+      act: "Do not replace the open action",
+    });
+    expect(duplicateCloseResponse.status).toBe(422);
+    expect(((await duplicateCloseResponse.json()) as NextActionErrorResponse).error).toContain(
+      first.nextAction.id,
+    );
+    expect((await store.findOpenNextAction(first.project.id))?.id).toBe(
+      replacement.nextAction.id,
+    );
 
     const settingsResponse = await fetchWorker("/api/settings");
     expect(settingsResponse.status).toBe(200);
@@ -206,6 +290,7 @@ describe("SqliteStore with the next-action rule", () => {
     expect(portfolioAfterEntry.progress[0]).toEqual(expect.objectContaining({
       id: first.project.id,
       recentEntries: [expect.objectContaining({ what: "Moved from a blank database" })],
+      nextAction: expect.objectContaining({ act: "Draft section two" }),
     }));
   });
 
@@ -279,6 +364,25 @@ describe("SqliteStore with the next-action rule", () => {
       ),
     ).toBe(false);
     expect(portfolio.shelved.map(({ id }) => id)).toEqual([shelvedProject.id]);
+
+    const repairedResponse = await postJson("/api/next-actions", {
+      projectId: actionlessProject.id,
+      trigger: "When the test is green",
+      act: "Keep the repaired action",
+      obstacle: "",
+    });
+    expect(repairedResponse.status).toBe(201);
+    const repairedPortfolio = (await (
+      await fetchWorker("/api/portfolio")
+    ).json()) as PortfolioResponse;
+    expect(
+      repairedPortfolio.outstanding.find(({ id }) => id === actionlessProject.id)?.nextAction,
+    ).toEqual(expect.objectContaining({
+      trigger: "When the test is green",
+      act: "Keep the repaired action",
+      obstacle: null,
+      estimateMinutes: null,
+    }));
 
     const countBeforeRejections = await entryCount();
     for (const projectId of ["missing-project", shelvedProject.id]) {
@@ -418,10 +522,28 @@ async function patchJson(path: string, body: Record<string, unknown>): Promise<R
   });
 }
 
-async function createProjectViaApi(title: string, areaId: string): Promise<ProjectMutationResponse> {
-  const response = await postJson("/api/projects", { title, areaId });
+async function createProjectViaApi(
+  title: string,
+  areaId: string,
+  actionFields: {
+    trigger?: string;
+    act?: string;
+    obstacle?: string;
+    estimateMinutes?: number;
+  } = {},
+): Promise<CreateProjectResponse> {
+  const response = await postJson("/api/projects", {
+    title,
+    areaId,
+    trigger: actionFields.trigger ?? "When the project opens",
+    act: actionFields.act ?? "Take the next step",
+    ...(actionFields.obstacle === undefined ? {} : { obstacle: actionFields.obstacle }),
+    ...(actionFields.estimateMinutes === undefined
+      ? {}
+      : { estimateMinutes: actionFields.estimateMinutes }),
+  });
   expect(response.status).toBe(201);
-  return response.json() as Promise<ProjectMutationResponse>;
+  return response.json() as Promise<CreateProjectResponse>;
 }
 
 async function fetchWorker(path: string, init?: RequestInit): Promise<Response> {

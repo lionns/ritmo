@@ -1,5 +1,6 @@
 ---
 import type { PortfolioArea } from "../../../contracts/portfolio.ts";
+import NextActionFields from "../molecules/NextActionFields.astro";
 
 interface Props {
   areas: PortfolioArea[];
@@ -25,6 +26,10 @@ const { areas, activeCount, activeCap } = Astro.props;
         <select class="min-h-[58px] w-full rounded-field border border-glass-border bg-[color-mix(in_srgb,var(--page-bg)_72%,transparent)] px-4 text-base text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent md:min-h-14" id="project-area" name="areaId" required>
           {areas.map((area) => <option value={area.id}>{area.name}</option>)}
         </select>
+        <section class="mt-5 border-t border-hair pt-5" aria-labelledby="first-action-heading">
+          <h3 id="first-action-heading" class="mb-4 font-mono text-[8px] leading-[1.4] font-normal tracking-[0.22em] text-dim uppercase md:text-[9px]">Primera acción</h3>
+          <NextActionFields idPrefix="project-action" />
+        </section>
         <p class="mt-3 font-mono text-[9px] leading-normal tracking-[0.08em] text-faint-text uppercase">
           {activeCount} de {activeCap} activos en áreas con límite
         </p>
@@ -36,7 +41,7 @@ const { areas, activeCount, activeCap } = Astro.props;
 </section>
 
 <script>
-  import type { ProjectMutationResponse } from "../../../contracts/capture.ts";
+  import type { CreateProjectResponse } from "../../../contracts/capture.ts";
 
   const form = document.querySelector<HTMLFormElement>("[data-project-form]");
   const status = document.querySelector<HTMLElement>("[data-project-status]");
@@ -44,19 +49,37 @@ const { areas, activeCount, activeCap } = Astro.props;
     event.preventDefault();
     const title = form.elements.namedItem("title");
     const areaId = form.elements.namedItem("areaId");
+    const trigger = form.elements.namedItem("trigger");
+    const act = form.elements.namedItem("act");
+    const obstacle = form.elements.namedItem("obstacle");
+    const estimate = form.elements.namedItem("estimateMinutes");
     const button = form.querySelector<HTMLButtonElement>("button[type='submit']");
-    if (!(title instanceof HTMLInputElement) || !(areaId instanceof HTMLSelectElement)) return;
+    if (
+      !(title instanceof HTMLInputElement) ||
+      !(areaId instanceof HTMLSelectElement) ||
+      !(trigger instanceof HTMLInputElement) ||
+      !(act instanceof HTMLInputElement) ||
+      !(obstacle instanceof HTMLInputElement) ||
+      !(estimate instanceof HTMLInputElement)
+    ) return;
     if (button !== null) button.disabled = true;
     if (status !== null) status.textContent = "Guardando…";
     try {
       const response = await fetch("/api/projects", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title: title.value, areaId: areaId.value }),
+        body: JSON.stringify({
+          title: title.value,
+          areaId: areaId.value,
+          trigger: trigger.value,
+          act: act.value,
+          ...(obstacle.value.trim() === "" ? {} : { obstacle: obstacle.value }),
+          ...(estimate.value === "" ? {} : { estimateMinutes: Number(estimate.value) }),
+        }),
       });
       const body: unknown = await response.json();
       if (!response.ok) throw new Error(readError(body));
-      const result = body as ProjectMutationResponse;
+      const result = body as CreateProjectResponse;
       if (status !== null) status.textContent = result.countsAgainstCap
         ? `${result.project.state === "active" ? "Activo" : "Archivado"}. ${result.activeCount} de ${result.activeCap} proyectos en áreas con límite.`
         : "Activo. Esta área no cuenta dentro del límite.";

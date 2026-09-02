@@ -1,7 +1,7 @@
 ---
 id: T-013
 title: The next action — write one, close it, write the next
-status: ready
+status: done
 profile: team
 harness: 0.8.1
 role: Backend Implementer
@@ -63,24 +63,24 @@ implements: [FR-6]
 
 ## Acceptance Criteria
 
-- [ ] WHEN a project is created through the product, THE SYSTEM SHALL create exactly one open
+- [x] WHEN a project is created through the product, THE SYSTEM SHALL create exactly one open
       `NextAction` for it in the same submission, and SHALL refuse a submission with no trigger or
       no act, so no path creates a project that violates `data-model.md:233`.
-- [ ] WHEN an active project has an open action and the owner writes a replacement, THE SYSTEM SHALL
+- [x] WHEN an active project has an open action and the owner writes a replacement, THE SYSTEM SHALL
       close the current one and open the replacement atomically, and a failure of either SHALL leave
       both unchanged (`T-007`'s integration case, re-run against this path).
-- [ ] WHEN an active project has no open action — every project `T-012` created — THE SYSTEM SHALL
+- [x] WHEN an active project has no open action — every project `T-012` created — THE SYSTEM SHALL
       offer writing the first one, and the portfolio row SHALL stop showing "Escribe la próxima
       acción cuando esté clara" once written.
-- [ ] `trigger` and `act` are required; `obstacle` and `estimateMinutes` are accepted and optional,
+- [x] `trigger` and `act` are required; `obstacle` and `estimateMinutes` are accepted and optional,
       and an omitted `estimateMinutes` is stored as `NULL` rather than `0`.
-- [ ] WHEN the same action is submitted for closure twice, THE SYSTEM SHALL refuse the second,
+- [x] WHEN the same action is submitted for closure twice, THE SYSTEM SHALL refuse the second,
       because `replaceNextAction` returns `false` and the rule turns that into an error.
-- [ ] The action reads back through `readAsSentence` unchanged — `T-006` settled that rendering and
+- [x] The action reads back through `readAsSentence` unchanged — `T-006` settled that rendering and
       this task does not touch it.
-- [ ] `npm run check:core` stays green, and the cycle's rules are covered in `test/core/` without a
+- [x] `npm run check:core` stays green, and the cycle's rules are covered in `test/core/` without a
       database.
-- [ ] All five gates green from a clean `npm ci`, and `node scripts/harness-lint.mjs` clean.
+- [x] All five gates green from a clean `npm ci`, and `node scripts/harness-lint.mjs` clean.
 
 ## Verification
 
@@ -116,18 +116,53 @@ implements: [FR-6]
 
 ## Outcome
 
-- Changes:
-- Files:
-- Baseline result:
-- Final result:
-- Decisions recorded:
-- Follow-up:
+- Changes: project capture now creates its first open action atomically; active rows share one form
+  for repair or atomic close-and-replace, including optional obstacle and estimate.
+- Files: store port/SQLite adapter, project/next-action rules, capture/action contracts and APIs,
+  project capture/row components, design handoff, and unit/integration tests.
+- Baseline result: clean `npm ci`; unit 33/33, isolation, harness lint, typecheck 0, Node build,
+  integration 7/7. Node 26.8.1 warned against the package pin of 24.20.0.
+- Final result, re-run at close: unit 36/36, isolation, typecheck 0, Node build, integration 7/7,
+  lint clean. A built server on a throwaway `RITMO_DB_PATH` file verified refusal without either
+  required field with no orphan project left behind, atomic creation, sentence rendering,
+  replacement, duplicate-close refusal at 422, and the legacy repair path.
+- Decisions recorded: none; implementation follows `D-019` and `D-021`.
+- Follow-up: none here. One Low stays open on the shelved-project rule contradiction. Owner
+  validation raised where project creation lives, which is `T-014`, not this task.
 
 ## Review
 
-- Severity · `file:line` · issue · impact · recommendation
+- 2026-09-02 · Reviewer, round 1 · five gates re-run: unit 36/36, isolation, typecheck 0 errors,
+  build, integration 7/7, lint clean. Verified the cycle live from an empty database rather than
+  from the diff: creating without `trigger` and without `act` both returned 400 **and left zero
+  projects behind**, a full submission created project and action together, the row rendered the
+  sentence through `readAsSentence` unchanged, close-and-replace returned 201, the same close a
+  second time returned 422, and the history kept one closed row beside the new open one. A project
+  inserted without an action — the state `T-012` created — offers writing the first one.
+  Atomicity is real rather than declared: `createProjectWithNextAction` wraps both writes in
+  `BEGIN IMMEDIATE`/`COMMIT`/`ROLLBACK`, and `buildOpenNextAction` validates before the store is
+  touched, which is why the two refusals left nothing. The tests bind — removing the empty-`trigger`
+  check fails exactly one. Whitespace is trimmed at the API layer.
+- The handoff extension is honest about its own history: it records that § The Project Row's earlier
+  "no second call to action per card" sentence described the canvas before the cycle existed, rather
+  than leaving the section contradicting itself.
+- Low · `core/rules/project.ts` against `core/rules/next-action.ts:83` · a project created past the
+  cap lands `shelved` **and still gets an open action written**, which `createNextAction` refuses
+  for a non-active project in so many words. The behaviour is defensible — the plan survives to
+  activation, and shelved rows never render the cycle, so it is invisible — but the two rules
+  disagree and nothing says which governs; the endpoint would refuse what creation performs · make
+  one of them state the rule, rather than leaving a reader to infer it.
+- Environmental, not this task's · the machine now runs Node `v26.8.1` while `package.json` pins
+  `24.20.0` and `@types/node` sits at `24.13.3`. The implementer flagged the warning in the Outcome,
+  correctly. Verified independently that `node:sqlite` is still "Stability: 1.2 — Release candidate"
+  on Node 26, so `D-019`'s record stays accurate; the pin gap is `D-013`'s and needs its own task.
+- 2026-09-02 · owner validation · the cycle works and is accepted. The owner raised that project
+  creation does not belong in the portfolio card — measured with three projects, that panel now
+  holds four forms and eighteen fields inside the bounded scroll surface. `T-012` put creation there
+  when it was three controls and this task tripled it, so neither decision was wrong alone. Routed
+  to `T-014`; the per-row disclosure stays, because it acts on the row it sits in.
 
 ## Validation
 
-- Validated by:
-- Date:
+- Validated by: Juan Sebastián León Velásquez
+- Date: 2026-09-02

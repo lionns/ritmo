@@ -1,9 +1,13 @@
-import type { Area, Owner, Project } from "../model/entities.ts";
+import type { Area, NextAction, Owner, Project } from "../model/entities.ts";
 import type { Clock } from "../ports/clock.ts";
 import type { IdGen } from "../ports/id-gen.ts";
 import type { Store } from "../ports/store.ts";
+import {
+  buildOpenNextAction,
+  type NextActionFields,
+} from "./next-action.ts";
 
-export interface NewProject {
+export interface NewProject extends NextActionFields {
   ownerId: string;
   areaId: string;
   title: string;
@@ -16,15 +20,20 @@ export interface ProjectCapResult {
   countsAgainstCap: boolean;
 }
 
+export interface ProjectCreationResult extends ProjectCapResult {
+  nextAction: NextAction;
+}
+
 export class ProjectRuleError extends Error {
   override readonly name = "ProjectRuleError";
 }
 
 export async function createProjectWithinCap(
   store: Store,
+  clock: Clock,
   ids: IdGen,
   input: NewProject,
-): Promise<ProjectCapResult> {
+): Promise<ProjectCreationResult> {
   const [owner, area, projects, areas] = await Promise.all([
     store.getOwner(input.ownerId),
     store.getArea(input.areaId),
@@ -49,8 +58,23 @@ export async function createProjectWithinCap(
     externalDeadline: null,
     deadlineSource: null,
   };
-  await store.createProject(project);
-  return capResult(project, area, owner, currentCount + Number(area.countsAgainstCap && state === "active"));
+  const nextAction = buildOpenNextAction(
+    ids,
+    input.ownerId,
+    project.id,
+    clock.now().toISOString(),
+    input,
+  );
+  await store.createProjectWithNextAction(project, nextAction);
+  return {
+    ...capResult(
+      project,
+      area,
+      owner,
+      currentCount + Number(area.countsAgainstCap && state === "active"),
+    ),
+    nextAction,
+  };
 }
 
 export async function changeProjectState(

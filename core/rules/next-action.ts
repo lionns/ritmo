@@ -1,8 +1,77 @@
 import type { NextAction } from "../model/entities.ts";
+import type { Clock } from "../ports/clock.ts";
+import type { IdGen } from "../ports/id-gen.ts";
 import type { Store } from "../ports/store.ts";
+
+export interface NextActionFields {
+  trigger: string;
+  act: string;
+  obstacle: string | null;
+  estimateMinutes: number | null;
+}
+
+export interface WriteNextActionInput extends NextActionFields {
+  ownerId: string;
+  projectId: string;
+  currentActionId: string | null;
+}
 
 export class NextActionRuleError extends Error {
   override readonly name = "NextActionRuleError";
+}
+
+export async function writeNextAction(
+  store: Store,
+  clock: Clock,
+  ids: IdGen,
+  input: WriteNextActionInput,
+): Promise<NextAction> {
+  const createdAt = clock.now().toISOString();
+  const action = buildOpenNextAction(
+    ids,
+    input.ownerId,
+    input.projectId,
+    createdAt,
+    input,
+  );
+  if (input.currentActionId === null) {
+    await createNextAction(store, action);
+  } else {
+    await closeNextAction(store, input.currentActionId, createdAt, action);
+  }
+  return action;
+}
+
+export function buildOpenNextAction(
+  ids: IdGen,
+  ownerId: string,
+  projectId: string,
+  createdAt: string,
+  fields: NextActionFields,
+): NextAction {
+  if (fields.trigger.trim() === "") {
+    throw new NextActionRuleError("Next action trigger is required");
+  }
+  if (fields.act.trim() === "") {
+    throw new NextActionRuleError("Next action act is required");
+  }
+  if (
+    fields.estimateMinutes !== null &&
+    (!Number.isInteger(fields.estimateMinutes) || fields.estimateMinutes <= 0)
+  ) {
+    throw new NextActionRuleError("Next action estimate must be a positive integer");
+  }
+  return {
+    id: ids.next(),
+    ownerId,
+    projectId,
+    trigger: fields.trigger,
+    act: fields.act,
+    obstacle: fields.obstacle,
+    estimateMinutes: fields.estimateMinutes,
+    createdAt,
+    closedAt: null,
+  };
 }
 
 export async function createNextAction(store: Store, action: NextAction): Promise<void> {

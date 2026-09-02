@@ -9,7 +9,7 @@ Harness `0.8.1` · profile `team`
 | Task | State | Goal |
 |---|---|---|
 | [T-004](docs/tasks/T-004-harness-loose-ends.md) | `ready` | Close the three low-severity findings the T-002 review left in the harness tooling, keeping |
-| [T-013](docs/tasks/T-013-the-next-action-cycle.md) | `ready` | Give every active project the one open next action `FR-6` requires and the product cannot |
+| [T-014](docs/tasks/T-014-creation-moves-to-the-structure-screen.md) | `ready` | Move project creation out of the portfolio card and into `/ajustes`, beside the areas and the |
 | [T-001](docs/tasks/T-001-skeleton-and-next-action.md) | `done` | Stand up the three-layer tree with every quality-gate command real and green, and prove it by |
 | [T-002](docs/tasks/T-002-split-task-budget.md) | `done` | Replace the single task-file budget with a plan budget and a record budget, enforced by |
 | [T-003](docs/tasks/T-003-loose-ends.md) | `done` | Close the six low-severity findings the T-001 review left open, so the schema states the |
@@ -20,6 +20,7 @@ Harness `0.8.1` · profile `team`
 | [T-009](docs/tasks/T-009-src-lib-outside-the-boundary.md) | `done` | Make `check:core` enforce what `D-017` decided — that `src/lib/` is front — so the gate the |
 | [T-011](docs/tasks/T-011-off-cloudflare-onto-node-and-sqlite.md) | `done` | Move the runtime, the store, the adapter and the gates from Cloudflare to Node and |
 | [T-012](docs/tasks/T-012-capture-areas-projects-and-the-cap.md) | `done` | Let the owner start from an empty database and enter their real portfolio from inside the |
+| [T-013](docs/tasks/T-013-the-next-action-cycle.md) | `done` | Give every active project the one open next action `FR-6` requires and the product cannot |
 | [T-010](docs/tasks/T-010-passkey-and-the-signed-cookie.md) | `superseded` | Build `D-004` as specified — a passkey registered per device, verified with Web Crypto and no |
 
 ## Next
@@ -32,10 +33,10 @@ None. All decisions are accepted or superseded.
 
 ## Journal — last 5
 
+- 2026-09-02 | T-013 | done | the next action: write one, close it, write the next | 20 files | unit 36/36, isolation, typecheck, build, integration 7/7 | -
 - 2026-09-02 | T-012 | done | your own portfolio: setup, areas, projects and a cap you answered | 30 files | unit 33/33, isolation, typecheck, build, integration 7/7 | -
 - 2026-09-02 | T-011 | done | off Cloudflare: the same product on Node and a SQLite file the owner holds | 28 files | unit 29/29, isolation, typecheck, build, integration 6/6 | D-022,D-023
 - 2026-09-01 | T-009 | done | src/lib brought inside the enforced front boundary, and a harness bump reverted | 10 files | unit 29/29, isolation, typecheck, build, integration 4/4 | D-017
 - 2026-09-01 | T-008 | done | the log form: optional minutes, the plan in view, the project as context | 10 files | unit 29/29, isolation, typecheck, build, integration 4/4 | -
-- 2026-09-01 | T-006 | done | the first loop you can open and write to, drawn from the approved canvas | 30 files | unit 25/25, isolation, typecheck, build, integration 4/4 | -
 
 Full history: [`JOURNAL.md`](JOURNAL.md) · decisions: [`docs/decisions/`](docs/decisions/README.md)
