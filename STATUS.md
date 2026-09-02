@@ -9,7 +9,6 @@ Harness `0.8.1` · profile `team`
 | Task | State | Goal |
 |---|---|---|
 | [T-004](docs/tasks/T-004-harness-loose-ends.md) | `ready` | Close the three low-severity findings the T-002 review left in the harness tooling, keeping |
-| [T-011](docs/tasks/T-011-off-cloudflare-onto-node-and-sqlite.md) | `review` | Move the runtime, the store, the adapter and the gates from Cloudflare to Node and |
 | [T-001](docs/tasks/T-001-skeleton-and-next-action.md) | `done` | Stand up the three-layer tree with every quality-gate command real and green, and prove it by |
 | [T-002](docs/tasks/T-002-split-task-budget.md) | `done` | Replace the single task-file budget with a plan budget and a record budget, enforced by |
 | [T-003](docs/tasks/T-003-loose-ends.md) | `done` | Close the six low-severity findings the T-001 review left open, so the schema states the |
@@ -18,11 +17,12 @@ Harness `0.8.1` · profile `team`
 | [T-007](docs/tasks/T-007-next-action-invariant.md) | `done` | Make the "exactly one open next action" invariant something the rules enforce rather than |
 | [T-008](docs/tasks/T-008-log-form-minutes-and-context.md) | `done` | Give `/registrar` the three things the approved artboard has and the screen does not — optional |
 | [T-009](docs/tasks/T-009-src-lib-outside-the-boundary.md) | `done` | Make `check:core` enforce what `D-017` decided — that `src/lib/` is front — so the gate the |
+| [T-011](docs/tasks/T-011-off-cloudflare-onto-node-and-sqlite.md) | `done` | Move the runtime, the store, the adapter and the gates from Cloudflare to Node and |
 | [T-010](docs/tasks/T-010-passkey-and-the-signed-cookie.md) | `superseded` | Build `D-004` as specified — a passkey registered per device, verified with Web Crypto and no |
 
 ## Next
 
-**T-011** (`review`) — Move the runtime, the store, the adapter and the gates from Cloudflare to Node and
+**T-004** (`ready`) — Close the three low-severity findings the T-002 review left in the harness tooling, keeping
 
 ## Open decisions
 
@@ -30,10 +30,10 @@ None. All decisions are accepted or superseded.
 
 ## Journal — last 5
 
+- 2026-09-02 | T-011 | done | off Cloudflare: the same product on Node and a SQLite file the owner holds | 28 files | unit 29/29, isolation, typecheck, build, integration 6/6 | D-022,D-023
 - 2026-09-01 | T-009 | done | src/lib brought inside the enforced front boundary, and a harness bump reverted | 10 files | unit 29/29, isolation, typecheck, build, integration 4/4 | D-017
 - 2026-09-01 | T-008 | done | the log form: optional minutes, the plan in view, the project as context | 10 files | unit 29/29, isolation, typecheck, build, integration 4/4 | -
 - 2026-09-01 | T-006 | done | the first loop you can open and write to, drawn from the approved canvas | 30 files | unit 25/25, isolation, typecheck, build, integration 4/4 | -
 - 2026-09-01 | T-007 | done | the next-action invariant enforced, and a path that time cannot erase | 13 files | unit 25/25, isolation, typecheck, build, integration 4/4 | -
-- 2026-08-31 | T-005 | done | portfolio read and entry write, live on a running worker | 20 files | unit 9/9, isolation, typecheck, build, integration 3/3 | -
 
 Full history: [`JOURNAL.md`](JOURNAL.md) · decisions: [`docs/decisions/`](docs/decisions/README.md)

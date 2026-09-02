@@ -1,7 +1,7 @@
 ---
 id: T-011
 title: Off Cloudflare — the same product on Node and a SQLite file the owner holds
-status: review
+status: done
 profile: team
 harness: 0.8.1
 role: Backend Implementer
@@ -60,7 +60,7 @@ decisions: [D-018, D-019, D-020, D-021]
 - [x] `grep -rn "cloudflare" --include=*.ts --include=*.astro --include=*.mjs --include=*.json .`
       outside `node_modules`, `docs/` and `.git` returns nothing that runs, and no `wrangler`
       invocation remains in any `package.json` script.
-- [ ] Writing an entry through `/registrar` persists it, and reloading `/` shows the day's mark
+- [x] Writing an entry through `/registrar` persists it, and reloading `/` shows the day's mark
       grown — the first loop of `T-006` and `T-008`, unchanged on the new stack.
 - [x] `replaceNextAction` still closes and opens atomically: a cross-project close returns `false`,
       the original stays open, and the replacement is absent (`T-007`'s integration case).
@@ -110,25 +110,27 @@ decisions: [D-018, D-019, D-020, D-021]
 - Files: `adapters/sqlite/`, runtime/API wiring, local scripts, Node/Astro config and lockfile,
   integration tests, architecture/gates, D-022.
 - Baseline result: 29/29 unit, isolation, harness lint, typecheck and Cloudflare build green.
-- Final result: clean install; 29/29 unit, isolation, typecheck, Node build, integration 6/6; reset,
-  seed, dev and start served HTTP 200 without `.wrangler`; timed SSR mark 12→104, untimed stayed 104.
-- Decisions recorded: D-022; D-018…D-021 implemented.
-- Follow-up: **back to Reviewer round 2.** The three assigned Low findings are fixed: both boundary
-  descriptions now match D-017, and integration 6/6 reaches `runtimeStore()` through
-  `RITMO_DB_PATH` with no handler injection. The Medium `scripts/` governance finding is unchanged
-  and remains the owner's call. Then owner validation. The `/registrar` click path stayed unchecked
-  here but was exercised over HTTP in review; D-020's phone gate remains recorded in Risks.
+- Final result, re-run at close: 29/29 unit, isolation, typecheck 0 errors, Node build, integration
+  6/6, lint clean. Full loop re-verified against a throwaway `RITMO_DB_PATH` database so the owner's
+  file was never touched: today's mark 12px `untimed` before, 104px `timed` after a 60-minute entry.
+  `/registrar` serves the form and its inlined 24KB module carrying the four chips and the `fetch`
+  to `/api/entries`; the POST was issued over HTTP rather than by a browser click, which is the one
+  link no gate covers here and the reason `D-020` leaves the phone check unmeetable.
+- Decisions recorded: D-022, and D-023 recording the owner's approval of the `scripts/` edit.
+- Follow-up: none for this task. Two nits stay open — a `closeRuntimeDatabase()` guard at the start
+  of the wiring test, and the Node pin at `24.20.0` against an installed `24.16.0`. `D-020` leaves
+  `NFR-1`'s phone check unmeetable and `quality-gates.md` still names it, which is the owner's call
+  and outlives this task. Capture and setup are next.
 
 ## Review
 
 - 2026-09-02 · Reviewer, round 1 · five gates green, and the move verified from scratch rather than
-  from the diff: `data/` and `dist/` deleted, then build, `db:reset`, `seed`, `npm start` — `/`,
-  `/registrar` and `/api/portfolio` all 200, two entries written over HTTP, today's mark
-  `height="104" data-state="timed"`, with no `wrangler` or `@cloudflare/*` installed and no account.
+  from the diff: `data/` and `dist/` deleted, then build, `db:reset`, `seed`, `npm start` — three
+  routes at 200 and entries written over HTTP, with nothing Cloudflare installed and no account.
   The hard criterion held: `core/`, `contracts/`, `src/components/`, `src/lib/` and `migrations/`
-  unchanged. Probed that the boundary binds the new platform — `core/` importing `node:sqlite` is
-  rejected. `node:sqlite` verified independently as "Stability: 1.2 — Release candidate", RC since
-  v24.15.0, which is what the implementer's assumption claimed. One Medium, three Low, two nits.
+  unchanged, and the boundary binds the new platform — `core/` importing `node:sqlite` is rejected.
+  `node:sqlite` verified independently as "Stability: 1.2 — Release candidate", RC since v24.15.0,
+  which is what the implementer's assumption claimed. One Medium, three Low, two nits.
 - Medium · `scripts/check-core-isolation.mjs` · edited without being in this task's Scope or Out of
   Scope, where `AGENTS.md` requires explicit approval, a decision file and a `VERSION.md` entry ·
   mutation-probed both ways: a `cloudflare:workers` import from `core/` is still caught by the
@@ -146,12 +148,10 @@ decisions: [D-018, D-019, D-020, D-021]
   `RITMO_DB_PATH`, and the new test is the only one of the six that fails.
 - Nit · `test/integration/sqlite-store.test.ts` · the wiring test's isolation rests on
   `runtimeDatabase` being unset when it runs, because `runtimeStore()` uses `??=` and would ignore
-  `RITMO_DB_PATH` if an earlier test in the process had already opened a connection. Nothing does
-  today, so it passes. The sharp edge is the fallback target: `DEFAULT_DATABASE_PATH` is the owner's
-  real `data/ritmo.sqlite`. Checked after the mutation run — it was not written to, because the
-  fixture project does not exist there and the POST fails first, which is the fixture's luck rather
-  than a guard · calling `closeRuntimeDatabase()` at the start as well as in `finally` makes it
-  order-independent.
+  `RITMO_DB_PATH` if an earlier test had opened a connection. Nothing does today. The sharp edge is
+  the fallback target — the owner's real `data/ritmo.sqlite`; checked after the mutation run and it
+  was not written to, but only because the fixture project is absent there · calling
+  `closeRuntimeDatabase()` at the start as well as in `finally` makes it order-independent.
 - Nit · `closeRuntimeDatabase()` is a production export whose only caller is a test. Closing a
   connection is real lifecycle rather than a test hook, so it is named once and not asked for.
 - **Recommended for owner validation.** Nothing is open. Two entries the reviewer wrote into
@@ -160,5 +160,5 @@ decisions: [D-018, D-019, D-020, D-021]
 
 ## Validation
 
-- Validated by:
-- Date:
+- Validated by: Juan Sebastián León Velásquez
+- Date: 2026-09-02

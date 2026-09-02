@@ -11,3 +11,4 @@
 2026-09-01 | T-006 | done | the first loop you can open and write to, drawn from the approved canvas | 30 files | unit 25/25, isolation, typecheck, build, integration 4/4 | -
 2026-09-01 | T-008 | done | the log form: optional minutes, the plan in view, the project as context | 10 files | unit 29/29, isolation, typecheck, build, integration 4/4 | -
 2026-09-01 | T-009 | done | src/lib brought inside the enforced front boundary, and a harness bump reverted | 10 files | unit 29/29, isolation, typecheck, build, integration 4/4 | D-017
+2026-09-02 | T-011 | done | off Cloudflare: the same product on Node and a SQLite file the owner holds | 28 files | unit 29/29, isolation, typecheck, build, integration 6/6 | D-022,D-023
