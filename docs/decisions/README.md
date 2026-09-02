@@ -29,3 +29,4 @@ rather than editing. Template in `../sdd/TEMPLATES.md`.
 | [D-020](D-020-deploy-local-on-demand.md) | 2026-09-02 | No deploy: the owner starts it to use it | `accepted` | D-005 |
 | [D-021](D-021-interface-astro-node-adapter.md) | 2026-09-02 | The same Astro, on the Node adapter | `accepted` | D-008 |
 | [D-022](D-022-tests-four-dev-dependencies.md) | 2026-09-02 | Four dev dependencies after the platform test harness leaves | `accepted` | D-014 |
+| [D-023](D-023-boundary-check-drops-the-vendor-clause.md) | 2026-09-02 | The boundary check stops naming a vendor the project left | `accepted` | none |

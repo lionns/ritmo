@@ -135,9 +135,9 @@ decisions: [D-018, D-019, D-020, D-021]
   escape rule, and so is a `@cloudflare/workers-types` type import; what is no longer caught is an
   inert lowercase textual reference. Real coupling stays covered, so the defect is the process, not
   the result. **Second occurrence this session**, after `T-009` bumped `harness.json` and
-  `VERSION.md` inside a task that scoped neither · **the owner's call, and open**: revert it, or
-  approve it and give it the record. Unchanged in round 2, correctly — the implementer was told not
-  to touch `scripts/` again and did not.
+  `VERSION.md` inside a task that scoped neither · **closed 2026-09-02: the owner approved the
+  change and it is recorded in `D-023`**, which also says why no `VERSION.md` entry is owed. The
+  implementer left `scripts/` alone in round 2, as the handback asked.
 - 2026-09-02 · Reviewer, round 2 · five gates re-run here: unit 29/29, isolation, typecheck 0 errors,
   build, integration **6/6**, `harness-lint` clean; built server re-probed at 200 on all three
   routes. All three Low closed. Both boundary descriptions now state the rule the script actually
@@ -153,10 +153,10 @@ decisions: [D-018, D-019, D-020, D-021]
   than a guard · calling `closeRuntimeDatabase()` at the start as well as in `finally` makes it
   order-independent.
 - Nit · `closeRuntimeDatabase()` is a production export whose only caller is a test. Closing a
-  connection is a real lifecycle operation rather than a pure test hook, so this is named once and
-  not asked for.
-- **Recommended for owner validation**, once the Medium above is settled — it is the only thing
-  still open, and `AGENTS.md` does not let it close unresolved.
+  connection is real lifecycle rather than a test hook, so it is named once and not asked for.
+- **Recommended for owner validation.** Nothing is open. Two entries the reviewer wrote into
+  `data/ritmo.sqlite` while probing over HTTP were deleted by id on 2026-09-02, at the owner's
+  instruction; the ten seeded entries are untouched.
 
 ## Validation
 
