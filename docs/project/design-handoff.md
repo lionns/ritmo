@@ -256,8 +256,15 @@ No new route. Setup and project capture are states of `/`; the cap and areas sta
 § Navigation Map already assigns them. All three use the existing two-column stage: one display
 question at left, one glass surface at right, and the veiled chart behind form work.
 
-**First run on `/`.** With no owner row, the headline is the question: “En una semana mala,
-¿cuántos proyectos puedes tocar de verdad?” The right panel has one required positive-integer field
+**First run on `/`.** With no owner row, the display line reads “Una semana mala.” and the
+supporting sentence carries the question: “¿Cuántos proyectos puedes tocar de verdad? La respuesta
+fija el límite de las áreas que compiten por tu capacidad.” **Corrected 2026-09-02 on the owner's
+first real use:** this section previously made the whole question the headline, which cannot work —
+the display slot is `clamp(76px, 9.2vw, 132px)` and every other screen fills it with two or three
+words (“Lo que moviste.”, “La estructura.”), so a sixty-character sentence overflowed the stage.
+`US-1` asks that the question name a bad week rather than an average one; the display line and the
+sentence are that question together, and the field label repeats the frame so it survives a reader
+who lands on the input first. The right panel has one required positive-integer field
 under `PROYECTOS EN UNA SEMANA MALA` and “Guardar límite”. It has no value and no numeric
 placeholder: FR-13 requires an answer, not a suggested default. Its helper says what the number
 does, without calling an average week normal or desirable. Success reloads `/` into the empty
@@ -287,9 +294,11 @@ the progress form.
 
 On mobile the forms stay in document flow and controls are full width. At `≥1200px` the project
 form stays inside the portfolio glass, which is already the bounded scroll surface; setup and
-settings keep one panel opposite the display question. Loading changes only the button label, errors
-sit in the form's live region as facts plus the corrective action, and no capture success uses a
-toast.
+settings keep one panel opposite the display question. **Every glass panel in the stage's right
+column carries that same bound**, not only the portfolio's: the areas list grows with each area the
+owner adds, and an unbounded panel walks off the stage. Added 2026-09-02, after it did.
+Loading changes only the button label, errors sit in the form's live region as facts plus the
+corrective action, and no capture success uses a toast.
 
 ## Navigation Map
 

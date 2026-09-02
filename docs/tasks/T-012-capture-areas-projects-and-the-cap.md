@@ -1,7 +1,7 @@
 ---
 id: T-012
 title: Capture — your own areas, your own projects, and a cap you answered
-status: review
+status: doing
 profile: team
 harness: 0.8.1
 role: Backend Implementer
@@ -121,41 +121,49 @@ implements: [US-1, US-2, FR-1, FR-13, FR-15, FR-17]
   types, capped overflow, shelved rendering, and a progress entry. No controllable browser was
   available, so visual interaction remains for owner validation.
 - Decisions recorded: none; implementation follows D-019 and D-021.
-- Follow-up: owner validation. The two Medium and the Low are routed to the `/semana` task, which
-  is where `FR-14`'s week boundary gets built and where they become reachable; none is fixable here
-  without deciding whether `FR-14` governs creation. Next in sequence is the next-action cycle.
+- Follow-up: **back to the Frontend Implementer, 2026-09-02, after owner validation round 1.** Two
+  visual fixes, both already specified in § Setup and Capture: bound every glass panel in the
+  stage's right column as `PortfolioPanel` is bound, and make the first-run display line “Una semana
+  mala.” with the question in the sentence below. No API, no rule, no contract. Then owner
+  validation round 2. The `FR-14` findings stay routed to `/semana`.
 
 ## Review
 
-- 2026-09-02 · Reviewer, round 1 · five gates re-run here: unit 33/33, isolation, typecheck 0
-  errors, Node build, integration 7/7, `harness-lint` clean. Reviewed from an empty database rather
-  than from the diff, because that is what the task promises: `db:reset` with no seed, then the
-  built server. `/` asked the bad-week question with no `value` and no numeric placeholder, a second
-  `POST /api/setup` returned 409, two areas and three projects against a cap of 2 produced
-  `active (1/2)`, `active (2/2)`, `shelved (2/2)`, a project in the uncapped area came back active
-  (`FR-15`), and an entry against an owner-created project moved today's mark from 9px `empty` to
-  104px `timed`. Shelved projects render in an `ARCHIVADOS` section with their area. The copy is a
-  count and nothing else — no softening, congratulation or apology (`US-2`, `NFR-7`). The
-  `seedId|LOCAL_OWNER_ID` grep is empty and `npm run seed` still works, as § Out of Scope required.
-  The cap rule's tests bind: mutating `>=` and then dropping `countsAgainstCap` each fail exactly
-  one test. § Setup and Capture is written and matches what was built.
-- Medium · `core/rules/project.ts` · the `FR-14` guard is one-sided. `changeProjectState` checks
-  `hasClosedWeek`, but `createProjectWithinCap` and `updateActiveCap` do not · verified live with a
-  week row closed by hand: raising the cap from 3 to 5 and creating a project returned it `active`,
-  so the active set changed inside a week `FR-14` says is fixed. The task's assumption covered state
-  *changes* only, so this does not deviate from the plan — but a reader sees a guard and infers the
-  boundary is enforced · **not reachable today**, since nothing in the product closes a week ·
-  routed to the `/semana` task, which must settle whether `FR-14` governs creation as well.
-- Medium · `core/rules/project.ts:102` · after the first closed week the cap can only rise.
-  `updateActiveCap` refuses a cap below the active count, lowering that count needs shelving, and
-  shelving is blocked once a week has closed · so the cap becomes monotonically non-decreasing,
-  which `FR-13` contradicts when it asks that the cap be audited against stale rate, and it is the
-  same trap the task's own assumption was written to avoid. `capRaises` recording only raises is
-  consistent with the asymmetry · also latent, and also `/semana`'s to settle.
-- Low · refusing to lower the cap at all is undocumented — neither § Setup and Capture nor this task
-  states it, so an owner who over-answers the first question has no written path back.
-- **Recommended for owner validation.** Both Medium are design gaps to close before `/semana`
-  exists, not defects in what was built.
+- 2026-09-02 · Reviewer, round 1 · five gates re-run: unit 33/33, isolation, typecheck 0 errors,
+  build, integration 7/7, lint clean. Reviewed from an empty database rather than from the diff:
+  `db:reset` with no seed, then the built server. The bad-week question carried no `value` and no
+  numeric placeholder, a second `POST /api/setup` returned 409, three projects against a cap of 2
+  gave `active (1/2)`, `active (2/2)`, `shelved (2/2)`, the uncapped area stayed active (`FR-15`),
+  and an entry against an owner-created project moved today's mark 9px `empty` → 104px `timed`.
+  Shelved projects render in `ARCHIVADOS`; the copy is a count and nothing else (`US-2`, `NFR-7`).
+  The `seedId|LOCAL_OWNER_ID` grep is empty and `npm run seed` still works. The cap rule's tests
+  bind: mutating `>=` and dropping `countsAgainstCap` each fail exactly one test.
+- Medium · `core/rules/project.ts` · the `FR-14` guard is one-sided: `changeProjectState` checks
+  `hasClosedWeek`, `createProjectWithinCap` and `updateActiveCap` do not · verified live with a week
+  closed by hand — raising the cap 3→5 and creating a project returned it `active`, so the active
+  set changed inside a week `FR-14` calls fixed. The task's assumption covered state *changes* only,
+  so this does not deviate from the plan, but a reader infers the boundary is enforced · **not
+  reachable today**, nothing closes a week · routed to `/semana`, which must settle whether `FR-14`
+  governs creation too.
+- Medium · `core/rules/project.ts:102` · after the first closed week the cap can only rise:
+  lowering it needs shelving, and shelving is then blocked, so it becomes monotonically
+  non-decreasing — which `FR-13` contradicts in asking that the cap be audited against stale rate,
+  and is the trap the task's assumption was written to avoid · also latent, also `/semana`'s.
+- Low · refusing to lower the cap is undocumented, so an owner who over-answers has no path back.
+- 2026-09-02 · **Owner validation, round 1 — two visual findings from real use, neither reachable
+  by any gate; both surfaced by entering actual areas.**
+- Medium · `SettingsPanel.astro:11` · the panel grows with every area and walks off the stage ·
+  `PortfolioPanel.astro:19` carries `xl:max-h-full xl:overflow-y-auto xl:overscroll-contain`, this
+  one carries nothing, so the rule § Responsive Behavior already states is on one panel of four;
+  `SetupForm` and `EntryForm` share the gap latently · `PageStage` slots both columns directly, so
+  a wrapper there fixes all four at once and is worth weighing against three more classes.
+- Medium · `index.astro:46` · the first-run headline is the whole question, sixty characters in a
+  `clamp(76px, 9.2vw, 132px)` display face, and it overflows · **the planner's, not the
+  implementer's**: § Setup and Capture said in those words that the headline is the question, and
+  Codex built what was written; every other screen fills that slot with two or three words · owner
+  settled it 2026-09-02 — the display line becomes “Una semana mala.” and the question moves to the
+  sentence below. `US-1` still holds: the pair is the question, and the field label repeats the
+  frame for a reader who tabs straight to the input. § Setup and Capture corrected with that reason.
 
 ## Validation
 
