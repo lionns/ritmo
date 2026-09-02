@@ -1,7 +1,7 @@
 ---
 id: T-006
 title: The first loop, front half — the portfolio you open and the entry you write
-status: review
+status: done
 profile: team
 harness: 0.8.1
 role: Frontend Implementer
@@ -83,57 +83,59 @@ implements: [US-3, NFR-1]
 
 ## Outcome
 
-- Changes: responsive SSR portfolio, three-state SVG chart with a bar-shaped key, canvas-faithful
-  project row, one-island entry form, `100dvh` stage with height-aware density, token-backed
-  utilities, both palettes, vendored Fontshare assets, and plan-lifetime project marks. 27 files.
+- Changes: responsive SSR portfolio and log form, three-state SVG chart labelled from the header,
+  canvas-faithful project row with plan-lifetime marks, one-island entry submit, `100dvh` stage
+  with height-aware density, token-backed utilities, both palettes, vendored Fontshare assets.
 - Baseline: clean `npm ci`; unit 9/9, isolation/typecheck/build, integration 3/3, lint clean.
-- Final: clean `npm ci`; unit 25/25, isolation/typecheck/build, integration 4/4 and harness lint;
-  live API 3/3/0 plan counts rendered as 3/3/0 marks while recent entries stayed 5/5/0.
-- Decisions: owner-settled in `design-handoff.md` and the traces; no decision file.
-- Follow-up: independent Reviewer re-checks the T-007 consumption; owner then performs the visual
-  and marks-reading checks plus `backdrop-filter` measurement on a real phone. No browser backend
-  was connected for the implementer's responsive recheck; live HTTP composition was verified.
+- Final: unit 25/25, isolation/typecheck/build, integration 4/4, lint clean; live probes — the API
+  reports 3/3/0 plan counts drawn as 3/3/0 marks while recent entries stay 5/5/0, a same-day
+  untimed entry still changes the row, and prefill selects the right project.
+- Decisions: owner-settled across `design-handoff.md` §§ The Project Row, The Hero Chart and
+  Navigation Map, and in both traces. No decision file.
+- Validation: owner confirmed the panel at nine seeded projects, the phone (closing the
+  `backdrop-filter` measurement carried since the first review round), and an entry saved inside
+  twenty seconds on a phone (`NFR-1`). No copy puts the owner in debt or red (`NFR-7`).
+- Follow-up, none blocking: one Low stands at `project-row.ts:19` (a whitespace-only `trigger`
+  renders a bare leading comma). `T-008` builds the minutes this form cannot record, which is what
+  makes the chart's third state reachable and gives `FR-20` its input. Three items routed to later
+  tasks: `reserve_spend` counted by the split but not the count, `T-007`'s lexicographic timestamp
+  compare, and the absence of any rule enforcing the next-action invariant at project creation.
 
 ## Review
 
-- **Rounds 1–3 (settled, full text in `git log`).** Tailwind refactor and vendored fonts verified;
-  validation refused twice on owner-screen findings, answered with the `100dvh` stage, denser glass
-  and panel reading hierarchy. Then the project row: markers the canvas drew and no document
-  recorded, rebuilt as marks, title, sentence and last movement, with § The Project Row written.
-  Owner settled the path-not-score reading, the cap of four, the prefilled row, the always-drawn
-  next step, the verbatim act, and the legend's removal. Nine findings raised and closed, `AC-5`
-  unchecked and re-earned with a probe. Those reviews were written by the code's own author.
+- **Rounds 1–3 (settled; full text in `git log`).** Tailwind refactor and vendored fonts verified;
+  validation refused twice on owner-screen findings, answered with the `100dvh` stage and panel
+  reading hierarchy. Then the project row — markers the canvas drew and no document recorded —
+  rebuilt as marks, title, sentence and last movement, with § The Project Row written. Owner
+  settled path-not-score, the cap of four, the prefilled row, the always-drawn next step, the
+  verbatim act and the legend's removal. Nine findings closed, `AC-5` unchecked and re-earned by
+  probe. Those reviews were written by the code's own author.
 - **Round 4, `/code-review high`, 2026-09-01 — the `T-007` consumption.** Independent: Codex wrote
   it, Claude reviewed. **The change itself is right and proven live** — the API reports
   `progressSincePlan` 3/3/0 where `recentEntries` is 5/5/0, and the page draws 3/3/0 marks. The
   decay is gone structurally, not just by test: the count compares against a fixed `createdAt`, so
   no moving boundary remains. Handoff, cap and coverage moved with it. Gates re-run: 25/25, 4/4.
-- Medium · `PageStage.astro:15` + `HeroChart.astro:43,68` · the three-state legend was deleted on a
-  rationale **I wrote into § The Hero Chart** — "the exact state of one day is in that mark's
-  `<title>`, on hover and for assistive technology" · neither path works: `pointer-events-none` on
-  the chart wrapper kills hover, and `role="img"` makes the SVG's children presentational, so the
-  titles reach no screen reader either · the spec now states something false, and the per-day state
-  reaches nobody. Correct the rationale, make the titles reachable, or reconsider the legend —
-  owner's, since the legend is a decision already taken once.
+- Medium · the legend was deleted on a rationale **I wrote into § The Hero Chart** — the day's state
+  "is in that mark's `<title>`, on hover and for assistive technology" · false both ways:
+  `pointer-events-none` removes the hover and `role="img"` makes the SVG's children presentational ·
+  **closed 2026-09-01**: owner kept both as they are and had the sentence corrected instead. The
+  chart is ground, its `aria-label` describes the whole, and per-day state is not exposed. No code.
 - Medium, reasoned not observed · `PortfolioPanel.astro:14` · `xl:max-h-full` may never cap the
-  panel: it is a grid item on an implicit `auto` row, which grows to content, so `max-height:100%`
-  resolves against the grown area and the fallback scroll the handoff promises would never engage —
-  the cards would spill over the chart instead · I cannot confirm layout behavior without a browser,
-  and the seed's three projects never reach it. Fold into the owner's visual check with ~6 projects.
+  panel, so the fallback scroll would never engage and cards would spill over the chart · **closed
+  by observation**: the owner ran it at nine seeded projects and the panel behaved. A layout claim
+  I could not verify without a browser, disproved by the one person who could look.
 - Low · `project-row.ts:19` · a whitespace-only `trigger` renders `", Hacer X."`, opening on a bare
   comma, and the opener strip omits `…?!` so `"¿Cuándo vuelvo?"` yields `"¿Cuándo vuelvo?, hacer X."`
   · reproduced both · `act` is guarded and `trigger` is not; no rule validates either.
-- Routing, not defects · `next-action.ts:59` compares timestamps lexicographically, so
-  `13:00+02:00` passes as later than `12:00Z` when it is an hour earlier (reproduced) — `T-007`'s
-  code, closed and validated, and I missed it in that review · nothing enforces the invariant at
-  *creation*: there is no project rule at all, so a project can be born without a plan, which is the
-  state `AC-2`'s copy repairs · `reserve_spend` still splits one way and counts another.
+- Routed, not defects · `T-007` compares timestamps lexicographically, so `13:00+02:00` passes as later than `12:00Z` (reproduced; its own review missed it) · no rule enforces the invariant at *creation*, so a project can be born without a plan · `reserve_spend` still splits one way and counts another.
 - Rejected · the seed's verification `SELECT` is not debug residue: `T-007`'s acceptance criterion
   asks for it in those words — "checkable by a query the seed prints or a test asserts".
-- Assessment: changes requested, none of them in this round's change. The Medium on the chart
-  titles is the one that matters, because a specification now asserts something untrue.
+- Assessment: **recommended for validation.** Both Medium closed by the owner on 2026-09-01 — one by
+  looking, one by correcting the specification. The `backdrop-filter` measurement carried since the
+  first review round is done: it holds on a real phone. One Low stands (`project-row.ts:19`), three
+  items are routed to later tasks, and nothing above Low remains.
 
 ## Validation
 
-- Validated by:
-- Date:
+- Validated by: Juan Sebastián León Velásquez
+- Date: 2026-09-01

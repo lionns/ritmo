@@ -8,3 +8,4 @@
 2026-08-31 | T-003 | done | six loose ends closed, and the core type boundary made whole | 12 files | unit 7/7, isolation, typecheck, build, integration 2/2 | -
 2026-08-31 | T-005 | done | portfolio read and entry write, live on a running worker | 20 files | unit 9/9, isolation, typecheck, build, integration 3/3 | -
 2026-09-01 | T-007 | done | the next-action invariant enforced, and a path that time cannot erase | 13 files | unit 25/25, isolation, typecheck, build, integration 4/4 | -
+2026-09-01 | T-006 | done | the first loop you can open and write to, drawn from the approved canvas | 30 files | unit 25/25, isolation, typecheck, build, integration 4/4 | -

@@ -143,8 +143,15 @@ The bars behind every screen are data, not texture. **Settled with the owner on 
   2026-09-01**, after a key of three swatches was built and rejected on sight: the states differ by
   height and colour, and any key small enough for a `9px` label line is too small to teach the
   `9:12` difference honestly. What a reader needs at a glance is nothing-versus-something, which
-  colour already carries; the exact state of one day is in that mark's `<title>`, on hover and for
-  assistive technology.
+  colour already carries.
+- **The state of one particular day is not exposed, and does not need to be.** Corrected 2026-09-01:
+  this document previously claimed it lived in each mark's `<title>`, on hover and for assistive
+  technology. Neither is true — `pointer-events-none` on the chart band removes the hover, and
+  `role="img"` makes the SVG's children presentational, so no screen reader reaches those titles.
+  Both are right as they stand: the chart is ground, its `aria-label` describes the whole of it, and
+  announcing twenty-eight bars one at a time would be noise rather than access. Once minutes can be
+  logged, height carries the rest — the shortest accent mark is the untimed one — and that is
+  learned by looking, not by a key.
 - **Opacity 0.30 applies to marks, never labels.** The legend remains full-opacity `dim`, at 9px
   mobile / 10px desktop; settled after owner readability testing on 2026-08-31.
 
