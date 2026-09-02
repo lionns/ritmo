@@ -1,6 +1,6 @@
 # D-001 — TypeScript end to end, on the Workers runtime
 
-- Status: accepted
+- Status: superseded
 - Date: 2026-08-29
 - Supersedes: none
 - Tasks: none

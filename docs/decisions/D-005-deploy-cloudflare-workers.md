@@ -1,6 +1,6 @@
 # D-005 — Cloudflare Workers, and the privacy constraint reversed
 
-- Status: accepted
+- Status: superseded
 - Date: 2026-08-29
 - Supersedes: none
 - Tasks: none

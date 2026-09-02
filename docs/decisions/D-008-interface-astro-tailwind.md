@@ -1,6 +1,6 @@
 # D-008 — Astro and Tailwind, islands only where earned
 
-- Status: accepted
+- Status: superseded
 - Date: 2026-08-29
 - Supersedes: D-007
 - Tasks: none

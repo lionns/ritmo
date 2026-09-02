@@ -7,14 +7,14 @@ rather than editing. Template in `../sdd/TEMPLATES.md`.
 
 | ID | Date | Title | Status | Supersedes |
 |---|---|---|---|---|
-| [D-001](D-001-runtime-typescript.md) | 2026-08-29 | TypeScript end to end, on the Workers runtime | `accepted` | none |
-| [D-002](D-002-data-sqlite.md) | 2026-08-29 | D1, which is SQLite | `accepted` | none |
+| [D-001](D-001-runtime-typescript.md) | 2026-08-29 | TypeScript end to end, on the Workers runtime | `superseded` | none |
+| [D-002](D-002-data-sqlite.md) | 2026-08-29 | D1, which is SQLite | `superseded` | none |
 | [D-003](D-003-boundaries-ports-adapters.md) | 2026-08-29 | A pure core behind ports, enforced by a check | `superseded` | none |
 | [D-004](D-004-identity-single-owner.md) | 2026-08-29 | One owner, session cookie, no third party | `accepted` | none |
-| [D-005](D-005-deploy-cloudflare-workers.md) | 2026-08-29 | Cloudflare Workers, and the privacy constraint reversed | `accepted` | none |
+| [D-005](D-005-deploy-cloudflare-workers.md) | 2026-08-29 | Cloudflare Workers, and the privacy constraint reversed | `superseded` | none |
 | [D-006](D-006-tests-node-runner.md) | 2026-08-29 | node --test, zero dependencies | `superseded` | none |
 | [D-007](D-007-interface-server-rendered.md) | 2026-08-29 | Server-rendered HTML, and NFR-6 narrowed | `superseded` | none |
-| [D-008](D-008-interface-astro-tailwind.md) | 2026-08-29 | Astro and Tailwind, islands only where earned | `accepted` | D-007 |
+| [D-008](D-008-interface-astro-tailwind.md) | 2026-08-29 | Astro and Tailwind, islands only where earned | `superseded` | D-007 |
 | [D-009](D-009-boundaries-front-back-split.md) | 2026-08-29 | Three layers, and no data reaches a template | `superseded` | D-003 |
 | [D-010](D-010-profile-team.md) | 2026-08-29 | Switch the profile to `team` | `accepted` | none |
 | [D-011](D-011-ids-ulid.md) | 2026-08-30 | ULID text ids, generated behind a port | `accepted` | none |
@@ -24,3 +24,7 @@ rather than editing. Template in `../sdd/TEMPLATES.md`.
 | [D-015](D-015-task-budget-plan-and-record.md) | 2026-08-31 | Split the task budget: the plan is bounded, the record is not the same thing | `accepted` | none |
 | [D-016](D-016-budget-contract-both-ways.md) | 2026-08-31 | The linter and `harness.json` must agree on which budgets exist | `accepted` | none |
 | [D-017](D-017-boundaries-src-lib-is-front.md) | 2026-09-01 | `src/lib/` is front, and the check has to be able to say so | `accepted` | D-009 |
+| [D-018](D-018-runtime-node-local.md) | 2026-09-02 | Node on the owner's machine, not V8 isolates on someone else's | `accepted` | D-001 |
+| [D-019](D-019-data-local-sqlite.md) | 2026-09-02 | SQLite in the process, and the durability that comes back with it | `accepted` | D-002 |
+| [D-020](D-020-deploy-local-on-demand.md) | 2026-09-02 | No deploy: the owner starts it to use it | `accepted` | D-005 |
+| [D-021](D-021-interface-astro-node-adapter.md) | 2026-09-02 | The same Astro, on the Node adapter | `accepted` | D-008 |

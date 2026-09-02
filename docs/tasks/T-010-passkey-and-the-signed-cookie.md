@@ -1,7 +1,7 @@
 ---
 id: T-010
 title: The passkey and the signed cookie — the owner stops being a constant
-status: ready
+status: superseded
 profile: team
 harness: 0.8.1
 role: Backend Implementer
@@ -111,12 +111,15 @@ implements: [NFR-3, AC-X9]
 
 ## Outcome
 
-- Changes:
-- Files:
-- Baseline result:
-- Final result:
-- Decisions recorded:
-- Follow-up:
+- Superseded on 2026-09-02, planned but never started. `D-020` moved Ritmo to the owner's machine,
+  started on demand, so nothing is exposed to a network and auth left the critical path. `D-004`
+  stands as written and unbuilt.
+- The plan below is not wrong, only premature, and it is kept rather than deleted because the work
+  returns intact the moment anything is hosted — `D-020` says so in those words. What it settled and
+  should not be re-derived: registration must be refused once a credential exists, or the bootstrap
+  is a stranger's; `/entrar` has one row in § Navigation Map and no section drawing it; and the
+  three platform facts in § Assumptions are to be verified against documentation, never recalled.
+- Replaced in the sequence by `T-011`.
 
 ## Review
 
