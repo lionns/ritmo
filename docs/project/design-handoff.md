@@ -210,6 +210,38 @@ page `page-ux`) but never written down until now, so the first implementation co
   project without spending a visible element on it (`NFR-1`). The canvas draws a single accent
   button in the headline column; a second call to action per card was never in it.
 
+## The Log Form
+
+Drawn in `R-Movil` (`page-ux`) and written down by T-008 so the screen can be reproduced without
+reverse-engineering the canvas. The form keeps one decision per block and the project is context,
+not another question, when the owner enters from its portfolio row.
+
+- **With a prefilled project:** its title is the form heading, followed by the open next action
+  under its own mono label, then the progress field. The action uses § The Project Row's sentence
+  rendering. Invalid data with no action renders no replacement copy.
+- **Without a prefilled project:** the existing project select remains. An unknown `project` query
+  also falls back to that select rather than silently writing against a different project.
+- **Minutes are four chips:** `15 / 30 / 60 / 120`, under `MINUTOS · OPCIONAL`. They are buttons,
+  not a numeric input. Only one may carry `aria-pressed="true"`; pressing it again clears it.
+  **Settled with the owner on 2026-09-01**, replacing the `10 / 20 / 45 / 90` drawn in `R-Movil`,
+  which is now superseded on chip values as well as on target height. The artboard's top value left
+  a session over ninety minutes nowhere honest to land, and `FR-20` calibrates on exactly that tail.
+  Nothing under the form ever capped at 90 — `entries.effort_minutes` takes any non-negative integer
+  — so the ceiling was only ever these four buttons. A day accumulates across entries, so the chart
+  was never what lost the minutes: splitting one long session in two inflates the entry count, and
+  § The Project Row draws its marks from that count.
+- **Optional means absent:** a selected chip submits `effortMinutes` as its number. With no selected
+  chip, the request omits the property rather than sending zero or `null`.
+- **Target and state:** chips are at least 58px tall on mobile and 56px on desktop. Selection uses
+  the accent fill plus the pressed state, so colour is not its only channel; focus keeps the shared
+  2px accent outline. The artboard's 52px chip yields to § Interaction States.
+- **Confirmation:** saving raises today's mark to the 12px floor and turns it accent, whether or not
+  minutes were given. Proportional height belongs to the server and arrives on the next render — the
+  client cannot reproduce a scale set by the tallest day in the window. **Corrected 2026-09-01:**
+  this bullet previously promised a timed entry rises above the floor at once, which was built as a
+  fixed ninety-minute guess and drew heights the next render did not keep. The chart remains the
+  confirmation and the hero remains veiled on this form.
+
 ## Navigation Map
 
 Six routes, three levels deep. Settled with the owner on 2026-08-30 after drawing both options.

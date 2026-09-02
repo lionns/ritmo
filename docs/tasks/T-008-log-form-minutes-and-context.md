@@ -1,7 +1,7 @@
 ---
 id: T-008
 title: The log form the canvas drew — optional minutes, the plan in view, the project as context
-status: ready
+status: doing
 profile: team
 harness: 0.8.1
 role: Frontend Implementer
@@ -27,7 +27,7 @@ implements: [US-4, FR-4]
 - `docs/project/design-handoff.md` — write § The Log Form. The artboard is the only record of this
   screen and, as with § The Project Row, an unwritten design cannot be built twice the same way.
 - `src/components/organisms/EntryForm.astro` — the minutes control: the label `MINUTOS · OPCIONAL`
-  and four chips, `10 / 20 / 45 / 90`, one selectable at a time and **deselectable**, submitting
+  and four chips, `15 / 30 / 60 / 120`, one selectable at a time and **deselectable**, submitting
   `effortMinutes` when one is chosen and omitting it when none is. No free-numeric input.
 - The next action of the selected project, rendered above the field under its own mono label, so the
   owner acts instead of deciding (`US-4`). It comes from the portfolio response the page already
@@ -54,24 +54,24 @@ implements: [US-4, FR-4]
 
 ## Acceptance Criteria
 
-- [ ] WHEN the owner selects a minutes chip and saves, THE SYSTEM SHALL send `effortMinutes` with
+- [x] WHEN the owner selects a minutes chip and saves, THE SYSTEM SHALL send `effortMinutes` with
       that value, and the next render of `/` SHALL draw that day's mark taller than the untimed floor.
-- [ ] WHEN no chip is selected, THE SYSTEM SHALL omit `effortMinutes`, and the mark SHALL stay at the
+- [x] WHEN no chip is selected, THE SYSTEM SHALL omit `effortMinutes`, and the mark SHALL stay at the
       12px floor of `design-handoff.md` § The Hero Chart.
-- [ ] WHEN a selected chip is tapped again, THE SYSTEM SHALL deselect it, because the label says
+- [x] WHEN a selected chip is tapped again, THE SYSTEM SHALL deselect it, because the label says
       optional and a value that cannot be taken back is not.
-- [ ] Every chip is at least 56px tall on desktop and 58px on mobile. **The artboard draws them at
+- [x] Every chip is at least 56px tall on desktop and 58px on mobile. **The artboard draws them at
       52px; the handoff's target floor outranks it** (`T-006` § Assumptions).
-- [ ] WHEN `/registrar` is opened with a `project` parameter, THE SYSTEM SHALL render that project's
+- [x] WHEN `/registrar` is opened with a `project` parameter, THE SYSTEM SHALL render that project's
       title as context and its open next action above the field, and SHALL NOT render the select.
-- [ ] WHEN `/registrar` is opened with no `project` parameter, THE SYSTEM SHALL render the select as
+- [x] WHEN `/registrar` is opened with no `project` parameter, THE SYSTEM SHALL render the select as
       it does today.
 - [ ] Accent coverage is measured after the change and still reads ~2% of the screen (`AC-9`): the
       selected chip and the save button are both accent, and `design-handoff.md` § Navigation Map
       says two highlighted things are none. If the measurement fails, the chip's selected state is a
       finding for the owner, not a silent redesign.
-- [ ] `npm run check:core` stays green, proving the form still reaches data only through `contracts/`.
-- [ ] All five gates stay green from a clean `npm ci`.
+- [x] `npm run check:core` stays green, proving the form still reaches data only through `contracts/`.
+- [x] All five gates stay green from a clean `npm ci`.
 
 ## Verification
 
@@ -84,9 +84,11 @@ implements: [US-4, FR-4]
 
 ## Assumptions
 
-- **The four values are the canvas's, not the planner's.** `10 / 20 / 45 / 90` are read off
-  `R-Movil`; no source explains the choice. If the owner wants different ones, that is a handoff
-  change before implementation, not a judgement during it.
+- **The four values are the owner's, settled 2026-09-01.** `R-Movil` draws `10 / 20 / 45 / 90` and
+  no source explains that choice. Review asked what a session over ninety minutes records; the owner
+  replaced them with `15 / 30 / 60 / 120`. Nothing under the form capped at 90
+  (`0001_initial_schema.sql:114` takes any non-negative integer), so this is the handoff change this
+  bullet always said it would be, not a contract one.
 - **The artboard's 52px chip is a defect in the artboard.** Rests on `design-handoff.md`
   § Accessibility Notes, "targets are 56px desktop / 58px mobile, minimum", and on `T-006`
   § Assumptions, which already settled that the handoff outranks the artboards on this exact class
@@ -107,16 +109,48 @@ implements: [US-4, FR-4]
 
 ## Outcome
 
-- Changes:
-- Files:
-- Baseline result:
-- Final result:
-- Decisions recorded:
-- Follow-up:
+- Changes: prefilled project heading and next-action context; optional `10 / 20 / 45 / 90` toggle
+  chips; typed request omission; 12px optimistic floor with SSR-owned proportional height; § The
+  Log Form handoff and contract tests.
+- Files: form/page, `entry-form.ts`, its test, handoff, task/trace and generated status (8 files).
+- Baseline result: clean `npm ci`; unit 25/25, isolation, lint, typecheck and build green.
+- Final result: clean `npm ci`; unit 29/29, isolation, lint, typecheck/build, integration 4/4. Live
+  SSR/API probe: untimed mark 12px; 45-minute mark 95px; both project-entry modes correct.
+- Decisions recorded: none.
+- Follow-up: **back to the Frontend Implementer, 2026-09-01, after Reviewer round 2.** Three things,
+  one round: the owner's new chip values in `EFFORT_MINUTE_OPTIONS` (the seven call sites in
+  `entry-form.test.ts` become type errors, which is the gate that catches this — `npm test` strips
+  types and will not); export `UNTIMED_HEIGHT` from `hero-chart.ts` for the Low below; re-run the
+  task-specific verification, because the `45`-minute probe recorded above used a chip that no
+  longer exists. Handoff and plan are already updated here. No backend, no `core/`. Then owner
+  validation: accent coverage and the 390px under-20s flow.
 
 ## Review
 
-- Severity · `file:line` · issue · impact · recommendation
+- 2026-09-01 · Reviewer, round 1 · five gates re-run here. Two Medium, two Low, three nits.
+  Medium · the optimistic bar scaled to a fixed 90-minute cap while `hero-chart.ts:65` scales to the
+  window maximum — on this task's own seed data a 45-minute entry drew 58px and reloaded at 95px,
+  and same-day totals drifted · **closed in round 2**, by the client no longer inventing a
+  proportion. Medium · that rule sat inline in the client script where no test reached it, which is
+  why five green gates said nothing about the first · **closed**, extracted and covered. Low · a
+  timed day could end up carrying `data-state="untimed"` · **closed**. Three nits raised without
+  asking for action (dead branch at `:12`, document-scoped chip query at `:105`, literal caps at
+  `:67`) — still open, still not worth a round.
+- 2026-09-01 · Reviewer, round 2 · all five gates re-run here, green: unit 29/29, isolation,
+  typecheck, build, integration 4/4. `confirmOptimisticChartMark` returns the 12px floor and never a
+  guessed proportion, so a reload can only raise a mark, never contradict one; the helper's third
+  case pins the `data-state` fix as a regression test. Scope held — nothing in `core/`, `adapters/`
+  or `contracts/`. Two Low left, both record hygiene rather than behaviour.
+- Low · `design-handoff.md` § The Log Form, **Confirmation** · promised a timed entry rises above the
+  floor at once, which the round-1 fix made false · the section exists so the screen can be rebuilt
+  without the canvas, so that bullet would rebuild the defect · **fixed here.** The round-1 handback
+  said "the handoff wording is the owner's", meaning the colour sentence; that routing was too broad
+  and the implementer reasonably read it as the whole document.
+- Low · `entry-form.ts:46` · the floor is a bare `12` while `hero-chart.ts:20` keeps it as a private
+  `UNTIMED_HEIGHT` · the handoff defines that number once and the code now says it twice, in modules
+  that cannot see each other · export it and import it. Routed in the follow-up above.
+- Owner's, unchanged: the `AC-9` accent measurement, and whether "colour is not its only channel"
+  earns a second visual channel on the selected chip.
 
 ## Validation
 

@@ -1,18 +1,38 @@
 ---
 import type { PortfolioProject } from "../../../contracts/portfolio.ts";
+import { EFFORT_MINUTE_OPTIONS } from "../../lib/entry-form.ts";
+import { readAsSentence } from "../../lib/project-row.ts";
 
 interface Props {
   projects: PortfolioProject[];
-  selectedProjectId?: string;
+  selectedProject?: PortfolioProject;
 }
 
-const { projects, selectedProjectId } = Astro.props;
-const initialProject = projects.some(({ id }) => id === selectedProjectId)
-  ? selectedProjectId
-  : projects[0]?.id;
+const { projects, selectedProject } = Astro.props;
+const initialProject = selectedProject?.id ?? projects[0]?.id;
 ---
 
 <form class="glass-panel p-[22px] md:p-7" data-entry-form>
+  {
+    selectedProject && (
+      <div class="mb-[22px]">
+        <h2 class="text-[19px] leading-tight font-semibold tracking-[-0.02em] text-ink md:text-xl">
+          {selectedProject.title}
+        </h2>
+        <input type="hidden" name="projectId" value={selectedProject.id} />
+        {selectedProject.nextAction && (
+          <div class="mt-5">
+            <p class="font-mono text-[8px] leading-[1.4] tracking-[0.2em] text-dim uppercase">
+              Próxima acción
+            </p>
+            <p class="mt-2 text-[15px] leading-[1.45] text-dim">
+              {readAsSentence(selectedProject.nextAction)}
+            </p>
+          </div>
+        )}
+      </div>
+    )
+  }
   <div>
     <label class="mb-[9px] block font-mono text-[8px] leading-[1.4] tracking-[0.2em] text-dim uppercase" for="entry-what">Una línea sobre lo que moviste</label>
     <textarea
@@ -25,19 +45,43 @@ const initialProject = projects.some(({ id }) => id === selectedProjectId)
       class="min-h-[132px] w-full resize-y rounded-field border border-glass-border bg-[color-mix(in_srgb,var(--page-bg)_72%,transparent)] p-4 text-base leading-[1.45] text-ink placeholder:text-faint-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent md:min-h-[150px]"
     ></textarea>
   </div>
-  <div class="mt-[22px]">
-    <label class="mb-[9px] block font-mono text-[8px] leading-[1.4] tracking-[0.2em] text-dim uppercase" for="entry-project">Proyecto</label>
-    <select
-      class="min-h-[58px] w-full rounded-field border border-glass-border bg-[color-mix(in_srgb,var(--page-bg)_72%,transparent)] p-4 text-base leading-[1.45] text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent md:min-h-14"
-      id="entry-project"
-      name="projectId"
-      required
-    >
-      {projects.map((project) => (
-        <option value={project.id} selected={project.id === initialProject}>{project.title}</option>
-      ))}
-    </select>
-  </div>
+  {
+    !selectedProject && (
+      <div class="mt-[22px]">
+        <label class="mb-[9px] block font-mono text-[8px] leading-[1.4] tracking-[0.2em] text-dim uppercase" for="entry-project">Proyecto</label>
+        <select
+          class="min-h-[58px] w-full rounded-field border border-glass-border bg-[color-mix(in_srgb,var(--page-bg)_72%,transparent)] p-4 text-base leading-[1.45] text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent md:min-h-14"
+          id="entry-project"
+          name="projectId"
+          required
+        >
+          {projects.map((project) => (
+            <option value={project.id} selected={project.id === initialProject}>{project.title}</option>
+          ))}
+        </select>
+      </div>
+    )
+  }
+  <fieldset class="mt-[22px]">
+    <legend class="mb-[9px] font-mono text-[8px] leading-[1.4] tracking-[0.2em] text-dim uppercase">
+      MINUTOS · OPCIONAL
+    </legend>
+    <div class="grid grid-cols-4 gap-2" data-effort-options>
+      {
+        EFFORT_MINUTE_OPTIONS.map((minutes) => (
+          <button
+            class="min-h-[58px] cursor-pointer rounded-field border border-glass-border bg-[color-mix(in_srgb,var(--page-bg)_72%,transparent)] px-2 font-mono text-sm text-ink transition-[filter] duration-[120ms] hover:brightness-[1.06] active:brightness-90 aria-pressed:border-accent aria-pressed:bg-accent aria-pressed:text-accent-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent motion-reduce:transition-none md:min-h-14"
+            type="button"
+            data-effort-minutes={minutes}
+            aria-label={`${minutes} minutos`}
+            aria-pressed="false"
+          >
+            {minutes}
+          </button>
+        ))
+      }
+    </div>
+  </fieldset>
   <button
     class="mt-6 inline-flex min-h-[58px] w-full cursor-pointer items-center justify-center rounded-[29px] border-0 bg-accent px-7 text-[17px] font-semibold text-accent-ink transition-[filter] duration-[120ms] hover:brightness-[1.06] active:brightness-90 disabled:cursor-wait disabled:saturate-[0.35] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent motion-reduce:transition-none md:min-h-14 md:w-auto md:min-w-[218px] md:rounded-[28px] md:text-base"
     type="submit"
@@ -49,24 +93,47 @@ const initialProject = projects.some(({ id }) => id === selectedProjectId)
 </form>
 
 <script>
+  import {
+    buildEntryRequest,
+    confirmOptimisticChartMark,
+    isEffortMinuteOption,
+    toggleEffortMinutes,
+    type EffortMinuteOption,
+  } from "../../lib/entry-form.ts";
+
   const form = document.querySelector<HTMLFormElement>("[data-entry-form]");
   const status = document.querySelector<HTMLElement>("[data-form-status]");
+  const effortButtons = [...document.querySelectorAll<HTMLButtonElement>("[data-effort-minutes]")];
+  let effortMinutes: EffortMinuteOption | undefined;
+
+  effortButtons.forEach((button) => {
+    button.addEventListener("click", () => {
+      const pressed = Number(button.dataset.effortMinutes);
+      if (!isEffortMinuteOption(pressed)) return;
+      effortMinutes = toggleEffortMinutes(effortMinutes, pressed);
+      syncEffortButtons();
+    });
+  });
 
   form?.addEventListener("submit", async (event) => {
     event.preventDefault();
     const submit = form.querySelector<HTMLButtonElement>("button[type='submit']");
     const what = form.elements.namedItem("what");
     const projectId = form.elements.namedItem("projectId");
-    if (!(what instanceof HTMLTextAreaElement) || !(projectId instanceof HTMLSelectElement)) return;
+    if (
+      !(what instanceof HTMLTextAreaElement) ||
+      (!(projectId instanceof HTMLSelectElement) && !(projectId instanceof HTMLInputElement))
+    ) return;
 
     if (submit !== null) submit.disabled = true;
     if (status !== null) status.textContent = "Guardando…";
+    const submittedEffortMinutes = effortMinutes;
 
     try {
       const response = await fetch("/api/entries", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ projectId: projectId.value, what: what.value }),
+        body: JSON.stringify(buildEntryRequest(projectId.value, what.value, effortMinutes)),
       });
       const body: unknown = await response.json();
       if (!response.ok) {
@@ -78,8 +145,10 @@ const initialProject = projects.some(({ id }) => id === selectedProjectId)
       }
 
       what.value = "";
+      effortMinutes = undefined;
+      syncEffortButtons();
       if (status !== null) status.textContent = "Entrada guardada.";
-      growTodayMarks();
+      growTodayMarks(submittedEffortMinutes);
       what.focus();
     } catch (error) {
       if (status !== null) {
@@ -91,17 +160,28 @@ const initialProject = projects.some(({ id }) => id === selectedProjectId)
     }
   });
 
-  function growTodayMarks(): void {
+  function syncEffortButtons(): void {
+    effortButtons.forEach((button) => {
+      button.setAttribute(
+        "aria-pressed",
+        String(Number(button.dataset.effortMinutes) === effortMinutes),
+      );
+    });
+  }
+
+  function growTodayMarks(loggedMinutes: EffortMinuteOption | undefined): void {
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const chart = document.querySelector<HTMLElement>("[data-hero-chart]");
     const duration = Number(chart?.dataset.riseDuration ?? 220);
     document.querySelectorAll<SVGRectElement>("[data-today-mark]").forEach((mark) => {
       const baseline = 126;
       const currentHeight = Number(mark.getAttribute("height") ?? 9);
-      const nextHeight = Math.max(12, currentHeight);
-      mark.setAttribute("height", String(nextHeight));
-      mark.setAttribute("y", String(baseline - nextHeight));
-      mark.setAttribute("data-state", "untimed");
+      const currentState = mark.dataset.state;
+      if (currentState !== "empty" && currentState !== "untimed" && currentState !== "timed") return;
+      const confirmed = confirmOptimisticChartMark(currentHeight, currentState, loggedMinutes);
+      mark.setAttribute("height", String(confirmed.height));
+      mark.setAttribute("y", String(baseline - confirmed.height));
+      mark.setAttribute("data-state", confirmed.state);
       mark.classList.remove("fill-faint-text");
       mark.classList.add("fill-accent");
       if (!reducedMotion) {

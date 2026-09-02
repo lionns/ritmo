@@ -26,6 +26,7 @@ try {
 const projects = portfolio === null ? [] : [...portfolio.progress, ...portfolio.outstanding];
 const entries = projects.flatMap(({ recentEntries }) => recentEntries);
 const selectedProjectId = Astro.url.searchParams.get("project") ?? undefined;
+const selectedProject = projects.find(({ id }) => id === selectedProjectId);
 ---
 
 <AppShell title="Registrar · Ritmo" description="Escribe una línea sobre lo que moviste." context="Registro">
@@ -49,7 +50,7 @@ const selectedProjectId = Astro.url.searchParams.get("project") ?? undefined;
           >
         </section>
       ) : (
-        <EntryForm projects={projects} selectedProjectId={selectedProjectId} />
+        <EntryForm projects={projects} selectedProject={selectedProject} />
       )
     }
     <HeroChart slot="chart" entries={entries} />
