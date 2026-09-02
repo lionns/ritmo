@@ -9,3 +9,4 @@
 2026-08-31 | T-005 | done | portfolio read and entry write, live on a running worker | 20 files | unit 9/9, isolation, typecheck, build, integration 3/3 | -
 2026-09-01 | T-007 | done | the next-action invariant enforced, and a path that time cannot erase | 13 files | unit 25/25, isolation, typecheck, build, integration 4/4 | -
 2026-09-01 | T-006 | done | the first loop you can open and write to, drawn from the approved canvas | 30 files | unit 25/25, isolation, typecheck, build, integration 4/4 | -
+2026-09-01 | T-008 | done | the log form: optional minutes, the plan in view, the project as context | 10 files | unit 29/29, isolation, typecheck, build, integration 4/4 | -

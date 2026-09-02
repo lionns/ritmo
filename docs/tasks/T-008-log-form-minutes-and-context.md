@@ -1,7 +1,7 @@
 ---
 id: T-008
 title: The log form the canvas drew — optional minutes, the plan in view, the project as context
-status: review
+status: done
 profile: team
 harness: 0.8.1
 role: Frontend Implementer
@@ -117,11 +117,13 @@ implements: [US-4, FR-4]
 - Files: form/page/chart, `entry-form.ts`, its test, handoff, task/traces and generated status
   (10 files).
 - Baseline result: clean `npm ci`; unit 25/25, isolation, lint, typecheck and build green.
-- Final result: clean `npm ci`; unit 29/29, isolation, lint, typecheck/build, integration 4/4. Live
-  SSR/API probe: exact owner-settled chips; untimed mark 12px; 60-minute mark 104px. Built form has
-  one accent-filled control; selected chip is glass with accent border/text and 300→400 weight.
+- Final result: unit 29/29, isolation, lint, typecheck (0 errors, 33 files), build, integration 4/4
+  — re-run at close. Live SSR/API probe: exact owner-settled chips; untimed mark 12px; 60-minute
+  mark 104px. Built form has one accent-filled control; selected chip is glass with accent
+  border/text and a 300→400 weight step. `NFR-1`'s 390px stopwatch and `NFR-7`'s copy check are the
+  owner's manual gate and were asserted, not measured here.
 - Decisions recorded: none.
-- Follow-up: Reviewer round 4, then owner validation of the 390px under-20s flow.
+- Follow-up: none. `T-009` carries the `src/lib/` finding; the three nits stay open.
 
 ## Review
 
@@ -134,9 +136,8 @@ implements: [US-4, FR-4]
   above the floor at once, which the fix made false — corrected in the handoff; round 1's handback
   said "the handoff wording is the owner's" meaning only the colour sentence, and that routing was
   mine and too broad. Low · the floor was a bare `12` beside a private `UNTIMED_HEIGHT`. Three nits
-  raised without asking for action (`:12`, `:105`, `:67`) stay open. Round 3 verified the floor in
-  the build rather than the source, and that `buildChartDays` does not follow the new cross-import
-  into the client; the re-probe's 104px is arithmetically the only value it could be.
+  raised without asking for action (`:12`, `:105`, `:67`) stay open. Round 3 checked the floor in
+  the build, not the source, and that the cross-import drags no chart code into the client.
 - Medium · `check-core-isolation.mjs:39` · `isFront` matches `src/components/`, `src/layouts/` and
   `src/pages/` but not `src/lib/`, so a file there may import an adapter and the check reports clean
   · mutation-probed both ways: `src/lib/__probe.ts` importing `adapters/d1/store.ts` passes, the
@@ -159,13 +160,12 @@ implements: [US-4, FR-4]
   veiled chart marks are also accent-filled — the implementer's own Outcome said "control", which
   was the more accurate word. **Recommended for owner validation.**
 - Correction: this review called `AC-2`, `AC-5` and `AC-9` fabricated. They are not — they are
-  `T-006`'s criteria by position, and all three fit their context. I searched
-  `acceptance-criteria.json`, missed them, and did not try the other reading. What survives is
-  smaller: a bare `AC-N` is ambiguous against that file's `AC-G*`/`AC-X*` ids and breaks silently if
-  a criterion is inserted into `T-006`. Left as it stands, at the owner's call. Separately, `T-006`
-  checked its own ninth criterion — "accent covers roughly 2%" — without measuring it.
+  `T-006`'s criteria by position. I missed them in `acceptance-criteria.json` and tried no other
+  reading. What survives is smaller: a bare `AC-N` is ambiguous against that file's `AC-G*`/`AC-X*`
+  ids. Left as it stands, at the owner's call. Separately, `T-006` checked its own ninth criterion —
+  "accent covers roughly 2%" — without measuring it.
 
 ## Validation
 
-- Validated by:
-- Date:
+- Validated by: Juan Sebastián León Velásquez
+- Date: 2026-09-01
