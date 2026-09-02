@@ -17,8 +17,9 @@
   - probes: prefilled heading/action/no select; fallback select; untimed mark 12px; 45 min mark 95px
   - follow-up: independent Tester/Reviewer; owner accent measurement and 390px stopwatch validation
 
-- 2026-09-01 — role: Frontend Implementer, Reviewer round-1 fixes
-  - did: removed the false 90-minute client scale; optimistic marks now stop at the 12px floor
-  - coverage: shared helper proves SSR owns height and timed state survives a later untimed entry
-  - checks: unit 29/29, isolation, typecheck, build, integration 4/4
-  - scope: no backend/core or owner-assigned handoff/AC-9 change; returned to Reviewer round 2
+- 2026-09-01 — role: Frontend Implementer, Reviewer fixes and owner handback
+  - did: removed false client scale; exported the 12px floor; changed chips to `15/30/60/120`
+  - coverage: shared helper pins SSR-owned height and preserves timed state; typed values updated
+  - checks: unit 29/29, isolation, typecheck, build, integration 4/4, lint clean
+  - probes: exact four chips; untimed 12px; 60-minute SSR mark 104px; seed restored
+  - follow-up: owner accent measurement and 390px stopwatch validation

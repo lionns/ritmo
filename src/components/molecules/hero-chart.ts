@@ -17,7 +17,7 @@ export const CHART_STAGGER_MS = 6;
 
 const DAY_MILLISECONDS = 24 * 60 * 60 * 1_000;
 const EMPTY_HEIGHT = 9;
-const UNTIMED_HEIGHT = 12;
+export const UNTIMED_HEIGHT = 12;
 const TIMED_RANGE = 92;
 
 export function buildChartDays(

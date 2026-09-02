@@ -1,6 +1,7 @@
 import type { CreateEntryRequest } from "../../contracts/entries.ts";
+import { UNTIMED_HEIGHT } from "../components/molecules/hero-chart.ts";
 
-export const EFFORT_MINUTE_OPTIONS = [10, 20, 45, 90] as const;
+export const EFFORT_MINUTE_OPTIONS = [15, 30, 60, 120] as const;
 
 export type EffortMinuteOption = (typeof EFFORT_MINUTE_OPTIONS)[number];
 export type OptimisticChartState = "empty" | "untimed" | "timed";
@@ -43,7 +44,7 @@ export function confirmOptimisticChartMark(
   loggedMinutes: EffortMinuteOption | undefined,
 ): OptimisticChartMark {
   return {
-    height: Math.max(12, currentHeight),
+    height: Math.max(UNTIMED_HEIGHT, currentHeight),
     state: currentState === "timed" || loggedMinutes !== undefined ? "timed" : "untimed",
   };
 }

@@ -1,7 +1,7 @@
 ---
 id: T-008
 title: The log form the canvas drew — optional minutes, the plan in view, the project as context
-status: doing
+status: review
 profile: team
 harness: 0.8.1
 role: Frontend Implementer
@@ -109,48 +109,51 @@ implements: [US-4, FR-4]
 
 ## Outcome
 
-- Changes: prefilled project heading and next-action context; optional `10 / 20 / 45 / 90` toggle
+- Changes: prefilled project heading and next-action context; optional `15 / 30 / 60 / 120` toggle
   chips; typed request omission; 12px optimistic floor with SSR-owned proportional height; § The
   Log Form handoff and contract tests.
-- Files: form/page, `entry-form.ts`, its test, handoff, task/trace and generated status (8 files).
+- Files: form/page/chart, `entry-form.ts`, its test, handoff, task/traces and generated status
+  (10 files).
 - Baseline result: clean `npm ci`; unit 25/25, isolation, lint, typecheck and build green.
 - Final result: clean `npm ci`; unit 29/29, isolation, lint, typecheck/build, integration 4/4. Live
-  SSR/API probe: untimed mark 12px; 45-minute mark 95px; both project-entry modes correct.
+  SSR/API probe: exact owner-settled chips; untimed mark 12px; 60-minute mark 104px.
 - Decisions recorded: none.
-- Follow-up: **back to the Frontend Implementer, 2026-09-01, after Reviewer round 2.** Three things,
-  one round: the owner's new chip values in `EFFORT_MINUTE_OPTIONS` (the seven call sites in
-  `entry-form.test.ts` become type errors, which is the gate that catches this — `npm test` strips
-  types and will not); export `UNTIMED_HEIGHT` from `hero-chart.ts` for the Low below; re-run the
-  task-specific verification, because the `45`-minute probe recorded above used a chip that no
-  longer exists. Handoff and plan are already updated here. No backend, no `core/`. Then owner
-  validation: accent coverage and the 390px under-20s flow.
+- Follow-up: owner validation — accent coverage and the 390px under-20s flow.
 
 ## Review
 
-- 2026-09-01 · Reviewer, round 1 · five gates re-run here. Two Medium, two Low, three nits.
-  Medium · the optimistic bar scaled to a fixed 90-minute cap while `hero-chart.ts:65` scales to the
-  window maximum — on this task's own seed data a 45-minute entry drew 58px and reloaded at 95px,
-  and same-day totals drifted · **closed in round 2**, by the client no longer inventing a
-  proportion. Medium · that rule sat inline in the client script where no test reached it, which is
-  why five green gates said nothing about the first · **closed**, extracted and covered. Low · a
-  timed day could end up carrying `data-state="untimed"` · **closed**. Three nits raised without
-  asking for action (dead branch at `:12`, document-scoped chip query at `:105`, literal caps at
-  `:67`) — still open, still not worth a round.
-- 2026-09-01 · Reviewer, round 2 · all five gates re-run here, green: unit 29/29, isolation,
-  typecheck, build, integration 4/4. `confirmOptimisticChartMark` returns the 12px floor and never a
-  guessed proportion, so a reload can only raise a mark, never contradict one; the helper's third
-  case pins the `data-state` fix as a regression test. Scope held — nothing in `core/`, `adapters/`
-  or `contracts/`. Two Low left, both record hygiene rather than behaviour.
-- Low · `design-handoff.md` § The Log Form, **Confirmation** · promised a timed entry rises above the
-  floor at once, which the round-1 fix made false · the section exists so the screen can be rebuilt
-  without the canvas, so that bullet would rebuild the defect · **fixed here.** The round-1 handback
-  said "the handoff wording is the owner's", meaning the colour sentence; that routing was too broad
-  and the implementer reasonably read it as the whole document.
-- Low · `entry-form.ts:46` · the floor is a bare `12` while `hero-chart.ts:20` keeps it as a private
-  `UNTIMED_HEIGHT` · the handoff defines that number once and the code now says it twice, in modules
-  that cannot see each other · export it and import it. Routed in the follow-up above.
-- Owner's, unchanged: the `AC-9` accent measurement, and whether "colour is not its only channel"
-  earns a second visual channel on the selected chip.
+- 2026-09-01 · Reviewer, rounds 1-2, all closed. Medium · the optimistic bar scaled to a fixed
+  90-minute cap while `hero-chart.ts:65` scales to the window maximum, so on this task's own seed
+  data a 45-minute entry drew 58px and reloaded at 95px, and same-day totals drifted. Medium · that
+  rule sat inline in the client script where no test reached it, which is why five green gates said
+  nothing about the first. Low · a timed day could carry `data-state="untimed"`. Low · § The Log
+  Form's **Confirmation** promised a timed entry rises above the floor at once, which the fix made
+  false — corrected in the handoff; round 1's handback said "the handoff wording is the owner's"
+  meaning only the colour sentence, and that routing was mine and too broad. Low · the floor was a
+  bare `12` beside a private `UNTIMED_HEIGHT`. Three nits raised without asking for action (dead
+  branch at `:12`, document-scoped chip query at `:105`, literal caps at `:67`) stay open.
+- 2026-09-01 · Reviewer, round 3 · five gates re-run here, green: unit 29/29, isolation, lint,
+  typecheck, build, integration 4/4. Both round-2 Low closed. The floor is defined once and verified
+  in the build rather than the source — the client minifies to `Math.max(12,e)`, the server chart to
+  `Math.max(12, Math.round(12 + …))`, and `buildChartDays` does not ride the cross-import into the
+  client (`dist/client/_astro/` carries CSS only). The owner's values landed with all seven call
+  sites typed; the re-probe is internally consistent, since the seed's tallest day is 50 minutes and
+  a 60-minute entry makes 60 the new maximum, which is the 104px recorded.
+- Medium · `check-core-isolation.mjs:39` · `isFront` matches `src/components/`, `src/layouts/` and
+  `src/pages/` but not `src/lib/`, so a file there may import an adapter and the check reports clean
+  · mutation-probed both ways: `src/lib/__probe.ts` importing `adapters/d1/store.ts` passes, the
+  identical import under `src/components/` fails. `D-009` names `.astro` routes and components as
+  the front and the regex mirrors it, so the gap is the decision's before it is the script's. This
+  task's criterion "`check:core` stays green, **proving** the form reaches data only through
+  `contracts/`" therefore over-claims: the gate is green and `entry-form.ts` is in fact clean, but
+  nothing looked at it · **routed to `T-009`**, not fixed here — `scripts/` needs approval and a
+  decision, and `src/lib/` predates this task (`T-006` put the first file there).
+- Nit · exporting `UNTIMED_HEIGHT` was round 2's recommendation and Codex did exactly that; the
+  cleaner shape was to move `confirmOptimisticChartMark` into `hero-chart.ts`, where the constant
+  could have stayed private. Costs nothing at runtime. Named in `T-009` § Out of Scope, not asked for.
+- Recommended for owner validation. Two things remain the owner's: the `AC-9` accent measurement —
+  which is the last unchecked criterion, and `harness-lint` refuses `done` while it is unchecked —
+  and whether "colour is not its only channel" earns a second visual channel on the selected chip.
 
 ## Validation
 
