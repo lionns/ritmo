@@ -14,7 +14,7 @@ Run these before starting new implementation. Any required failure blocks the ta
 | Check | Command or Procedure | Required | Notes |
 | --- | --- | --- | --- |
 | Tests | `npm test` | yes | `node --test`, no framework (D-006) |
-| Core isolation | `npm run check:core` | yes | No `@cloudflare/*`, `cloudflare:*` or `Env` reaches the core (D-003) |
+| Core isolation | `npm run check:core` | yes | Core imports stay inside `core/`; no platform global or `Env` reaches it (D-017) |
 | Harness records | `node scripts/harness-lint.mjs` | yes | Budgets and record shape |
 | Type check | `npm run typecheck` | yes | `astro check && tsc --noEmit` (D-021) |
 | Lint | — | | Formatting is not gated; no dependency earns it here |

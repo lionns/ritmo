@@ -69,6 +69,11 @@ export function runtimeStore(): SqliteStore {
   return new SqliteStore(runtimeDatabase);
 }
 
+export function closeRuntimeDatabase(): void {
+  runtimeDatabase?.close();
+  runtimeDatabase = undefined;
+}
+
 export class SqliteStore implements Store {
   readonly #database: DatabaseSync;
 

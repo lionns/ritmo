@@ -42,9 +42,9 @@ error mapping, so endpoints stay thin.
 `contracts/` for the types. Neither Express nor Hono appears. Node now provides `node:http`, but a
 second router would still duplicate what Astro already does.
 
-**The boundary is checked, not trusted.** No file in the core may import from `@cloudflare/*` or
-`cloudflare:*`, name the `Env` binding type, or touch any platform API; a zero-dependency script
-enforces it in the baseline gate. Platform coupling arrives one well-excused import at a time and is
+**The boundary is checked, not trusted.** Core imports must stay inside `core/`; no file there may
+name the `Env` binding type or touch a platform global. A zero-dependency script enforces the rule
+in the baseline gate (`D-017`). Platform coupling arrives one well-excused import at a time and is
 invisible until someone tries to move, so it is caught the day it happens rather than the day it
 hurts.
 

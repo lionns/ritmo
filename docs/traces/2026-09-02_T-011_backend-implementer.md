@@ -10,3 +10,9 @@
   - assumptions: retained the accepted Node 24.20.0 pin; official docs say SQLite is RC, not experimental
   - blocker: in-app browser unavailable; `/registrar` click path and owner phone validation remain
   - decisions: D-022; D-018…D-021 implemented
+- 2026-09-02 — role: Backend Implementer, review fixes
+  - read: Reviewer round 1 in T-011
+  - did: corrected two stale boundary descriptions; tested real runtime wiring and connection cache
+  - files: architecture, quality gates, SQLite store and integration test
+  - checks: integration 6/6, typecheck, isolation; no `scripts/` change
+  - blocker: Reviewer's Medium governance finding remains for the owner

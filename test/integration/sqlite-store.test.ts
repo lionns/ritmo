@@ -6,11 +6,13 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from
 
 import { LOCAL_OWNER_ID } from "../../adapters/local-owner.ts";
 import { applyMigrations, openDatabase } from "../../adapters/sqlite/database.ts";
-import { SqliteStore } from "../../adapters/sqlite/store.ts";
+import { closeRuntimeDatabase, SqliteStore } from "../../adapters/sqlite/store.ts";
 import type { Area, Entry, NextAction, Owner, Project } from "../../core/model/entities.ts";
 import { closeNextAction, createNextAction } from "../../core/rules/next-action.ts";
 import type { CreateEntryErrorResponse, CreateEntryResponse } from "../../contracts/entries.ts";
 import type { PortfolioResponse } from "../../contracts/portfolio.ts";
+import { handlePostEntry } from "../../src/pages/api/entries.ts";
+import { handleGetPortfolio } from "../../src/pages/api/portfolio.ts";
 import { testApplication } from "./worker.ts";
 
 let database: DatabaseSync;
@@ -105,7 +107,7 @@ describe("SqliteStore with the next-action rule", () => {
     expect(await store.getNextAction(mismatchedReplacement.id)).toBeNull();
   });
 
-  it("drives POST entries and GET portfolio through the real D1 adapter", async () => {
+  it("drives POST entries and GET portfolio through the real SQLite adapter", async () => {
     const quietProject: Project = { ...project, id: "project-quiet", title: "Quiet project" };
     const actionlessProject: Project = {
       ...project,
@@ -254,6 +256,38 @@ describe("SqliteStore with the next-action rule", () => {
     expect(database.prepare("SELECT name FROM _ritmo_migrations ORDER BY name").all()).toEqual([
       { name: "0001_initial_schema.sql" },
     ]);
+  });
+
+  it("wires API handlers through runtimeStore and RITMO_DB_PATH", async () => {
+    const previousPath = process.env.RITMO_DB_PATH;
+    const runtimePath = join(temporaryDirectory, `${databaseSequence++}-runtime.sqlite`);
+    process.env.RITMO_DB_PATH = runtimePath;
+    const seedDatabase = openDatabase(runtimePath);
+    const seedStore = new SqliteStore(seedDatabase);
+    await seedStore.createOwner(owner);
+    await seedStore.createArea(area);
+    await seedStore.createProject(project);
+    seedDatabase.close();
+
+    try {
+      const createdResponse = await handlePostEntry(
+        new Request("http://example.test/api/entries", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ projectId: project.id, what: "Stored through runtime wiring" }),
+        }),
+      );
+      expect(createdResponse.status).toBe(201);
+
+      const portfolioResponse = await handleGetPortfolio();
+      expect(portfolioResponse.status).toBe(200);
+      const portfolio = (await portfolioResponse.json()) as PortfolioResponse;
+      expect(portfolio.progress[0].recentEntries[0].what).toBe("Stored through runtime wiring");
+    } finally {
+      closeRuntimeDatabase();
+      if (previousPath === undefined) delete process.env.RITMO_DB_PATH;
+      else process.env.RITMO_DB_PATH = previousPath;
+    }
   });
 });
 

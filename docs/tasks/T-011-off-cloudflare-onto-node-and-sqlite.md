@@ -1,7 +1,7 @@
 ---
 id: T-011
 title: Off Cloudflare — the same product on Node and a SQLite file the owner holds
-status: doing
+status: review
 profile: team
 harness: 0.8.1
 role: Backend Implementer
@@ -110,53 +110,53 @@ decisions: [D-018, D-019, D-020, D-021]
 - Files: `adapters/sqlite/`, runtime/API wiring, local scripts, Node/Astro config and lockfile,
   integration tests, architecture/gates, D-022.
 - Baseline result: 29/29 unit, isolation, harness lint, typecheck and Cloudflare build green.
-- Final result: clean install; 29/29 unit, isolation, typecheck, Node build, integration 5/5; reset,
+- Final result: clean install; 29/29 unit, isolation, typecheck, Node build, integration 6/6; reset,
   seed, dev and start served HTTP 200 without `.wrangler`; timed SSR mark 12→104, untimed stayed 104.
 - Decisions recorded: D-022; D-018…D-021 implemented.
-- Follow-up: **back to the Frontend/Backend Implementer, 2026-09-02, after Reviewer round 1.** Three
-  Low: the two stale Cloudflare-framed doc lines, and integration coverage for `runtimeStore()` —
-  `localDatabasePath()` already reads `RITMO_DB_PATH`, so one test can drive the real wiring against
-  a temporary path. Two nits are optional. **Do not touch `scripts/` again**; the Medium there is
-  the owner's call, not the implementer's. Then Reviewer round 2, then owner validation. The
-  `/registrar` click path stayed unchecked here but was exercised over HTTP in review; `D-020`
-  leaves the phone gate unmeetable, which is recorded in Risks and is not this task's to fix.
+- Follow-up: **back to Reviewer round 2.** The three assigned Low findings are fixed: both boundary
+  descriptions now match D-017, and integration 6/6 reaches `runtimeStore()` through
+  `RITMO_DB_PATH` with no handler injection. The Medium `scripts/` governance finding is unchanged
+  and remains the owner's call. Then owner validation. The `/registrar` click path stayed unchecked
+  here but was exercised over HTTP in review; D-020's phone gate remains recorded in Risks.
 
 ## Review
 
-- 2026-09-02 · Reviewer, round 1 · five gates re-run here: unit 29/29, isolation, typecheck 0 errors
-  across 32 files, build, integration 5/5, `harness-lint` clean. The move works, verified from
-  scratch rather than from the diff: `data/` and `dist/` deleted, then build, `db:reset`, `seed`,
-  `npm start` — `/`, `/registrar` and `/api/portfolio` all 200, two entries written over HTTP (201,
-  201), and today's mark rendered `height="104" data-state="timed"`. No `wrangler` or
-  `@cloudflare/*` installed, no account, no `.wrangler`. The hard criterion holds: `core/`,
-  `contracts/`, `src/components/`, `src/lib/` and `migrations/` have zero diff. Probed that the
-  boundary still binds the *new* platform — a `core/` file importing `node:sqlite` is rejected. The
-  `node:sqlite` claim was verified independently against the Node 24 docs: "Stability: 1.2 —
-  Release candidate", RC since v24.15.0.
+- 2026-09-02 · Reviewer, round 1 · five gates green, and the move verified from scratch rather than
+  from the diff: `data/` and `dist/` deleted, then build, `db:reset`, `seed`, `npm start` — `/`,
+  `/registrar` and `/api/portfolio` all 200, two entries written over HTTP, today's mark
+  `height="104" data-state="timed"`, with no `wrangler` or `@cloudflare/*` installed and no account.
+  The hard criterion held: `core/`, `contracts/`, `src/components/`, `src/lib/` and `migrations/`
+  unchanged. Probed that the boundary binds the new platform — `core/` importing `node:sqlite` is
+  rejected. `node:sqlite` verified independently as "Stability: 1.2 — Release candidate", RC since
+  v24.15.0, which is what the implementer's assumption claimed. One Medium, three Low, two nits.
 - Medium · `scripts/check-core-isolation.mjs` · edited without being in this task's Scope or Out of
-  Scope, and `AGENTS.md` requires explicit approval, a decision file and a `VERSION.md` entry for
-  `scripts/` · mutation-probed rather than argued: an import of `cloudflare:workers` from `core/` is
-  still caught by the escape rule, as is a `@cloudflare/workers-types` type import; what is no
-  longer caught is an inert lowercase textual reference, which the removed rule did catch. So real
-  coupling stays covered and the defect is the process, not the result. **Second occurrence this
-  session** — `T-009` bumped `harness.json` and `VERSION.md` inside a task that scoped neither ·
-  **the owner's call**: revert it, or approve it and give it the record `AGENTS.md` asks for. Either
-  way it must be settled before `done`, and the implementer should not touch `scripts/` again here.
-- Low · `docs/project/quality-gates.md:17` · the isolation row still reads "No `@cloudflare/*`,
-  `cloudflare:*` or `Env` reaches the core (`D-003`)" · `D-003` is superseded twice over and the
-  description matches neither the platform nor the check as it now stands; the other rows were
-  updated · rewrite it against `D-017` and the rule the script actually enforces.
-- Low · `docs/project/architecture.md:45-46` · "The boundary is checked, not trusted" still states
-  the rule in Cloudflare terms while the section above it was rewritten · same class as above.
-- Low · `src/pages/api/*.ts` · the handlers gained `injectedStore?: Store` and the integration test
-  injects, so `runtimeStore()` — `openDatabase()`, the default path, and the module-level connection
-  cache — is exercised by no gate. The old worker called `handleGetPortfolio()` with no argument and
-  did reach `runtimeStore()`, so this is coverage moved rather than added: broader on the store and
-  the real migrations, narrower on the wiring · `localDatabasePath()` already honours
-  `RITMO_DB_PATH`, so one test driving the real wiring against a temporary path closes it.
-- Nits · `package.json` pins Node `24.20.0` while the machine runs `24.16.0`, recorded as retained,
-  but Node is the runtime now. · `runtimeDatabase` is a module singleton, so `db:reset` while `dev`
-  runs leaves a stale handle — the owner's daily loop.
+  Scope, where `AGENTS.md` requires explicit approval, a decision file and a `VERSION.md` entry ·
+  mutation-probed both ways: a `cloudflare:workers` import from `core/` is still caught by the
+  escape rule, and so is a `@cloudflare/workers-types` type import; what is no longer caught is an
+  inert lowercase textual reference. Real coupling stays covered, so the defect is the process, not
+  the result. **Second occurrence this session**, after `T-009` bumped `harness.json` and
+  `VERSION.md` inside a task that scoped neither · **the owner's call, and open**: revert it, or
+  approve it and give it the record. Unchanged in round 2, correctly — the implementer was told not
+  to touch `scripts/` again and did not.
+- 2026-09-02 · Reviewer, round 2 · five gates re-run here: unit 29/29, isolation, typecheck 0 errors,
+  build, integration **6/6**, `harness-lint` clean; built server re-probed at 200 on all three
+  routes. All three Low closed. Both boundary descriptions now state the rule the script actually
+  enforces and cite `D-017` instead of a twice-superseded `D-003`. The wiring gap is genuinely
+  closed, not merely claimed: mutation-probed by making `localDatabasePath()` ignore
+  `RITMO_DB_PATH`, and the new test is the only one of the six that fails.
+- Nit · `test/integration/sqlite-store.test.ts` · the wiring test's isolation rests on
+  `runtimeDatabase` being unset when it runs, because `runtimeStore()` uses `??=` and would ignore
+  `RITMO_DB_PATH` if an earlier test in the process had already opened a connection. Nothing does
+  today, so it passes. The sharp edge is the fallback target: `DEFAULT_DATABASE_PATH` is the owner's
+  real `data/ritmo.sqlite`. Checked after the mutation run — it was not written to, because the
+  fixture project does not exist there and the POST fails first, which is the fixture's luck rather
+  than a guard · calling `closeRuntimeDatabase()` at the start as well as in `finally` makes it
+  order-independent.
+- Nit · `closeRuntimeDatabase()` is a production export whose only caller is a test. Closing a
+  connection is a real lifecycle operation rather than a pure test hook, so this is named once and
+  not asked for.
+- **Recommended for owner validation**, once the Medium above is settled — it is the only thing
+  still open, and `AGENTS.md` does not let it close unresolved.
 
 ## Validation
 
