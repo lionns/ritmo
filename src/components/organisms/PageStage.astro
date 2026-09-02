@@ -7,7 +7,7 @@ const { chartVeiled = false } = Astro.props;
 ---
 
 <div class="page-stage flex min-h-0 flex-1 flex-col">
-  <main class="grid min-h-0 flex-1 items-center gap-[46px] xl:grid-cols-[minmax(0,1fr)_clamp(400px,32vw,480px)] xl:gap-16">
+  <main class="stage-main grid min-h-0 flex-1 items-center gap-[46px] xl:grid-cols-[minmax(0,1fr)_clamp(400px,32vw,480px)] xl:gap-16">
     <slot />
   </main>
   <div
@@ -30,6 +30,15 @@ const { chartVeiled = false } = Astro.props;
     .page-stage {
       --stage-chart-gap: clamp(12px, 2dvh, 32px);
       --stage-chart-height: clamp(96px, 12dvh, 180px);
+    }
+
+    .stage-main > :global(:nth-child(2)) {
+      min-height: 0;
+      max-height: 100%;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      scrollbar-color: color-mix(in srgb, var(--page-dim) 72%, transparent) transparent;
+      scrollbar-width: thin;
     }
   }
 </style>

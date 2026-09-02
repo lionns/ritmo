@@ -34,17 +34,15 @@ describe("the first-loop page composition", () => {
   it("uses a bounded desktop stage and keeps panel scrolling as a fallback", () => {
     const shell = source("src/layouts/AppShell.astro");
     const stage = source("src/components/organisms/PageStage.astro");
-    const panel = source("src/components/organisms/PortfolioPanel.astro");
-    const panelClass = panel.match(/class="([^"]*glass-panel[^"]*)"/)?.[1];
 
     assert.match(shell, /xl:h-dvh/);
     assert.match(shell, /xl:h-full/);
     assert.match(stage, /min-h-0/);
     assert.match(stage, /--stage-chart-height: clamp\(96px, 12dvh, 180px\)/);
-    assert.ok(panelClass, "the portfolio needs a glass panel class");
-    assert.match(panelClass, /xl:max-h-full/);
-    assert.match(panelClass, /xl:overflow-y-auto/);
-    assert.match(panelClass, /xl:overscroll-contain/);
+    assert.match(stage, /\.stage-main > :global\(:nth-child\(2\)\)/);
+    assert.match(stage, /max-height: 100%/);
+    assert.match(stage, /overflow-y: auto/);
+    assert.match(stage, /overscroll-behavior: contain/);
   });
 
   it("compacts decoration by height without shrinking interactive targets", () => {
@@ -97,16 +95,15 @@ describe("the first-loop page composition", () => {
 
   it("styles fallback panel scrolling without spending accent", () => {
     const stage = source("src/components/organisms/PageStage.astro");
-    const panel = source("src/components/organisms/PortfolioPanel.astro");
 
     assert.match(stage, /clamp\(400px,32vw,480px\)/);
-    assert.match(panel, /scrollbar-width: thin/);
-    assert.match(panel, /var\(--page-dim\) 72%/);
-    assert.doesNotMatch(panel, /scrollbar[^\n]*accent/);
+    assert.match(stage, /scrollbar-width: thin/);
+    assert.match(stage, /var\(--page-dim\) 72%/);
+    assert.doesNotMatch(stage, /scrollbar[^\n]*accent/);
     // Declaring the standard properties makes ::-webkit-scrollbar* dead everywhere it could apply.
-    assert.doesNotMatch(panel, /::-webkit-scrollbar/);
+    assert.doesNotMatch(stage, /::-webkit-scrollbar/);
     // The gutter is not reserved: the normal panel does not scroll, and must stay centred.
-    assert.doesNotMatch(panel, /scrollbar-gutter/);
+    assert.doesNotMatch(stage, /scrollbar-gutter/);
   });
 
   it("draws the project row as marks, a title and one sentence", () => {
@@ -171,7 +168,8 @@ describe("the first-loop page composition", () => {
     const setup = source("src/components/organisms/SetupForm.astro");
     const capture = source("src/components/organisms/ProjectCapture.astro");
 
-    assert.match(page, /En una semana mala, ¿cuántos proyectos puedes tocar de verdad\?/);
+    assert.match(page, /setupRequired \? "Una semana mala\."/);
+    assert.match(page, /¿Cuántos proyectos puedes tocar de verdad\? La respuesta/);
     assert.match(setup, /name="activeCap"/);
     assert.doesNotMatch(setup, /name="activeCap"[^>]*(?:value|placeholder)=/);
     assert.match(capture, /Nuevo proyecto/);

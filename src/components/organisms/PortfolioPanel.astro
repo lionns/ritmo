@@ -16,7 +16,7 @@ const { progress, outstanding, shelved, areas, activeCount, activeCap } = Astro.
 ---
 
 <section
-  class="portfolio-panel glass-panel p-[22px] md:px-7 md:py-6 xl:max-h-full xl:overflow-y-auto xl:overscroll-contain"
+  class="portfolio-panel glass-panel p-[22px] md:px-7 md:py-6"
   aria-labelledby="portfolio-heading"
 >
   <h2 id="portfolio-heading" class="m-0 font-mono text-[8px] leading-[1.4] font-normal tracking-[0.22em] text-dim uppercase md:text-[9px]">En movimiento</h2>
@@ -53,13 +53,6 @@ const { progress, outstanding, shelved, areas, activeCount, activeCap } = Astro.
 </section>
 
 <style>
-  @media (min-width: 75rem) {
-    .portfolio-panel {
-      scrollbar-color: color-mix(in srgb, var(--page-dim) 72%, transparent) transparent;
-      scrollbar-width: thin;
-    }
-  }
-
   @media (min-width: 75rem) and (max-height: 75rem) {
     .portfolio-panel {
       padding-block: 16px;

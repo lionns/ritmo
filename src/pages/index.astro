@@ -43,11 +43,11 @@ const setupRequired = portfolio?.setupRequired === true;
   <PageStage chartVeiled={setupRequired}>
     <section class="self-center" aria-labelledby="page-title">
       <h1 id="page-title" class="max-w-[760px] font-display text-[clamp(46px,13.2vw,64px)] leading-[0.84] font-semibold tracking-[-0.04em] md:text-[clamp(76px,9.2vw,132px)]">
-        {setupRequired ? "En una semana mala, ¿cuántos proyectos puedes tocar de verdad?" : "Lo que moviste."}
+        {setupRequired ? "Una semana mala." : "Lo que moviste."}
       </h1>
       <p class="mt-6 max-w-[470px] text-[15px] leading-[1.55] text-dim">
         {setupRequired
-          ? "La respuesta fija el límite de las áreas que compiten por tu capacidad."
+          ? "¿Cuántos proyectos puedes tocar de verdad? La respuesta fija el límite de las áreas que compiten por tu capacidad."
           : "Primero lo que tuvo movimiento. Después, lo que puede esperar sin convertirse en presión."}
       </p>
       {readyPortfolio !== null && (

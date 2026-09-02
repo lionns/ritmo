@@ -12,3 +12,4 @@
 2026-09-01 | T-008 | done | the log form: optional minutes, the plan in view, the project as context | 10 files | unit 29/29, isolation, typecheck, build, integration 4/4 | -
 2026-09-01 | T-009 | done | src/lib brought inside the enforced front boundary, and a harness bump reverted | 10 files | unit 29/29, isolation, typecheck, build, integration 4/4 | D-017
 2026-09-02 | T-011 | done | off Cloudflare: the same product on Node and a SQLite file the owner holds | 28 files | unit 29/29, isolation, typecheck, build, integration 6/6 | D-022,D-023
+2026-09-02 | T-012 | done | your own portfolio: setup, areas, projects and a cap you answered | 30 files | unit 33/33, isolation, typecheck, build, integration 7/7 | -
