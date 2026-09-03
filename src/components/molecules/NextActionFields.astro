@@ -1,48 +1,51 @@
 ---
 interface Props {
   idPrefix: string;
+  paired?: boolean;
 }
 
-const { idPrefix } = Astro.props;
+const { idPrefix, paired = false } = Astro.props;
 ---
 
-<div>
-  <label class="mb-2 block text-sm font-medium text-dim" for={`${idPrefix}-trigger`}>Disparador</label>
-  <input
-    class="min-h-[58px] w-full rounded-field border border-glass-border bg-[color-mix(in_srgb,var(--page-bg)_72%,transparent)] px-4 text-base text-ink placeholder:text-faint-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent md:min-h-14"
-    id={`${idPrefix}-trigger`}
-    name="trigger"
-    placeholder="Ej. Cuando abra el documento"
-    required
-  />
-</div>
-<div class="mt-4">
-  <label class="mb-2 block text-sm font-medium text-dim" for={`${idPrefix}-act`}>Acción</label>
-  <input
-    class="min-h-[58px] w-full rounded-field border border-glass-border bg-[color-mix(in_srgb,var(--page-bg)_72%,transparent)] px-4 text-base text-ink placeholder:text-faint-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent md:min-h-14"
-    id={`${idPrefix}-act`}
-    name="act"
-    placeholder="Ej. Escribir el primer párrafo"
-    required
-  />
-</div>
-<div class="mt-4">
-  <label class="mb-2 block text-sm font-medium text-dim" for={`${idPrefix}-obstacle`}>Obstáculo · opcional</label>
-  <input
-    class="min-h-[58px] w-full rounded-field border border-glass-border bg-[color-mix(in_srgb,var(--page-bg)_72%,transparent)] px-4 text-base text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent md:min-h-14"
-    id={`${idPrefix}-obstacle`}
-    name="obstacle"
-  />
-</div>
-<div class="mt-4">
-  <label class="mb-2 block text-sm font-medium text-dim" for={`${idPrefix}-estimate`}>Minutos estimados · opcional</label>
-  <input
-    class="min-h-[58px] w-full rounded-field border border-glass-border bg-[color-mix(in_srgb,var(--page-bg)_72%,transparent)] px-4 font-mono text-base text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent md:min-h-14"
-    id={`${idPrefix}-estimate`}
-    name="estimateMinutes"
-    type="number"
-    min="1"
-    step="1"
-    inputmode="numeric"
-  />
+<div class:list={["grid gap-4", paired && "xl:grid-cols-2"]}>
+  <div>
+    <label class="mb-2 block text-sm font-medium text-dim" for={`${idPrefix}-trigger`}>Disparador</label>
+    <input
+      class="min-h-[58px] w-full rounded-field border border-glass-border bg-[color-mix(in_srgb,var(--page-bg)_72%,transparent)] px-4 text-base text-ink placeholder:text-faint-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent md:min-h-14"
+      id={`${idPrefix}-trigger`}
+      name="trigger"
+      placeholder="Ej. Cuando abra el documento"
+      required
+    />
+  </div>
+  <div>
+    <label class="mb-2 block text-sm font-medium text-dim" for={`${idPrefix}-act`}>Acción</label>
+    <input
+      class="min-h-[58px] w-full rounded-field border border-glass-border bg-[color-mix(in_srgb,var(--page-bg)_72%,transparent)] px-4 text-base text-ink placeholder:text-faint-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent md:min-h-14"
+      id={`${idPrefix}-act`}
+      name="act"
+      placeholder="Ej. Escribir el primer párrafo"
+      required
+    />
+  </div>
+  <div>
+    <label class="mb-2 block text-sm font-medium text-dim" for={`${idPrefix}-obstacle`}>Obstáculo · opcional</label>
+    <input
+      class="min-h-[58px] w-full rounded-field border border-glass-border bg-[color-mix(in_srgb,var(--page-bg)_72%,transparent)] px-4 text-base text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent md:min-h-14"
+      id={`${idPrefix}-obstacle`}
+      name="obstacle"
+    />
+  </div>
+  <div>
+    <label class="mb-2 block text-sm font-medium text-dim" for={`${idPrefix}-estimate`}>Minutos estimados · opcional</label>
+    <input
+      class="min-h-[58px] w-full rounded-field border border-glass-border bg-[color-mix(in_srgb,var(--page-bg)_72%,transparent)] px-4 font-mono text-base text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent md:min-h-14"
+      id={`${idPrefix}-estimate`}
+      name="estimateMinutes"
+      type="number"
+      min="1"
+      step="1"
+      inputmode="numeric"
+    />
+  </div>
 </div>

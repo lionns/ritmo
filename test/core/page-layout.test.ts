@@ -214,6 +214,37 @@ describe("the first-loop page composition", () => {
     assert.match(settings, /activeCount=\{activeCount\}/);
   });
 
+  it("spends the structure card width on paired fields", () => {
+    const settings = source("src/components/organisms/SettingsPanel.astro");
+    const capture = source("src/components/organisms/ProjectCapture.astro");
+    const fields = source("src/components/molecules/NextActionFields.astro");
+    const capFormAt = settings.indexOf("data-cap-form");
+    const projectsPanelAt = settings.indexOf('aria-labelledby="projects-heading"');
+
+    assert.match(settings, /class="[^"]*xl:grid-cols-2[^"]*" data-area-fields/);
+    assert.ok(capFormAt > -1 && capFormAt < projectsPanelAt, "the cap editor belongs to the areas card");
+    assert.match(capture, /class="[^"]*xl:grid-cols-2[^"]*" data-project-fields/);
+    assert.match(capture, /<NextActionFields idPrefix="project-action" paired \/>/);
+    assert.match(fields, /paired && "xl:grid-cols-2"/);
+  });
+
+  it("shows disclosure state and normalises native control chrome", () => {
+    const styles = source("src/styles/global.css");
+    const settings = source("src/components/organisms/SettingsPanel.astro");
+    const cycle = source("src/components/organisms/NextActionCycle.astro");
+    const entry = source("src/components/organisms/EntryForm.astro");
+
+    assert.match(settings, /data-disclosure-marker[^>]*>\+<\/span>/);
+    assert.match(cycle, /data-disclosure-marker[^>]*>\+<\/span>/);
+    assert.match(styles, /details\[open\] > summary \[data-disclosure-marker\][^{]*\{[^}]*rotate\(45deg\)/);
+    assert.match(styles, /\[data-disclosure-marker\][^{]*\{[^}]*transition: transform 120ms/);
+    assert.match(styles, /prefers-reduced-motion: reduce[\s\S]*\[data-disclosure-marker\][^{]*\{[^}]*transition: none/);
+    assert.match(styles, /select,\s*input\[type="number"\][^{]*\{[^}]*appearance: none/);
+    assert.match(styles, /select[^{]*\{[^}]*background-image:/);
+    assert.match(styles, /input\[type="number"\]::-webkit-inner-spin-button/);
+    assert.match(entry, /<select/);
+  });
+
   it("keeps the first and replacement action on one field shape", () => {
     const fields = source("src/components/molecules/NextActionFields.astro");
     const capture = source("src/components/organisms/ProjectCapture.astro");
@@ -223,7 +254,7 @@ describe("the first-loop page composition", () => {
         .map(([input]) => input)
         .find((input) => input.includes(`name="${name}"`)) ?? "";
 
-    assert.match(capture, /<NextActionFields idPrefix="project-action" \/>/);
+    assert.match(capture, /<NextActionFields idPrefix="project-action" paired \/>/);
     assert.match(inputFor("trigger"), /\brequired\b/);
     assert.match(inputFor("act"), /\brequired\b/);
     assert.doesNotMatch(inputFor("obstacle"), /\brequired\b/);

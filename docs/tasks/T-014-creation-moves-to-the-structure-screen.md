@@ -1,7 +1,7 @@
 ---
 id: T-014
 title: Creation moves to the structure screen — `/` goes back to being read
-status: doing
+status: done
 profile: team
 harness: 0.8.1
 role: Frontend Implementer
@@ -122,58 +122,59 @@ implements: [FR-1]
 
 - Changes: moved project creation from the portfolio to `/ajustes`; split areas and projects into
   two glass surfaces; collapsed the reference-only area list; added the empty-portfolio signpost.
-  Owner rounds moved `/ajustes` to document flow, then to a full-width desktop pair with Title text.
-- Files: `AppShell`, `PageStage`, portfolio/settings/project-capture components, `/` and `/ajustes`,
-  design handoff, and page-layout tests. No API, rule, contract or adapter changed.
+  Owner rounds moved it to document flow, a full-width desktop pair, then paired its form fields.
+- Files: shell/stage, portfolio and form components, routes, global styles, handoff and layout tests.
+  No API, rule, contract or adapter changed.
 - Baseline result: clean `npm ci`; unit 36/36, isolation, harness lint, typecheck 0, Node build,
   integration 7/7. Node 26.8.1 warned against the package pin of 24.20.0.
-- Final result: unit 39/39, isolation, typecheck 0, Node build, integration 7/7, lint clean. A built
-  server on throwaway SQLite verified the empty route, two panels, area-to-project capture, three
+- Final result through round 4: unit 41/41, isolation, typecheck 0, Node build, integration 7/7,
+  lint clean. A built server on throwaway SQLite verified the empty route, two panels, capture, three
   projects on `/`, three cycle forms and no project-creation form. Round 2 verified `/ajustes` omits
   viewport/equal-row/panel bounds while `/` retains them. Round 3 verified the 1312px container,
-  Title treatment, two equal desktop tracks and stacked source order; backend scope diff stayed empty.
+  Title treatment and desktop tracks. Round 4 pairs fields, moves the cap editor, turns disclosure
+  markers and normalises native chrome; backend scope diff stayed empty.
 - Decisions recorded: none; the move follows `D-021` and the task's owner-settled handoff.
-- Follow-up: **back to the Frontend Implementer, 2026-09-03, after owner validation round 3.** Four
-  changes, all already specified in the handoff. **Pair the fields** across the 624px —
-  `Nombre|Área`, `Disparador|Acción`, `Obstáculo|Minutos`, and `Nombre|`checkbox in Áreas. **Move
-  the cap editor** into the Áreas card; the `X DE Y ACTIVOS` count stays above the project form.
-  **Animate the disclosure marker**: `+` rotates `45deg` over `120ms`, `motion-reduce` keeps the
-  rotation and drops the transition. **Normalise native control chrome** with `appearance: none` on
-  both `select`s and the cap `number` — this reaches `/registrar`'s select, a deliberate extension,
-  because a rule written per screen is a rule invented twice. Then owner validation round 4.
+- Follow-up: none here. Form errors and the native dropdown list are routed to `T-015`: they span
+  `/ajustes`, `/registrar` and the per-row cycle, so they are a design-system concern rather than
+  this screen's. `T-012`'s `FR-14` findings and the cap floor stay routed to `/semana`.
 
 ## Review
 
-- 2026-09-02 · Reviewer, rounds 1-2, both closed. Round 1: `xl:auto-rows-[minmax(0,1fr)]` gave each
-  card half the stage regardless of content and clipped the Áreas form through the middle of
-  “Crear área”, and the same change left two independent scroll surfaces stacked in one column —
-  worse than the single panel this task started from. Round 2 fixed both cleanly. **Both were the
-  plan's fault**: it asked for two glass surfaces and for every panel to carry the bound as separate
-  requirements, and never said how two panels share the column's height.
-- 2026-09-02 · owner validation round 2 · the round-2 fix was correct and still wrong: at 1440px the
-  headline column took **787px, 60% of the width, to hold a title**. **Third round of fixing a
-  symptom, all three handbacks mine.** The stage is a reading composition and a screen of forms is
-  not one. Settled: `/ajustes` runs full width, headline at Title, two surfaces side by side.
+- 2026-09-02 · Reviewer, rounds 1-2 · equal grid rows clipped the Áreas form through the middle of
+  “Crear área” and left two scroll surfaces stacked in one column — worse than the single panel this
+  task started from. Round 2 fixed both, and was still wrong: at 1440px the headline column took
+  **787px, 60% of the width, to hold a title**. **All three handbacks were the plan's**, which asked
+  for two surfaces and for every panel to be bounded without saying how they share the height.
+  Settled: `/ajustes` runs full width, headline at Title, two surfaces side by side.
 - 2026-09-03 · Reviewer, round 3, **measured in a browser rather than read off the CSS** — the first
   round on this screen where that was possible. Verified: two cards at **624px each**, nothing
   clipped (`scrollHeight == clientHeight` on both), headline at Title, no `col-start`, `row-span` or
   `font-display`. Five gates green: unit 39/39, isolation, typecheck 0, build, integration 7/7.
-- **Medium · the imbalance turned vertical.** Áreas measures **465px** against Proyectos' **1091px**
-  — a **627px void** under the short card — and the page scrolls **635px**. The cause: the cards are
-  624px wide while every field is single-column, so `Minutos estimados` renders a **566px input**.
-  The width was spent on length instead of height · pair the fields and move the 120px cap editor —
-  ~501px against ~719px, which holds a 900px viewport. ~218px apart reads as two cards; 627px reads
-  as a hole, and two cards of different content are not made to match.
-- **"Short enough that the page does not scroll at all" was mine and was wrong.** I wrote it into
-  § Setup and Capture without measuring. The section now carries the measured numbers and says so.
-- 2026-09-03 · owner validation round 3, two findings, both unwritten rules rather than slips · the
-  disclosure marker is a static `+` with no rotation or transition, so an opened list looks
-  identical to a closed one · and nothing in `src/` sets `appearance`, so `select` and `number`
-  inherit OS chrome and differ per browser · § Interaction States now carries both as rules, because
-  neither was written anywhere and both would be invented again on the next screen.
+- **Medium · the imbalance turned vertical.** Áreas **465px** against Proyectos' **1091px** — a
+  **627px void** — because the cards were 624px wide while every field was single-column, so
+  `Minutos estimados` rendered a **566px input**: the width went into length instead of height.
+  Two cards of different content are not made to match; 627px reads as a hole. **And "short enough
+  that the page does not scroll at all" was mine and was wrong** — written into § Setup and Capture
+  without measuring, now replaced there by the measured numbers.
+- 2026-09-03 · owner validation round 3, two findings, both unwritten rules rather than slips: a
+  static `+` that never changes on open, and nothing in `src/` setting `appearance`, so `select` and
+  `number` inherited OS chrome. § Interaction States now carries both as rules — an unwritten rule
+  gets invented again on the next screen.
+- 2026-09-03 · Reviewer, round 4, **measured in a browser**: Áreas **554px** against Proyectos'
+  **651px** — a **97px** difference where round 3 measured 627px, and better than the ~218px this
+  review predicted. Fields pair at **275px** each, the cap editor sits with the areas, nothing is
+  clipped, the chevron uses the `dim` token exactly, the number loses its spinners, and the `+`
+  rotates 45° over 120ms with `motion-reduce` keeping the rotation. Five gates green: unit 41/41,
+  isolation, typecheck 0, build, integration 7/7. The page still scrolls 195px at a 1009px viewport
+  — that is the whole page with header, chart and footer, not card imbalance. Said plainly here
+  because the last version of this record over-promised the opposite.
 - Nit · `PageStage.astro` · the bound selector is no longer positional, which closed the `T-012` nit.
+- **Recommended for owner validation, and closed on it.** Four rounds, three of them on layout, and
+  every handback was the plan's rather than the implementer's. What that cost is recorded above; what
+  it bought is a screen the owner accepted and a rule — data-entry routes get the width, reading
+  routes get the stage — that the next form screen does not have to re-derive.
 
 ## Validation
 
-- Validated by:
-- Date:
+- Validated by: Juan Sebastián León Velásquez
+- Date: 2026-09-03

@@ -13,7 +13,7 @@ const formPrefix = `next-action-${project.id}`;
 <details class="border-t border-hair" data-action-cycle>
   <summary class="flex min-h-[58px] cursor-pointer list-none items-center justify-between gap-4 py-3 text-sm font-medium text-dim marker:content-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent md:min-h-14">
     <span>{project.nextAction === null ? "Escribir la próxima acción" : "Cerrar y escribir la siguiente"}</span>
-    <span class="font-mono text-[13px] text-faint-text" aria-hidden="true">+</span>
+    <span class="font-mono text-[13px] text-faint-text" data-disclosure-marker aria-hidden="true">+</span>
   </summary>
   <form class="pb-5" data-next-action-form>
     <input type="hidden" name="projectId" value={project.id} />

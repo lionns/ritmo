@@ -14,3 +14,4 @@
 2026-09-02 | T-011 | done | off Cloudflare: the same product on Node and a SQLite file the owner holds | 28 files | unit 29/29, isolation, typecheck, build, integration 6/6 | D-022,D-023
 2026-09-02 | T-012 | done | your own portfolio: setup, areas, projects and a cap you answered | 30 files | unit 33/33, isolation, typecheck, build, integration 7/7 | -
 2026-09-02 | T-013 | done | the next action: write one, close it, write the next | 20 files | unit 36/36, isolation, typecheck, build, integration 7/7 | -
+2026-09-03 | T-014 | done | creation moves to the structure screen, and it stops fighting the stage | 12 files | unit 41/41, isolation, typecheck, build, integration 7/7 | -
