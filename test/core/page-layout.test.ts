@@ -222,6 +222,8 @@ describe("the first-loop page composition", () => {
     const projectsPanelAt = settings.indexOf('aria-labelledby="projects-heading"');
 
     assert.match(settings, /class="[^"]*xl:grid-cols-2[^"]*" data-area-fields/);
+    assert.match(settings, /xl:grid-rows-\[auto_auto_auto\]/);
+    assert.equal(settings.match(/xl:\[grid-template-rows:subgrid\]/g)?.length, 2);
     assert.ok(capFormAt > -1 && capFormAt < projectsPanelAt, "the cap editor belongs to the areas card");
     assert.match(capture, /class="[^"]*xl:grid-cols-2[^"]*" data-project-fields/);
     assert.match(capture, /<NextActionFields idPrefix="project-action" paired \/>/);
@@ -277,6 +279,9 @@ describe("the first-loop page composition", () => {
     assert.match(errorLogic, /setAttribute\("aria-invalid", "true"\)/);
     assert.match(errorLogic, /classList\.toggle\("text-ink", state === "error"\)/);
     assert.match(listbox, /close\(true\)/);
+    assert.match(listbox, /event\.key === "Enter" \|\| event\.key === " "\) \{[\s\S]*?return;/);
+    assert.match(listbox, /event\.key === "ArrowDown" \|\| event\.key === "ArrowUp"\)[\s\S]*?trigger\.click\(\)/);
+    assert.match(listbox, /open\(selectedOptionIndex\(\)\)/);
     assert.match(styles, /\[data-field-control\]\[aria-invalid="true"\][^{]*\{[^}]*border-style: dashed/);
     assert.equal(allSource.match(/data-form-status/g)?.length, 6);
     assert.equal(allSource.match(/data-field-error/g)?.length ?? 0, 0, "field errors come from the shared atom");

@@ -117,6 +117,9 @@ const labelClass = labelKind === "eyebrow"
       listbox.focus();
     };
 
+    const selectedOptionIndex = () =>
+      Math.max(0, options.findIndex((option) => option.getAttribute("aria-selected") === "true"));
+
     const close = (returnFocus: boolean) => {
       listbox.hidden = true;
       listbox.removeAttribute("aria-activedescendant");
@@ -157,19 +160,23 @@ const labelClass = labelKind === "eyebrow"
 
     trigger.addEventListener("click", () => {
       if (trigger.getAttribute("aria-expanded") === "true") close(true);
-      else open();
+      else open(selectedOptionIndex());
     });
 
     trigger.addEventListener("keydown", (event) => {
-      if (event.key === "ArrowDown" || event.key === "ArrowUp" || event.key === "Home" || event.key === "End") {
+      if (event.key === "Enter" || event.key === " ") {
+        // Preserve the button's native keyboard click, which follows this keydown.
+        return;
+      }
+      if (event.key === "ArrowDown" || event.key === "ArrowUp") {
         event.preventDefault();
-        open(moveListboxIndex(activeIndex, options.length, event.key));
-      } else if (event.key === "Enter" || event.key === " ") {
+        if (trigger.getAttribute("aria-expanded") === "false") trigger.click();
+      } else if (event.key === "Home" || event.key === "End") {
         event.preventDefault();
-        open();
+        open(event.key === "Home" ? 0 : options.length - 1);
       } else if (event.key.length === 1 && !event.ctrlKey && !event.metaKey && !event.altKey) {
         event.preventDefault();
-        open();
+        open(selectedOptionIndex());
         search(event.key);
       }
     });

@@ -14,3 +14,11 @@
   - blockers: browser-only acceptance and the required independent review/owner validation
   - decisions: none
   - follow-up: run both listboxes at 1440px and 390px, then review and owner validation
+  - round 1 follow-up: preserved native `Enter`/`Space` clicks, routed arrows through the same open
+    path, reset active state to the selected option, and replaced Áreas end-alignment with shared
+    label/control/error subgrid rows
+  - regression: layout/source checks cover the native-click branch, arrow click path and two shared
+    subgrids; the built response contains the revised inline handler and the CSS contains `subgrid`
+  - current checks: unit 49/49, typecheck 0, build, integration 7/7 and diff check green
+  - browser: the required browser connection and recovery check found no available instance
+  - follow-up: Reviewer round 2 must repeat the keyboard and Áreas position probes in a browser

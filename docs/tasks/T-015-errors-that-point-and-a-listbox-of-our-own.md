@@ -71,9 +71,9 @@ implements: [NFR-7]
       distinguishable without reading them.
 - [x] `grep -rn "<select" src/` returns nothing; both replacements expose `role="listbox"` with
       `role="option"` children and set `aria-activedescendant` while open.
-- [ ] The listbox is operable by keyboard alone: open, move with arrows and `Home`/`End`, choose
+- [x] The listbox is operable by keyboard alone: open, move with arrows and `Home`/`End`, choose
       with `Enter`, dismiss with `Esc`, and focus returns to the trigger. Verified in a browser.
-- [ ] Every option is at least 58px tall on mobile and 56px on desktop, measured in a browser.
+- [x] Every option is at least 58px tall on mobile and 56px on desktop, measured in a browser.
 - [x] Creating a project and writing an entry both still work end to end, with the same request
       bodies as before.
 - [x] All five gates green from a clean `npm ci`, and `node scripts/harness-lint.mjs` clean.
@@ -122,39 +122,49 @@ implements: [NFR-7]
   server on throwaway SQLite rendered two listboxes and no selects; project and entry POSTs returned
   201 with the existing request keys. The first lint pass named the missing trace; adding it closed it.
 - Decisions recorded: none; the implementation follows D-021 and the task's owner-settled handoff.
-- Follow-up: **back to the Frontend Implementer, 2026-09-03, after Reviewer round 1.** Two Medium.
-  **Open the listbox from the keyboard** — `Enter`, `Space` and `ArrowDown` on the closed trigger
-  must open it and put the active option on the selected row; today the keydown is consumed and no
-  `click` fires. **Make the paired cells structurally symmetric** so an error grows a row shared by
-  both fields instead of sliding the one without a label. Nothing else is reopened: the ARIA, the
-  three error channels and the target sizes all measured correct. Then Reviewer round 2.
+- Reviewer round 1 fixes: `Enter` and `Space` now keep the button's native click, arrows open through
+  the same click path, and every open starts on the selected option. The Áreas pair now shares three
+  desktop subgrid rows, so its label, control and error heights are structural rather than end-aligned.
+- Follow-up: none. Both Medium closed and verified by the probes that found them. The `T-012`
+  `FR-14` findings and the cap floor stay routed to `/semana`.
 
 ## Review
 
 - 2026-09-03 · Reviewer, round 1, **measured in a browser** as this task's Verification requires.
-  Five gates green: unit 49/49, isolation, typecheck 0, build, integration 7/7, lint. Verified:
-  `grep -rn "<select" src/` returns nothing, six forms carry `novalidate`, and the listbox exposes
-  `role="listbox"`, `role="option"`, `aria-activedescendant` and `aria-selected`. Options measure
-  **56px at desktop and 58px at 390px**, trigger 58px. Errors carry `aria-invalid="true"` and an
-  `aria-describedby` pointing at the message id, and use **three channels** — dashed border, `ink`,
-  and an `aria-hidden` `↑` — so no field is marked by colour alone and nothing is red (`NFR-8`).
-  Empty error slots are `hidden` at zero height; a first read of their `textContent` looked like
-  stray arrows and was not.
-- **Medium · the listbox cannot be opened from the keyboard**, which fails the criterion in so many
-  words · probed rather than assumed, because the alternative explanation was my own tooling: with
-  the trigger focused, `Enter` produces `keydown: ["Enter"]` on the button and **`click: 0`**, and
-  `aria-expanded` stays `false`. `Space` and `ArrowDown` behave the same. A `<button type="button">`
-  fires `click` on `Enter`, so the component's own keydown handler is consuming the key while closed
-  instead of opening · this is the risk this task named: half-right is worse than the `<select>` it
-  replaced, which opened on all three keys.
-- **Medium · `SettingsPanel.astro`, the Áreas row · an error slides the checkbox 29px out of
-  alignment**, which the owner found on sight. The row is `display: grid` with
-  `align-items: flex-end`, chosen so the boxes line up although “Nombre” carries a label and the
-  checkbox does not. When the message appears the name cell grows 56px → **114px** and the checkbox,
-  pinned to the row's end, drops. Confirmed by contrast: the project form's pairs move **together**
-  (`Nombre`/`Área` hold, `Disparador`/`Acción` both drop 30px) because both its cells have labels ·
-  the defect is the row's structural asymmetry, not the error treatment · make the pair share
-  label/control/error rows so either error grows a common row and neither control moves.
+  Five gates green: unit 49/49, integration 7/7. `grep "<select"` returns nothing, six forms carry
+  `novalidate`, the listbox exposes `role="listbox"`, `role="option"`, `aria-activedescendant` and
+  `aria-selected`, options measure **56px desktop / 58px at 390px**, and errors carry `aria-invalid`
+  plus `aria-describedby` and use **three channels** — dashed border, `ink`, an `aria-hidden` `↑` —
+  so nothing is marked by colour alone and nothing is red (`NFR-8`). Empty error slots are `hidden`
+  at zero height; their `textContent` read as stray arrows and was not.
+- **Medium · the listbox could not be opened from the keyboard** · probed rather than assumed: with
+  the trigger focused, `Enter` produced `keydown: ["Enter"]` and **`click: 0`**, `aria-expanded`
+  staying `false`; `Space` and `ArrowDown` the same. A `<button type="button">` fires `click` on
+  `Enter`, so the component's own handler was consuming the key while closed. Exactly the risk this
+  task named: half-right is worse than the `<select>` it replaced.
+- **Medium · the Áreas row slid the checkbox 29px out of alignment** when an error appeared — the
+  owner's finding. `align-items: flex-end` on asymmetric cells: “Nombre” has a label, the checkbox
+  does not, the name cell grew 56 → **114px** and the checkbox pinned to the row's end dropped.
+  Confirmed by contrast — the project form's pairs move **together**, both cells having labels.
+- 2026-09-03 · Reviewer, round 2 · **both Medium closed, each verified by the same probe that found
+  it.** The keyboard now opens the listbox, and the event sequence is the proof:
+  `btn:keydown(Enter)` → **`btn:click`** — zero in round 1 — → open → focus to the listbox →
+  `aria-activedescendant=project-area-option-0`. The handler returns early for `Enter`/`Space` so the
+  button's native keyboard click survives. Full keyboard walked end to end: `ArrowDown` moves the
+  active option, `End` jumps to the last, `Enter` commits (trigger text and `aria-selected` follow,
+  focus returns to the trigger, the hidden input carries the id), `Escape` closes without committing
+  and returns focus. Options measure 56px at desktop and 58px at 390px, so both criteria this task
+  left open are now met and checked.
+- The Áreas row holds: name input and checkbox both at y=381 **before and after** the message —
+  0px of movement, where round 1 measured 29. CSS `subgrid` with an `aria-hidden` label spacer, so
+  the pair shares label/control/error rows; support confirmed rather than assumed. The `✓` on every
+  option is `aria-hidden`, so `aria-selected` carries the state alone. End to end: a project created
+  **through the form**, its area chosen by keyboard, lands with that area and its next action.
+- **Method note.** Several key presses registered no events at all until a real mouse click
+  established user activation in the tab, which read naively looks like a dead control. Round 1's
+  finding stands — that probe did capture the keydown with `click: 0` — but a keyboard result here
+  is only trustworthy with its event log beside it, which is why the log is quoted, not the verdict.
+- **Recommended for owner validation.**
 
 ## Validation
 
