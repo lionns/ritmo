@@ -1,7 +1,7 @@
 ---
 id: T-015
 title: Errors that point at the field, and a listbox that is ours
-status: doing
+status: done
 profile: team
 harness: 0.8.1
 role: Frontend Implementer
@@ -118,15 +118,18 @@ implements: [NFR-7]
   styles, design handoff, focused unit/layout tests, and task/trace records. Backend scope is untouched.
 - Baseline result: clean `npm ci`; unit 41/41, isolation, harness lint, typecheck 0 and Node build
   green. Node 26.8.1 warned against the package pin of 24.20.0.
-- Final result: unit 49/49, isolation, typecheck 0, Node build and integration 7/7 green. A built
-  server on throwaway SQLite rendered two listboxes and no selects; project and entry POSTs returned
-  201 with the existing request keys. The first lint pass named the missing trace; adding it closed it.
+- Final result, re-run at close: unit 49/49, isolation, typecheck 0, Node build, integration 7/7,
+  lint clean. Verified in a browser rather than from the source: the listbox opens from the keyboard
+  (`keydown(Enter)` → `click` → open → focus), arrows and `End` move, `Enter` commits and returns
+  focus, `Escape` closes uncommitted; options 56px desktop and 58px at 390px; the Áreas pair holds
+  at 0px of movement when an error appears; and a project created through the form with its area
+  chosen by keyboard lands with that area and its next action.
 - Decisions recorded: none; the implementation follows D-021 and the task's owner-settled handoff.
 - Reviewer round 1 fixes: `Enter` and `Space` now keep the button's native click, arrows open through
   the same click path, and every open starts on the selected option. The Áreas pair now shares three
   desktop subgrid rows, so its label, control and error heights are structural rather than end-aligned.
-- Follow-up: none. Both Medium closed and verified by the probes that found them. The `T-012`
-  `FR-14` findings and the cap floor stay routed to `/semana`.
+- Follow-up: none. The `T-012` `FR-14` findings and the cap floor stay routed to `/semana`, which
+  is the next screen and now inherits three of them.
 
 ## Review
 
@@ -146,15 +149,12 @@ implements: [NFR-7]
   owner's finding. `align-items: flex-end` on asymmetric cells: “Nombre” has a label, the checkbox
   does not, the name cell grew 56 → **114px** and the checkbox pinned to the row's end dropped.
   Confirmed by contrast — the project form's pairs move **together**, both cells having labels.
-- 2026-09-03 · Reviewer, round 2 · **both Medium closed, each verified by the same probe that found
-  it.** The keyboard now opens the listbox, and the event sequence is the proof:
-  `btn:keydown(Enter)` → **`btn:click`** — zero in round 1 — → open → focus to the listbox →
-  `aria-activedescendant=project-area-option-0`. The handler returns early for `Enter`/`Space` so the
-  button's native keyboard click survives. Full keyboard walked end to end: `ArrowDown` moves the
-  active option, `End` jumps to the last, `Enter` commits (trigger text and `aria-selected` follow,
-  focus returns to the trigger, the hidden input carries the id), `Escape` closes without committing
-  and returns focus. Options measure 56px at desktop and 58px at 390px, so both criteria this task
-  left open are now met and checked.
+- 2026-09-03 · Reviewer, round 2 · **both Medium closed, each verified by the probe that found it.**
+  The event sequence is the proof: `btn:keydown(Enter)` → **`btn:click`** — zero in round 1 — →
+  open → focus to the listbox → active option set. The handler returns early for `Enter`/`Space` so
+  the button's native keyboard click survives. `ArrowDown` moves, `End` jumps, `Enter` commits with
+  trigger text, `aria-selected` and focus following, `Escape` closes uncommitted. Options 56px
+  desktop / 58px at 390px, so both criteria left open are met and checked.
 - The Áreas row holds: name input and checkbox both at y=381 **before and after** the message —
   0px of movement, where round 1 measured 29. CSS `subgrid` with an `aria-hidden` label spacer, so
   the pair shares label/control/error rows; support confirmed rather than assumed. The `✓` on every
@@ -168,5 +168,5 @@ implements: [NFR-7]
 
 ## Validation
 
-- Validated by:
-- Date:
+- Validated by: Juan Sebastián León Velásquez
+- Date: 2026-09-03
