@@ -318,9 +318,18 @@ own submit button.
 Instead, at `≥1200px` `/ajustes` runs full width: **`La estructura.` drops from Display to Title**
 (20/17px, Switzer 600 — the headline names the page rather than carrying it), its sentence sits
 below, and the two glass surfaces sit **side by side across the full 1312px**, roughly 624px each
-with the `2xl` column gap. Both are then short enough that the page does not scroll at all, which is
-the actual fix: nothing is bounded, nothing is clipped, and nothing is hidden. Below `1200px` they
-stack in document flow as every other screen does.
+with the `2xl` column gap. Below `1200px` they stack in document flow as every other screen does.
+
+**The width is for pairing fields, not for widening them.** Measured in the browser on 2026-09-03,
+after the first full-width build shipped single-column fields inside 624px cards: every input ran
+566px wide to hold “45”, which spent the width on length instead of height and left Áreas at 465px
+beside Proyectos at 1091px — a 627px void under the short card, and 635px of page scroll. Fields
+pair across the card — `Nombre|Área`, `Disparador|Acción`, `Obstáculo|Minutos` — and the cap
+**editor** sits with the areas while the `X DE Y ACTIVOS` count stays above the project form, where
+it is read. That brings the pair to roughly 501px and 719px, so a 900px viewport holds the screen
+without scrolling. **Two cards of different content will not match, and are not made to**: ~218px
+apart reads as two cards, ~627px reads as a hole. This paragraph carried "short enough that the page
+does not scroll at all" until 2026-09-03; that was written without measuring and was wrong.
 
 A panel that *is* a direct child of a bounded stage still carries the bound, independent of child
 position — that part of the 2026-09-02 work stands and is what `/` relies on. **The rule this
@@ -409,6 +418,15 @@ compact height mode contracts the outer padding of a row and the gaps between bl
 | **Empty** | A sentence, never an illustration: "Aún no hay nada aquí. Escribe la primera línea." |
 | **Error** | `ink` on `glass`, stated as a fact, with the action to fix it. Never red (NFR-8). |
 | **Success** | The chart mark grows. That is the whole confirmation — no toast. |
+| **Disclosure** | The marker turns, it never swaps glyph. A `+` rotates `45deg` into an `×` over `120ms`; `motion-reduce` removes the transition, not the rotation. A summary that looks the same open and closed has not confirmed the tap. |
+
+**Native control chrome is normalised, never inherited.** Added 2026-09-03, after the owner found
+`select` rendering differently across browsers. A `select`, a `number` input and any other control
+the OS decorates gets `appearance: none` and the project's own affordance — a `dim` chevron for a
+`select`, no spinners on a number — so the same field looks the same on macOS, Windows and Linux.
+The rule is the control, not the screen: a new control answers this here rather than per form.
+Keyboard behaviour and the 58/56px target are unchanged by the reset, and the shared focus outline
+still applies.
 
 **Targets are 56px desktop / 58px mobile, minimum.** Fitts: the earlier mobile CTA had a glass ring
 around the button, which made the real target smaller than the thing the eye read as the target.

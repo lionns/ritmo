@@ -16,7 +16,7 @@ const activeCount = settings.projects.filter(
 const areaCountLabel = `${settings.areas.length} ${settings.areas.length === 1 ? "área" : "áreas"}`;
 ---
 
-<section class="glass-panel p-[22px] md:p-7 xl:col-start-2" aria-labelledby="areas-heading">
+<section class="glass-panel p-[22px] md:p-7" aria-labelledby="areas-heading">
   <h2 id="areas-heading" class="font-mono text-[8px] leading-[1.4] tracking-[0.22em] text-dim uppercase md:text-[9px]">Áreas</h2>
   <form class="mt-4" data-area-form>
     <label class="mb-2 block text-sm font-medium text-dim" for="area-name">Nombre</label>
@@ -49,7 +49,7 @@ const areaCountLabel = `${settings.areas.length} ${settings.areas.length === 1 ?
   }
 </section>
 
-<section class="glass-panel p-[22px] md:p-7 xl:col-start-2" aria-labelledby="projects-heading">
+<section class="glass-panel p-[22px] md:p-7" aria-labelledby="projects-heading">
   <h2 id="projects-heading" class="font-mono text-[8px] leading-[1.4] tracking-[0.22em] text-dim uppercase md:text-[9px]">Proyectos</h2>
   <form class="mt-5" data-cap-form>
     <label class="mb-2 block text-sm font-medium text-dim" for="active-cap">Proyectos en una semana mala</label>

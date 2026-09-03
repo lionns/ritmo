@@ -1,7 +1,7 @@
 ---
 id: T-014
 title: Creation moves to the structure screen — `/` goes back to being read
-status: review
+status: doing
 profile: team
 harness: 0.8.1
 role: Frontend Implementer
@@ -122,7 +122,7 @@ implements: [FR-1]
 
 - Changes: moved project creation from the portfolio to `/ajustes`; split areas and projects into
   two glass surfaces; collapsed the reference-only area list; added the empty-portfolio signpost.
-  After owner round 1, `/ajustes` now grows with its content and leaves panel bounding to `/`.
+  Owner rounds moved `/ajustes` to document flow, then to a full-width desktop pair with Title text.
 - Files: `AppShell`, `PageStage`, portfolio/settings/project-capture components, `/` and `/ajustes`,
   design handoff, and page-layout tests. No API, rule, contract or adapter changed.
 - Baseline result: clean `npm ci`; unit 36/36, isolation, harness lint, typecheck 0, Node build,
@@ -130,39 +130,48 @@ implements: [FR-1]
 - Final result: unit 39/39, isolation, typecheck 0, Node build, integration 7/7, lint clean. A built
   server on throwaway SQLite verified the empty route, two panels, area-to-project capture, three
   projects on `/`, three cycle forms and no project-creation form. Round 2 verified `/ajustes` omits
-  viewport/equal-row/panel bounds while `/` retains them; backend scope diff stayed empty.
+  viewport/equal-row/panel bounds while `/` retains them. Round 3 verified the 1312px container,
+  Title treatment, two equal desktop tracks and stacked source order; backend scope diff stayed empty.
 - Decisions recorded: none; the move follows `D-021` and the task's owner-settled handoff.
-- Follow-up: **back to the Frontend Implementer, 2026-09-02, after owner validation round 2.**
-  `/ajustes` leaves the two-column stage for a full-width layout: headline at Title size, the two
-  glass surfaces side by side across 1312px at `≥1200px`, stacked below that. `boundedPanels` and
-  `pageScroll` stay as built — `/` needs the first, and this route needs the second only until the
-  cards fit, which they should. § Setup and Capture is already written. Then owner validation
-  round 3, which is where this one has to be judged: by looking.
+- Follow-up: **back to the Frontend Implementer, 2026-09-03, after owner validation round 3.** Four
+  changes, all already specified in the handoff. **Pair the fields** across the 624px —
+  `Nombre|Área`, `Disparador|Acción`, `Obstáculo|Minutos`, and `Nombre|`checkbox in Áreas. **Move
+  the cap editor** into the Áreas card; the `X DE Y ACTIVOS` count stays above the project form.
+  **Animate the disclosure marker**: `+` rotates `45deg` over `120ms`, `motion-reduce` keeps the
+  rotation and drops the transition. **Normalise native control chrome** with `appearance: none` on
+  both `select`s and the cap `number` — this reaches `/registrar`'s select, a deliberate extension,
+  because a rule written per screen is a rule invented twice. Then owner validation round 4.
 
 ## Review
 
-- 2026-09-02 · Reviewer, round 1 · five gates green: unit 38/38, isolation, typecheck 0 errors,
-  build, integration 7/7, lint clean. The move itself is right — creation is off `/`, the two
-  surfaces exist, the cap sits beside the projects it governs, and the selector is no longer
-  positional, which was the stated prerequisite.
-- **Medium · `PageStage.astro` · `xl:auto-rows-[minmax(0,1fr)]` gives each card exactly half the
-  stage regardless of content, so the Áreas form is clipped through the middle of “Crear área”.**
-  Traced rather than guessed: the headline takes `xl:row-span-2` in column one, both panels take
-  `xl:col-start-2` into rows one and two, equal rows size each to half the viewport, and
-  `max-height:100%; overflow-y:auto` does the cutting. A form whose submit button is sliced reads as
-  broken, not as scrollable · the owner found it on sight.
-- **Medium · the same change leaves two independent scroll surfaces stacked in one column**, which
-  is worse than the single panel this task started from: nothing says which region scrolls, page and
-  card scrollbars compete, and content hides with no affordance. This is what the owner named as
-  "no es intuitivo", and it is the more important of the two.
-- **Both are the plan's fault, not the implementer's.** This task asked for two glass surfaces and
-  for every panel to carry the bound as separate requirements, and never said how two panels share
-  the column's height. Those two rules taken literally produce exactly what shipped.
-- Settled with the owner 2026-09-02: **`/ajustes` stops being a bounded stage and scrolls as a
-  page.** § Responsive Behavior bounds the stage so the *portfolio* fits without scrolling and calls
-  internal scrolling a fallback for exceptional content — a screen of forms is neither. Panels stay
-  bounded on `/`, which is what the portfolio relies on. § Setup and Capture corrected with the
-  reasoning; `src/` is the implementer's.
+- 2026-09-02 · Reviewer, rounds 1-2, both closed. Round 1: `xl:auto-rows-[minmax(0,1fr)]` gave each
+  card half the stage regardless of content and clipped the Áreas form through the middle of
+  “Crear área”, and the same change left two independent scroll surfaces stacked in one column —
+  worse than the single panel this task started from. Round 2 fixed both cleanly. **Both were the
+  plan's fault**: it asked for two glass surfaces and for every panel to carry the bound as separate
+  requirements, and never said how two panels share the column's height.
+- 2026-09-02 · owner validation round 2 · the round-2 fix was correct and still wrong: at 1440px the
+  headline column took **787px, 60% of the width, to hold a title**. **Third round of fixing a
+  symptom, all three handbacks mine.** The stage is a reading composition and a screen of forms is
+  not one. Settled: `/ajustes` runs full width, headline at Title, two surfaces side by side.
+- 2026-09-03 · Reviewer, round 3, **measured in a browser rather than read off the CSS** — the first
+  round on this screen where that was possible. Verified: two cards at **624px each**, nothing
+  clipped (`scrollHeight == clientHeight` on both), headline at Title, no `col-start`, `row-span` or
+  `font-display`. Five gates green: unit 39/39, isolation, typecheck 0, build, integration 7/7.
+- **Medium · the imbalance turned vertical.** Áreas measures **465px** against Proyectos' **1091px**
+  — a **627px void** under the short card — and the page scrolls **635px**. The cause: the cards are
+  624px wide while every field is single-column, so `Minutos estimados` renders a **566px input**.
+  The width was spent on length instead of height · pair the fields and move the 120px cap editor —
+  ~501px against ~719px, which holds a 900px viewport. ~218px apart reads as two cards; 627px reads
+  as a hole, and two cards of different content are not made to match.
+- **"Short enough that the page does not scroll at all" was mine and was wrong.** I wrote it into
+  § Setup and Capture without measuring. The section now carries the measured numbers and says so.
+- 2026-09-03 · owner validation round 3, two findings, both unwritten rules rather than slips · the
+  disclosure marker is a static `+` with no rotation or transition, so an opened list looks
+  identical to a closed one · and nothing in `src/` sets `appearance`, so `select` and `number`
+  inherit OS chrome and differ per browser · § Interaction States now carries both as rules, because
+  neither was written anywhere and both would be invented again on the next screen.
+- Nit · `PageStage.astro` · the bound selector is no longer positional, which closed the `T-012` nit.
 
 ## Validation
 

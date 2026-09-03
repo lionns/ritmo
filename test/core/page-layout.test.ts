@@ -10,7 +10,7 @@ const source = (path: string) =>
 describe("the first-loop page composition", () => {
   it("centres both columns while keeping the chart in document flow", () => {
     const stage = source("src/components/organisms/PageStage.astro");
-    const mainClass = stage.match(/<main[\s\S]*?class="([^"]+)"/)?.[1];
+    const mainClass = stage.match(/"stage-main ([^"]+)"/)?.[1];
     const chartClass = stage.match(/"pointer-events-none ([^"]+)"/)?.[1];
 
     assert.ok(mainClass, "the stage needs a main layout class");
@@ -48,15 +48,22 @@ describe("the first-loop page composition", () => {
     assert.match(stage, /overscroll-behavior: contain/);
   });
 
-  it("lets the structure screen use the document scrollbar", () => {
+  it("gives the structure screen a full-width document flow", () => {
     const shell = source("src/layouts/AppShell.astro");
+    const stage = source("src/components/organisms/PageStage.astro");
     const settingsPage = source("src/pages/ajustes.astro");
+    const settingsPanel = source("src/components/organisms/SettingsPanel.astro");
 
     assert.match(shell, /pageScroll\?: boolean/);
     assert.match(shell, /!pageScroll && "xl:h-dvh xl:min-h-0"/);
     assert.match(shell, /!pageScroll && "xl:h-full xl:min-h-0"/);
     assert.match(settingsPage, /<AppShell[^>]*pageScroll>/);
-    assert.match(settingsPage, /<PageStage chartVeiled boundedPanels=\{false\}>/);
+    assert.match(settingsPage, /<PageStage chartVeiled boundedPanels=\{false\} fullWidth>/);
+    assert.match(stage, /fullWidth\s*\? "xl:grid-cols-2 xl:items-start xl:gap-x-16 xl:gap-y-8"/);
+    assert.match(settingsPage, /class="xl:col-span-2"/);
+    assert.match(settingsPage, /text-\[17px\][^\n]*md:text-xl/);
+    assert.doesNotMatch(settingsPage, /font-display|row-span/);
+    assert.doesNotMatch(settingsPanel, /col-start/);
   });
 
   it("compacts decoration by height without shrinking interactive targets", () => {

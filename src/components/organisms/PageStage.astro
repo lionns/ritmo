@@ -2,14 +2,20 @@
 interface Props {
   chartVeiled?: boolean;
   boundedPanels?: boolean;
+  fullWidth?: boolean;
 }
 
-const { chartVeiled = false, boundedPanels = true } = Astro.props;
+const { chartVeiled = false, boundedPanels = true, fullWidth = false } = Astro.props;
 ---
 
 <div class="page-stage flex min-h-0 flex-1 flex-col">
   <main
-    class="stage-main grid min-h-0 flex-1 items-center gap-[46px] xl:grid-cols-[minmax(0,1fr)_clamp(400px,32vw,480px)] xl:gap-x-16 xl:gap-y-6"
+    class:list={[
+      "stage-main grid min-h-0 flex-1 items-center gap-[46px]",
+      fullWidth
+        ? "xl:grid-cols-2 xl:items-start xl:gap-x-16 xl:gap-y-8"
+        : "xl:grid-cols-[minmax(0,1fr)_clamp(400px,32vw,480px)] xl:gap-x-16 xl:gap-y-6",
+    ]}
     data-bounded-panels={boundedPanels ? "true" : undefined}
   >
     <slot />
