@@ -16,3 +16,4 @@
 2026-09-02 | T-013 | done | the next action: write one, close it, write the next | 20 files | unit 36/36, isolation, typecheck, build, integration 7/7 | -
 2026-09-03 | T-014 | done | creation moves to the structure screen, and it stops fighting the stage | 12 files | unit 41/41, isolation, typecheck, build, integration 7/7 | -
 2026-09-03 | T-015 | done | errors that point at the field, and a listbox with real keyboard support | 18 files | unit 49/49, isolation, typecheck, build, integration 7/7 | -
+2026-09-03 | T-016 | done | the harness records leave Ritmo, and the vendored copy moves to 0.9.0 | 21 files | unit 45/45, isolation, typecheck, build, integration 7/7, lock verified | -

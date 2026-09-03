@@ -8,7 +8,6 @@ Harness `0.9.0` · profile `team`
 
 | Task | State | Goal |
 |---|---|---|
-| [T-016](docs/tasks/T-016-stop-carrying-the-harness.md) | `review` | Remove the harness governance this repository authored in place — one done task, one never |
 | [T-001](docs/tasks/T-001-skeleton-and-next-action.md) | `done` | Stand up the three-layer tree with every quality-gate command real and green, and prove it by |
 | [T-003](docs/tasks/T-003-loose-ends.md) | `done` | Close the six low-severity findings the T-001 review left open, so the schema states the |
 | [T-005](docs/tasks/T-005-first-loop-back.md) | `done` | Give the front two endpoints and the contracts behind them, so a real portfolio can be read |
@@ -21,11 +20,12 @@ Harness `0.9.0` · profile `team`
 | [T-013](docs/tasks/T-013-the-next-action-cycle.md) | `done` | Give every active project the one open next action `FR-6` requires and the product cannot |
 | [T-014](docs/tasks/T-014-creation-moves-to-the-structure-screen.md) | `done` | Move project creation out of the portfolio card and into `/ajustes`, split that screen into |
 | [T-015](docs/tasks/T-015-errors-that-point-and-a-listbox-of-our-own.md) | `done` | Give every form one error treatment that names the field it belongs to, and replace both |
+| [T-016](docs/tasks/T-016-stop-carrying-the-harness.md) | `done` | Remove the harness governance this repository authored in place — one done task, one never |
 | [T-010](docs/tasks/T-010-passkey-and-the-signed-cookie.md) | `superseded` | Build `D-004` as specified — a passkey registered per device, verified with Web Crypto and no |
 
 ## Next
 
-**T-016** (`review`) — Remove the harness governance this repository authored in place — one done task, one never
+Nothing open. Plan the next task before implementing anything.
 
 ## Open decisions
 
@@ -33,10 +33,10 @@ None. All decisions are accepted or superseded.
 
 ## Journal — last 5
 
+- 2026-09-03 | T-016 | done | the harness records leave Ritmo, and the vendored copy moves to 0.9.0 | 21 files | unit 45/45, isolation, typecheck, build, integration 7/7, lock verified | -
 - 2026-09-03 | T-015 | done | errors that point at the field, and a listbox with real keyboard support | 18 files | unit 49/49, isolation, typecheck, build, integration 7/7 | -
 - 2026-09-03 | T-014 | done | creation moves to the structure screen, and it stops fighting the stage | 12 files | unit 41/41, isolation, typecheck, build, integration 7/7 | -
 - 2026-09-02 | T-013 | done | the next action: write one, close it, write the next | 20 files | unit 36/36, isolation, typecheck, build, integration 7/7 | -
 - 2026-09-02 | T-012 | done | your own portfolio: setup, areas, projects and a cap you answered | 30 files | unit 33/33, isolation, typecheck, build, integration 7/7 | -
-- 2026-09-02 | T-011 | done | off Cloudflare: the same product on Node and a SQLite file the owner holds | 28 files | unit 29/29, isolation, typecheck, build, integration 6/6 | D-022,D-023
 
 Full history: [`JOURNAL.md`](JOURNAL.md) · decisions: [`docs/decisions/`](docs/decisions/README.md)

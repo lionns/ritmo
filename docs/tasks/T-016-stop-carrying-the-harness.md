@@ -1,7 +1,7 @@
 ---
 id: T-016
 title: This repository stops carrying the harness it only installs
-status: review
+status: done
 profile: team
 harness: 0.9.0
 role: Release Engineer
@@ -107,6 +107,6 @@ decisions: []
 
 ## Validation
 
-- Validated by:
-- Date:
+- Validated by: Juan Sebastián León Velásquez
+- Date: 2026-09-03
 
