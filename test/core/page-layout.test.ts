@@ -10,7 +10,7 @@ const source = (path: string) =>
 describe("the first-loop page composition", () => {
   it("centres both columns while keeping the chart in document flow", () => {
     const stage = source("src/components/organisms/PageStage.astro");
-    const mainClass = stage.match(/<main class="([^"]+)"/)?.[1];
+    const mainClass = stage.match(/<main[\s\S]*?class="([^"]+)"/)?.[1];
     const chartClass = stage.match(/"pointer-events-none ([^"]+)"/)?.[1];
 
     assert.ok(mainClass, "the stage needs a main layout class");
@@ -38,13 +38,25 @@ describe("the first-loop page composition", () => {
     assert.match(shell, /xl:h-dvh/);
     assert.match(shell, /xl:h-full/);
     assert.match(stage, /min-h-0/);
-    assert.match(stage, /xl:auto-rows-\[minmax\(0,1fr\)\]/);
+    assert.doesNotMatch(stage, /auto-rows/);
     assert.match(stage, /--stage-chart-height: clamp\(96px, 12dvh, 180px\)/);
-    assert.match(stage, /\.stage-main > :global\(\.glass-panel\)/);
+    assert.match(stage, /data-bounded-panels=\{boundedPanels \? "true" : undefined\}/);
+    assert.match(stage, /\.stage-main\[data-bounded-panels="true"\] > :global\(\.glass-panel\)/);
     assert.doesNotMatch(stage, /:nth-child/);
     assert.match(stage, /max-height: 100%/);
     assert.match(stage, /overflow-y: auto/);
     assert.match(stage, /overscroll-behavior: contain/);
+  });
+
+  it("lets the structure screen use the document scrollbar", () => {
+    const shell = source("src/layouts/AppShell.astro");
+    const settingsPage = source("src/pages/ajustes.astro");
+
+    assert.match(shell, /pageScroll\?: boolean/);
+    assert.match(shell, /!pageScroll && "xl:h-dvh xl:min-h-0"/);
+    assert.match(shell, /!pageScroll && "xl:h-full xl:min-h-0"/);
+    assert.match(settingsPage, /<AppShell[^>]*pageScroll>/);
+    assert.match(settingsPage, /<PageStage chartVeiled boundedPanels=\{false\}>/);
   });
 
   it("compacts decoration by height without shrinking interactive targets", () => {

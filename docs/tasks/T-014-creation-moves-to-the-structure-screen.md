@@ -1,7 +1,7 @@
 ---
 id: T-014
 title: Creation moves to the structure screen — `/` goes back to being read
-status: doing
+status: review
 profile: team
 harness: 0.8.1
 role: Frontend Implementer
@@ -121,21 +121,23 @@ implements: [FR-1]
 ## Outcome
 
 - Changes: moved project creation from the portfolio to `/ajustes`; split areas and projects into
-  two glass surfaces; collapsed the reference-only area list; made all stage glass children bound
-  independently of order; added the empty-portfolio signpost.
-- Files: `PageStage`, portfolio/settings/project-capture components, `/` and `/ajustes`, design
-  handoff, and page-layout tests. No API, rule, contract or adapter changed.
+  two glass surfaces; collapsed the reference-only area list; added the empty-portfolio signpost.
+  After owner round 1, `/ajustes` now grows with its content and leaves panel bounding to `/`.
+- Files: `AppShell`, `PageStage`, portfolio/settings/project-capture components, `/` and `/ajustes`,
+  design handoff, and page-layout tests. No API, rule, contract or adapter changed.
 - Baseline result: clean `npm ci`; unit 36/36, isolation, harness lint, typecheck 0, Node build,
   integration 7/7. Node 26.8.1 warned against the package pin of 24.20.0.
-- Final result: unit 38/38, isolation, typecheck 0, Node build, integration 7/7, lint clean. A built
+- Final result: unit 39/39, isolation, typecheck 0, Node build, integration 7/7, lint clean. A built
   server on throwaway SQLite verified the empty route, two panels, area-to-project capture, three
-  projects on `/`, three cycle forms and no project-creation form; backend scope diff stayed empty.
+  projects on `/`, three cycle forms and no project-creation form. Round 2 verified `/ajustes` omits
+  viewport/equal-row/panel bounds while `/` retains them; backend scope diff stayed empty.
 - Decisions recorded: none; the move follows `D-021` and the task's owner-settled handoff.
-- Follow-up: **back to the Frontend Implementer, 2026-09-02, after owner validation round 1.**
-  `/ajustes` scrolls as a page: drop `xl:auto-rows-[minmax(0,1fr)]` and the height bound on that
-  route so both cards take their content height and the page carries the only scrollbar. `/` keeps
-  its bounded panel unchanged. The split, the cap placement and the non-positional selector all
-  stay. § Setup and Capture is already corrected. Then owner validation round 2.
+- Follow-up: **back to the Frontend Implementer, 2026-09-02, after owner validation round 2.**
+  `/ajustes` leaves the two-column stage for a full-width layout: headline at Title size, the two
+  glass surfaces side by side across 1312px at `≥1200px`, stacked below that. `boundedPanels` and
+  `pageScroll` stay as built — `/` needs the first, and this route needs the second only until the
+  cards fit, which they should. § Setup and Capture is already written. Then owner validation
+  round 3, which is where this one has to be judged: by looking.
 
 ## Review
 

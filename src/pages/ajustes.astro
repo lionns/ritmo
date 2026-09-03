@@ -19,9 +19,9 @@ try {
 }
 ---
 
-<AppShell title="Ajustes · Ritmo" description="Las áreas, los proyectos y su límite activo." context="Ajustes">
+<AppShell title="Ajustes · Ritmo" description="Las áreas, los proyectos y su límite activo." context="Ajustes" pageScroll>
   <div class="pointer-events-none fixed inset-0 -z-10 bg-[color-mix(in_srgb,var(--page-bg)_80%,transparent)]" aria-hidden="true"></div>
-  <PageStage chartVeiled>
+  <PageStage chartVeiled boundedPanels={false}>
     <section class="self-center xl:row-span-2" aria-labelledby="page-title">
       <h1 id="page-title" class="max-w-[760px] font-display text-[clamp(46px,13.2vw,64px)] leading-[0.84] font-semibold tracking-[-0.04em] md:text-[clamp(76px,9.2vw,132px)]">La estructura.</h1>
       <p class="mt-6 max-w-[470px] text-[15px] leading-[1.55] text-dim">Las áreas que ordenan el portfolio y los proyectos que usan su límite.</p>

@@ -10,9 +10,11 @@ interface Props {
   context: string;
   /** Optional wider wording from `md` up, where the same label has room to say more. */
   contextWide?: string;
+  /** Let a form-heavy route grow past the desktop viewport and use the document scrollbar. */
+  pageScroll?: boolean;
 }
 
-const { title, description, context, contextWide } = Astro.props;
+const { title, description, context, contextWide, pageScroll = false } = Astro.props;
 ---
 
 <!doctype html>
@@ -33,13 +35,23 @@ const { title, description, context, contextWide } = Astro.props;
     <title>{title}</title>
   </head>
   <body class="m-0 min-h-screen min-h-dvh overflow-x-hidden bg-bg font-sans text-ink selection:bg-accent selection:text-accent-ink">
-    <div class="relative isolate min-h-screen min-h-dvh px-5 pt-8 pb-6 md:px-16 md:py-11 xl:h-dvh xl:min-h-0 xl:py-[clamp(24px,4dvh,44px)]">
+    <div
+      class:list={[
+        "relative isolate min-h-screen min-h-dvh px-5 pt-8 pb-6 md:px-16 md:py-11 xl:py-[clamp(24px,4dvh,44px)]",
+        !pageScroll && "xl:h-dvh xl:min-h-0",
+      ]}
+    >
       <div
         class="pointer-events-none fixed -z-30 h-[76vh] blur-[86px] [background:radial-gradient(ellipse_at_50%_50%,rgba(var(--page-glow),0.5)_0%,rgba(var(--page-glow),0.12)_36%,transparent_72%)] -inset-x-[15vw] -bottom-[34vh]"
         aria-hidden="true"
       ></div>
       <Grain />
-      <div class="relative z-[2] mx-auto flex min-h-[calc(100dvh-56px)] w-[min(100%,1312px)] flex-col md:min-h-[calc(100dvh-88px)] xl:h-full xl:min-h-0">
+      <div
+        class:list={[
+          "relative z-[2] mx-auto flex min-h-[calc(100dvh-56px)] w-[min(100%,1312px)] flex-col md:min-h-[calc(100dvh-88px)]",
+          !pageScroll && "xl:h-full xl:min-h-0",
+        ]}
+      >
         <header class="mb-11 flex items-baseline justify-between gap-4 md:mb-16 xl:mb-[clamp(24px,4dvh,64px)] xl:shrink-0">
           <Wordmark />
           <p class="m-0 text-right font-mono text-[8px] leading-[1.4] font-normal tracking-[0.22em] text-dim uppercase md:text-[9px]" data-header-context>

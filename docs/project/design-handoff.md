@@ -307,17 +307,25 @@ the progress form.
 On mobile the forms stay in document flow and controls are full width. At `≥1200px`, `/ajustes`
 places its two glass surfaces in the stage's right column opposite one display question.
 
-**`/ajustes` is not a bounded stage; it scrolls as a page.** Settled with the owner on 2026-09-02
-after the first build of the split shipped the opposite. Both panels take the height of their
-content and the page carries the only scrollbar. **The rule this corrects:** a bounded stage plus
-two panels made every panel a scroll surface, equal rows sized each to half the viewport, and the
-Áreas form — taller than half — was clipped through the middle of its own submit button. A form
-whose button is sliced does not read as scrollable; it reads as broken, and two scroll regions
-stacked in one column hide content with no affordance either way. § Responsive Behavior bounds the
-stage so *the portfolio* fits without scrolling and calls internal scrolling a fallback for
-exceptional content; a screen of forms is neither. A panel that is a direct child of a bounded stage
-still carries the bound, independent of child position — that part of the 2026-09-02 fix stands, and
-it is what `/` relies on.
+**`/ajustes` does not use the two-column stage.** Settled with the owner on 2026-09-02, after two
+rounds of fixing the symptom. The stage is a *reading* composition — a display headline holding one
+thought, a panel holding its content — and `/`, `/registrar` and `/semana` all are that. A screen of
+forms is not, and forcing it there produced the defects: at 1440px the headline column took **787px,
+60% of the width, to hold a title**, while two forms and a list shared 461px; a bounded stage with
+two panels then sized each to half the viewport and clipped the Áreas form through the middle of its
+own submit button.
+
+Instead, at `≥1200px` `/ajustes` runs full width: **`La estructura.` drops from Display to Title**
+(20/17px, Switzer 600 — the headline names the page rather than carrying it), its sentence sits
+below, and the two glass surfaces sit **side by side across the full 1312px**, roughly 624px each
+with the `2xl` column gap. Both are then short enough that the page does not scroll at all, which is
+the actual fix: nothing is bounded, nothing is clipped, and nothing is hidden. Below `1200px` they
+stack in document flow as every other screen does.
+
+A panel that *is* a direct child of a bounded stage still carries the bound, independent of child
+position — that part of the 2026-09-02 work stands and is what `/` relies on. **The rule this
+leaves:** a route whose job is entering data gets the full width; a route whose job is reading gets
+the stage. A third form-heavy screen answers this question the same way rather than re-deriving it.
 
 Loading changes only the button label, errors sit in the form's live region as facts plus the
 corrective action, and no capture success uses a toast.

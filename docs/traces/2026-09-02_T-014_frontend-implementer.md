@@ -5,11 +5,12 @@
   - did: moved project capture to `/ajustes`, split areas/projects into two glass panels, collapsed the area list, and restored `/` to read plus row cycles
   - files: `PageStage`, portfolio/settings/project-capture components, `/`, `/ajustes`, design handoff, page-layout tests, T-014 records
   - baseline: clean `npm ci`; unit 36/36, isolation, harness lint, typecheck 0, build, integration 7/7 — green; Node 26.8.1 warned against pin 24.20.0
-  - iteration: removed a duplicate active-count line and gave implicit desktop grid rows equal bounded shares after inspecting the two-panel composition
-  - checks: unit 38/38, integration 7/7, isolation, typecheck 0, build, `git diff --check` — green; `git diff --stat core/ contracts/ adapters/` empty
+  - iteration: removed a duplicate active-count line; round 1's equal bounded rows were then rejected on sight because they clipped the area form and created two scroll regions
+  - checks: unit 39/39, integration 7/7, isolation, typecheck 0, build, `git diff --check` — green; `git diff --stat core/ contracts/ adapters/` empty
   - composition: throwaway empty SQLite rendered zero forms on empty `/`; `/ajustes` rendered two glass panels and no project form until its first area existed
   - round trip: area creation exposed project capture; three project POSTs returned 1/3, 2/3, 3/3 and `/` rendered all three with exactly three cycle forms
-  - layout: compiled CSS targets `.stage-main > .glass-panel`, contains no `nth-child`, and gives two implicit rows bounded shares; both settings panels are direct stage children
+  - round 2: added route-level document scrolling, removed equal grid rows, and scoped the non-positional panel bound to bounded stages only
+  - layout: rendered `/ajustes` has no viewport-height classes, equal-row class or bound attribute; rendered `/` retains all three and compiled CSS contains no `nth-child`
   - browser: no controllable browser connection was available after the required connection check, so visual/computed-layout validation remains with the owner
   - scope: no API, core rule, contract or adapter changed; the throwaway database was removed and owner data was untouched
   - decisions: none
