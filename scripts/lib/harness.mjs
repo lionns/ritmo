@@ -43,8 +43,9 @@ const OUTCOME = /^## Outcome[ \t]*$/;
  * Splits a task into its agreed plan and execution record at the first Outcome heading.
  *
  * Fenced regions are skipped: a task quoting `TEMPLATES.md` carries the whole template, heading
- * included, and splitting there would measure the quote as a record (D-030, T-019). An indented
- * code block still mis-splits — it fails loudly on the record budget rather than passing wrongly.
+ * included, and splitting there would measure the quote as a record (D-030, T-019). A heading
+ * inside an indented code block is not matched at all, since the pattern is anchored at column
+ * zero, so such a file counts entirely as plan — the safe direction (T-022).
  */
 export function taskBudgetSections(text) {
   let offset = 0;

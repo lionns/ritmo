@@ -29,14 +29,39 @@ for (const message of budgetContractProblems(budgets)) {
 // copy. No lock means no check, so a repository from before 0.9.0 upgrades unchanged.
 const lockPath = join(ROOT, "harness.lock");
 if (existsSync(lockPath)) {
-  const lock = JSON.parse(readFileSync(lockPath, "utf8"));
-  const remedy = lock.source === cfg.project
-    ? "does not match harness.lock — run `node scripts/harness-manifest.mjs` to record the change"
-    : `does not match the ${lock.harness} harness — propose the change in ${lock.source}, then reinstall`;
-  for (const [path, hash] of Object.entries(lock.files ?? {})) {
-    const full = join(ROOT, path);
-    if (!existsSync(full)) fail(path, `listed in harness.lock but missing — ${remedy.replace(/^does not match/, "the copy")}`);
-    else if (fileHash(full) !== hash) fail(path, remedy);
+  let lock = null;
+  try {
+    lock = JSON.parse(readFileSync(lockPath, "utf8"));
+  } catch (error) {
+    // The gate must fail in sentences. A corrupt lock is a problem to report, not a stack trace.
+    fail("harness.lock", `is not readable JSON — ${error.message}`);
+  }
+  const mine = lock?.source === cfg.project;
+  const change = mine
+    ? "run `node scripts/harness-manifest.mjs` to record the change"
+    : `propose the change in ${lock?.source}, then reinstall`;
+  if (lock && lock.algorithm !== "sha256") {
+    fail("harness.lock", `declares algorithm "${lock.algorithm}", which this harness cannot verify — upgrade it`);
+  } else if (lock) {
+    for (const [path, hash] of Object.entries(lock.files ?? {})) {
+      const full = join(ROOT, path);
+      if (!existsSync(full)) {
+        fail(path, mine
+          ? "is listed in harness.lock but missing — restore it, or regenerate the lock if the removal was deliberate"
+          : `is listed in harness.lock but missing — reinstall the harness from ${lock.source}`);
+        continue;
+      }
+      let actual = null;
+      try {
+        actual = fileHash(full);
+      } catch (error) {
+        fail(path, `is listed in harness.lock but cannot be read — ${error.code ?? error.message}`);
+        continue;
+      }
+      if (actual !== hash) {
+        fail(path, `does not match ${mine ? "harness.lock" : `the ${lock.harness} harness`} — ${change}`);
+      }
+    }
   }
 }
 
