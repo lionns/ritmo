@@ -420,6 +420,13 @@ compact height mode contracts the outer padding of a row and the gaps between bl
 | **Success** | The chart mark grows. That is the whole confirmation — no toast. |
 | **Disclosure** | The marker turns, it never swaps glyph. A `+` rotates `45deg` into an `×` over `120ms`; `motion-reduce` removes the transition, not the rotation. A summary that looks the same open and closed has not confirmed the tap. |
 
+**An error points to its field.** Every validating form opts out of the browser's validation bubble
+and uses one product message beneath the field. The control names that message with
+`aria-describedby`, carries `aria-invalid="true"`, and changes to a dashed `ink` boundary — position,
+language and line style still identify the error without colour. Progress and success remain `dim`
+in the form status; a network or whole-form failure stays there but switches to `ink`. Messages are
+facts with the corrective action, never scores, warnings or debt language.
+
 **Native control chrome is normalised, never inherited.** Added 2026-09-03, after the owner found
 `select` rendering differently across browsers. A `select`, a `number` input and any other control
 the OS decorates gets `appearance: none` and the project's own affordance — a `dim` chevron for a
@@ -427,6 +434,14 @@ the OS decorates gets `appearance: none` and the project's own affordance — a 
 The rule is the control, not the screen: a new control answers this here rather than per form.
 Keyboard behaviour and the 58/56px target are unchanged by the reset, and the shared focus outline
 still applies.
+
+**Listbox is one component, not two dressed selects.** A button holds the selected label and the
+same `dim` chevron; opening it moves focus to a single-select `role="listbox"` and sets
+`aria-activedescendant` on its active `role="option"`. Arrow keys wrap, `Home`/`End` reach the bounds,
+type-ahead matches Spanish labels without accents, `Enter`/`Space` choose, and `Esc` closes. Choosing
+or pressing `Esc` returns focus to the button. A plain check names the selected option while a
+neutral 8% `ink` surface follows the active option; accent remains the focus outline. Rows keep the
+58px mobile / 56px desktop target, and a hidden input submits the unchanged request value.
 
 **Targets are 56px desktop / 58px mobile, minimum.** Fitts: the earlier mobile CTA had a glass ring
 around the button, which made the real target smaller than the thing the eye read as the target.

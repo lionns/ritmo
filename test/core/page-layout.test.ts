@@ -228,21 +228,58 @@ describe("the first-loop page composition", () => {
     assert.match(fields, /paired && "xl:grid-cols-2"/);
   });
 
-  it("shows disclosure state and normalises native control chrome", () => {
+  it("shows disclosure state and normalises number chrome", () => {
     const styles = source("src/styles/global.css");
     const settings = source("src/components/organisms/SettingsPanel.astro");
     const cycle = source("src/components/organisms/NextActionCycle.astro");
-    const entry = source("src/components/organisms/EntryForm.astro");
 
     assert.match(settings, /data-disclosure-marker[^>]*>\+<\/span>/);
     assert.match(cycle, /data-disclosure-marker[^>]*>\+<\/span>/);
     assert.match(styles, /details\[open\] > summary \[data-disclosure-marker\][^{]*\{[^}]*rotate\(45deg\)/);
     assert.match(styles, /\[data-disclosure-marker\][^{]*\{[^}]*transition: transform 120ms/);
     assert.match(styles, /prefers-reduced-motion: reduce[\s\S]*\[data-disclosure-marker\][^{]*\{[^}]*transition: none/);
-    assert.match(styles, /select,\s*input\[type="number"\][^{]*\{[^}]*appearance: none/);
-    assert.match(styles, /select[^{]*\{[^}]*background-image:/);
+    assert.match(styles, /input\[type="number"\][^{]*\{[^}]*appearance: none/);
     assert.match(styles, /input\[type="number"\]::-webkit-inner-spin-button/);
-    assert.match(entry, /<select/);
+  });
+
+  it("owns validation and selection chrome", () => {
+    const forms = [
+      source("src/components/organisms/SetupForm.astro"),
+      source("src/components/organisms/EntryForm.astro"),
+      source("src/components/organisms/SettingsPanel.astro"),
+      source("src/components/organisms/ProjectCapture.astro"),
+      source("src/components/organisms/NextActionCycle.astro"),
+    ];
+    const allSource = forms.join("\n");
+    const listbox = source("src/components/molecules/ListboxField.astro");
+    const fieldError = source("src/components/atoms/FieldError.astro");
+    const errorLogic = source("src/lib/form-errors.ts");
+    const actionFields = source("src/components/molecules/NextActionFields.astro");
+    const styles = source("src/styles/global.css");
+
+    assert.equal(allSource.match(/<form\b/g)?.length, 6);
+    assert.equal(allSource.match(/<form\b[^>]*\bnovalidate\b/g)?.length, 6);
+    assert.doesNotMatch(allSource, /<select\b/);
+    assert.match(listbox, /role="listbox"/);
+    assert.match(listbox, /role="option"/);
+    assert.match(listbox, /aria-activedescendant/);
+    assert.match(listbox, /aria-describedby=\{errorId\}/);
+    assert.match(listbox, /<input type="hidden" name=\{name\}/);
+    assert.match(listbox, /ArrowDown|ArrowUp/);
+    assert.match(listbox, /Home|End/);
+    assert.match(listbox, /Escape/);
+    assert.match(listbox, /min-h-\[58px\][^"]*md:min-h-14/);
+    assert.match(fieldError, /data-field-error/);
+    assert.match(fieldError, /text-ink/);
+    assert.match(fieldError, /aria-hidden="true"/);
+    assert.doesNotMatch(`${fieldError}\n${styles}`, /\bred\b/);
+    assert.match(actionFields, /aria-describedby=\{`\$\{idPrefix\}-trigger-error`\}/);
+    assert.match(errorLogic, /setAttribute\("aria-invalid", "true"\)/);
+    assert.match(errorLogic, /classList\.toggle\("text-ink", state === "error"\)/);
+    assert.match(listbox, /close\(true\)/);
+    assert.match(styles, /\[data-field-control\]\[aria-invalid="true"\][^{]*\{[^}]*border-style: dashed/);
+    assert.equal(allSource.match(/data-form-status/g)?.length, 6);
+    assert.equal(allSource.match(/data-field-error/g)?.length ?? 0, 0, "field errors come from the shared atom");
   });
 
   it("keeps the first and replacement action on one field shape", () => {

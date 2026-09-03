@@ -15,19 +15,30 @@ const formPrefix = `next-action-${project.id}`;
     <span>{project.nextAction === null ? "Escribir la próxima acción" : "Cerrar y escribir la siguiente"}</span>
     <span class="font-mono text-[13px] text-faint-text" data-disclosure-marker aria-hidden="true">+</span>
   </summary>
-  <form class="pb-5" data-next-action-form>
+  <form class="pb-5" data-next-action-form novalidate>
     <input type="hidden" name="projectId" value={project.id} />
     {project.nextAction && <input type="hidden" name="currentActionId" value={project.nextAction.id} />}
     <NextActionFields idPrefix={formPrefix} />
     <button class="mt-5 inline-flex min-h-[58px] w-full items-center justify-center rounded-[29px] border-0 bg-accent px-7 text-[17px] font-semibold text-accent-ink transition-[filter] duration-[120ms] hover:brightness-[1.06] active:brightness-90 disabled:cursor-wait disabled:saturate-[0.35] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent md:min-h-14 md:rounded-[28px] md:text-base" type="submit">
       {project.nextAction === null ? "Guardar acción" : "Cerrar y continuar"}
     </button>
-    <p class="mt-3 min-h-[42px] text-sm leading-normal text-dim" data-next-action-status aria-live="polite"></p>
+    <p class="mt-3 min-h-[42px] text-sm leading-normal text-dim" data-next-action-status data-form-status aria-live="polite"></p>
   </form>
 </details>
 
 <script>
+  import {
+    bindFieldErrorClearing,
+    clearFieldErrors,
+    fieldIssueFromServer,
+    fieldNames,
+    firstFieldIssue,
+    setFormStatus,
+    showFieldIssue,
+  } from "../../lib/form-errors.ts";
+
   document.querySelectorAll<HTMLFormElement>("[data-next-action-form]").forEach((form) => {
+    bindFieldErrorClearing(form);
     form.addEventListener("submit", async (event) => {
       event.preventDefault();
       const projectId = form.elements.namedItem("projectId");
@@ -45,8 +56,23 @@ const formPrefix = `next-action-${project.id}`;
         !(obstacle instanceof HTMLInputElement) ||
         !(estimate instanceof HTMLInputElement)
       ) return;
+      const issue = firstFieldIssue([
+        { name: "trigger", value: trigger.value, requiredMessage: "Escribe el disparador." },
+        { name: "act", value: act.value, requiredMessage: "Escribe la acción." },
+        {
+          name: "estimateMinutes",
+          value: estimate.value,
+          positiveIntegerMessage: "Escribe minutos enteros mayores que cero.",
+        },
+      ]);
+      if (issue !== null) {
+        showFieldIssue(form, issue);
+        setFormStatus(status, "", "idle");
+        return;
+      }
+      clearFieldErrors(form);
       if (button !== null) button.disabled = true;
-      if (status !== null) status.textContent = "Guardando…";
+      setFormStatus(status, "Guardando…", "loading");
       try {
         const body: Record<string, string | number> = {
           projectId: projectId.value,
@@ -64,13 +90,23 @@ const formPrefix = `next-action-${project.id}`;
           body: JSON.stringify(body),
         });
         const result: unknown = await response.json();
-        if (!response.ok) throw new Error(readError(result));
-        if (status !== null) status.textContent = currentActionId instanceof HTMLInputElement
+        if (!response.ok) {
+          const serverIssue = fieldIssueFromServer(readError(result), fieldNames(form));
+          if (serverIssue !== null) {
+            showFieldIssue(form, serverIssue);
+            setFormStatus(status, "", "idle");
+          } else {
+            setFormStatus(status, "No se pudo guardar la acción. Recarga la página e inténtalo otra vez.", "error");
+          }
+          return;
+        }
+        setFormStatus(status, currentActionId instanceof HTMLInputElement
           ? "Acción cerrada. La siguiente queda abierta."
-          : "Próxima acción guardada.";
+          : "Próxima acción guardada.", "success");
         window.setTimeout(() => window.location.reload(), 500);
-      } catch (error) {
-        if (status !== null) status.textContent = `${error instanceof Error ? error.message : "No se pudo guardar la acción"}. Revisa los campos e inténtalo otra vez.`;
+      } catch {
+        setFormStatus(status, "No se pudo conectar. Revisa la conexión e inténtalo otra vez.", "error");
+      } finally {
         if (button !== null) button.disabled = false;
       }
     });

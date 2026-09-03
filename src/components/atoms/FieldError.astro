@@ -1,0 +1,19 @@
+---
+interface Props {
+  id: string;
+  field: string;
+}
+
+const { id, field } = Astro.props;
+---
+
+<p
+  id={id}
+  class="mt-2 text-sm leading-normal text-ink"
+  data-field-error={field}
+  aria-live="polite"
+  hidden
+>
+  <span class="mr-1 font-mono" aria-hidden="true">↑</span>
+  <span data-field-error-text></span>
+</p>

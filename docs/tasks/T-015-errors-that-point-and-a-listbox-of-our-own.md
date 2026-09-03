@@ -1,7 +1,7 @@
 ---
 id: T-015
 title: Errors that point at the field, and a listbox that is ours
-status: ready
+status: doing
 profile: team
 harness: 0.8.1
 role: Frontend Implementer
@@ -60,23 +60,23 @@ implements: [NFR-7]
 
 ## Acceptance Criteria
 
-- [ ] WHEN a required field is submitted empty, THE SYSTEM SHALL show the product's own message
+- [x] WHEN a required field is submitted empty, THE SYSTEM SHALL show the product's own message
       under that field rather than a browser bubble, and `grep -rn "novalidate" src/` SHALL match
       every form that validates.
-- [ ] The invalid field carries `aria-invalid="true"` and an `aria-describedby` pointing at the
+- [x] The invalid field carries `aria-invalid="true"` and an `aria-describedby` pointing at the
       message's id, and the message is reachable from the field by that association alone.
-- [ ] No error state uses red, and no field is marked by colour alone (`NFR-8`, § Accessibility
+- [x] No error state uses red, and no field is marked by colour alone (`NFR-8`, § Accessibility
       Notes). Stated as a fact with the action to fix it, never evaluative (`NFR-7`).
-- [ ] Error text renders in `ink` and the progress/success line stays `dim`, so the three states are
+- [x] Error text renders in `ink` and the progress/success line stays `dim`, so the three states are
       distinguishable without reading them.
-- [ ] `grep -rn "<select" src/` returns nothing; both replacements expose `role="listbox"` with
+- [x] `grep -rn "<select" src/` returns nothing; both replacements expose `role="listbox"` with
       `role="option"` children and set `aria-activedescendant` while open.
 - [ ] The listbox is operable by keyboard alone: open, move with arrows and `Home`/`End`, choose
       with `Enter`, dismiss with `Esc`, and focus returns to the trigger. Verified in a browser.
 - [ ] Every option is at least 58px tall on mobile and 56px on desktop, measured in a browser.
-- [ ] Creating a project and writing an entry both still work end to end, with the same request
+- [x] Creating a project and writing an entry both still work end to end, with the same request
       bodies as before.
-- [ ] All five gates green from a clean `npm ci`, and `node scripts/harness-lint.mjs` clean.
+- [x] All five gates green from a clean `npm ci`, and `node scripts/harness-lint.mjs` clean.
 
 ## Verification
 
@@ -112,16 +112,49 @@ implements: [NFR-7]
 
 ## Outcome
 
-- Changes:
-- Files:
-- Baseline result:
-- Final result:
-- Decisions recorded:
-- Follow-up:
+- Changes: added one shared field-error treatment to all six validating forms and replaced the area
+  and project selects with one ARIA listbox component that preserves their submitted values.
+- Files: form components, `FieldError`, `ListboxField`, front-end error/listbox helpers, global
+  styles, design handoff, focused unit/layout tests, and task/trace records. Backend scope is untouched.
+- Baseline result: clean `npm ci`; unit 41/41, isolation, harness lint, typecheck 0 and Node build
+  green. Node 26.8.1 warned against the package pin of 24.20.0.
+- Final result: unit 49/49, isolation, typecheck 0, Node build and integration 7/7 green. A built
+  server on throwaway SQLite rendered two listboxes and no selects; project and entry POSTs returned
+  201 with the existing request keys. The first lint pass named the missing trace; adding it closed it.
+- Decisions recorded: none; the implementation follows D-021 and the task's owner-settled handoff.
+- Follow-up: **back to the Frontend Implementer, 2026-09-03, after Reviewer round 1.** Two Medium.
+  **Open the listbox from the keyboard** — `Enter`, `Space` and `ArrowDown` on the closed trigger
+  must open it and put the active option on the selected row; today the keydown is consumed and no
+  `click` fires. **Make the paired cells structurally symmetric** so an error grows a row shared by
+  both fields instead of sliding the one without a label. Nothing else is reopened: the ARIA, the
+  three error channels and the target sizes all measured correct. Then Reviewer round 2.
 
 ## Review
 
-- Severity · `file:line` · issue · impact · recommendation
+- 2026-09-03 · Reviewer, round 1, **measured in a browser** as this task's Verification requires.
+  Five gates green: unit 49/49, isolation, typecheck 0, build, integration 7/7, lint. Verified:
+  `grep -rn "<select" src/` returns nothing, six forms carry `novalidate`, and the listbox exposes
+  `role="listbox"`, `role="option"`, `aria-activedescendant` and `aria-selected`. Options measure
+  **56px at desktop and 58px at 390px**, trigger 58px. Errors carry `aria-invalid="true"` and an
+  `aria-describedby` pointing at the message id, and use **three channels** — dashed border, `ink`,
+  and an `aria-hidden` `↑` — so no field is marked by colour alone and nothing is red (`NFR-8`).
+  Empty error slots are `hidden` at zero height; a first read of their `textContent` looked like
+  stray arrows and was not.
+- **Medium · the listbox cannot be opened from the keyboard**, which fails the criterion in so many
+  words · probed rather than assumed, because the alternative explanation was my own tooling: with
+  the trigger focused, `Enter` produces `keydown: ["Enter"]` on the button and **`click: 0`**, and
+  `aria-expanded` stays `false`. `Space` and `ArrowDown` behave the same. A `<button type="button">`
+  fires `click` on `Enter`, so the component's own keydown handler is consuming the key while closed
+  instead of opening · this is the risk this task named: half-right is worse than the `<select>` it
+  replaced, which opened on all three keys.
+- **Medium · `SettingsPanel.astro`, the Áreas row · an error slides the checkbox 29px out of
+  alignment**, which the owner found on sight. The row is `display: grid` with
+  `align-items: flex-end`, chosen so the boxes line up although “Nombre” carries a label and the
+  checkbox does not. When the message appears the name cell grows 56px → **114px** and the checkbox,
+  pinned to the row's end, drops. Confirmed by contrast: the project form's pairs move **together**
+  (`Nombre`/`Área` hold, `Disparador`/`Acción` both drop 30px) because both its cells have labels ·
+  the defect is the row's structural asymmetry, not the error treatment · make the pair share
+  label/control/error rows so either error grows a common row and neither control moves.
 
 ## Validation
 

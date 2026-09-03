@@ -1,4 +1,8 @@
-<form class="glass-panel p-[22px] md:p-7" data-setup-form>
+---
+import FieldError from "../atoms/FieldError.astro";
+---
+
+<form class="glass-panel p-[22px] md:p-7" data-setup-form novalidate>
   <label class="mb-[9px] block font-mono text-[8px] leading-[1.4] tracking-[0.2em] text-dim uppercase" for="setup-cap">
     Proyectos en una semana mala
   </label>
@@ -12,26 +16,51 @@
     inputmode="numeric"
     required
     autofocus
+    aria-describedby="setup-cap-error"
+    data-field-control="activeCap"
   />
+  <FieldError id="setup-cap-error" field="activeCap" />
   <p class="mt-3 text-sm leading-normal text-dim">
     Ese número limita los proyectos activos de las áreas que elijas. El trabajo fijo puede quedar fuera.
   </p>
   <button class="mt-6 inline-flex min-h-[58px] w-full items-center justify-center rounded-[29px] border-0 bg-accent px-7 text-[17px] font-semibold text-accent-ink transition-[filter] duration-[120ms] hover:brightness-[1.06] active:brightness-90 disabled:cursor-wait disabled:saturate-[0.35] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent md:min-h-14 md:w-auto md:min-w-[218px] md:rounded-[28px] md:text-base" type="submit">
     Guardar límite
   </button>
-  <p class="mt-3 min-h-[42px] text-sm leading-normal text-dim" data-setup-status aria-live="polite"></p>
+  <p class="mt-3 min-h-[42px] text-sm leading-normal text-dim" data-setup-status data-form-status aria-live="polite"></p>
 </form>
 
 <script>
+  import {
+    bindFieldErrorClearing,
+    clearFieldErrors,
+    fieldIssueFromServer,
+    firstFieldIssue,
+    setFormStatus,
+    showFieldIssue,
+  } from "../../lib/form-errors.ts";
+
   const form = document.querySelector<HTMLFormElement>("[data-setup-form]");
   const status = document.querySelector<HTMLElement>("[data-setup-status]");
+  if (form !== null) bindFieldErrorClearing(form);
   form?.addEventListener("submit", async (event) => {
     event.preventDefault();
     const field = form.elements.namedItem("activeCap");
     const button = form.querySelector<HTMLButtonElement>("button[type='submit']");
     if (!(field instanceof HTMLInputElement)) return;
+    const issue = firstFieldIssue([{
+      name: "activeCap",
+      value: field.value,
+      requiredMessage: "Escribe cuántos proyectos caben en una semana mala.",
+      positiveIntegerMessage: "Escribe un número entero mayor que cero.",
+    }]);
+    if (issue !== null) {
+      showFieldIssue(form, issue);
+      setFormStatus(status, "", "idle");
+      return;
+    }
+    clearFieldErrors(form);
     if (button !== null) button.disabled = true;
-    if (status !== null) status.textContent = "Guardando…";
+    setFormStatus(status, "Guardando…", "loading");
     try {
       const response = await fetch("/api/setup", {
         method: "POST",
@@ -39,10 +68,20 @@
         body: JSON.stringify({ activeCap: Number(field.value) }),
       });
       const body: unknown = await response.json();
-      if (!response.ok) throw new Error(readError(body, "No se pudo guardar el límite"));
+      if (!response.ok) {
+        const serverIssue = fieldIssueFromServer(readError(body, ""), ["activeCap"]);
+        if (serverIssue !== null) {
+          showFieldIssue(form, serverIssue);
+          setFormStatus(status, "", "idle");
+        } else {
+          setFormStatus(status, "No se pudo guardar el límite. Recarga la página e inténtalo otra vez.", "error");
+        }
+        return;
+      }
       window.location.assign("/");
-    } catch (error) {
-      if (status !== null) status.textContent = `${error instanceof Error ? error.message : "No se pudo guardar"}. Revisa el número e inténtalo otra vez.`;
+    } catch {
+      setFormStatus(status, "No se pudo conectar. Revisa la conexión e inténtalo otra vez.", "error");
+    } finally {
       if (button !== null) button.disabled = false;
     }
   });

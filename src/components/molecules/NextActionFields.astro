@@ -1,4 +1,6 @@
 ---
+import FieldError from "../atoms/FieldError.astro";
+
 interface Props {
   idPrefix: string;
   paired?: boolean;
@@ -15,8 +17,11 @@ const { idPrefix, paired = false } = Astro.props;
       id={`${idPrefix}-trigger`}
       name="trigger"
       placeholder="Ej. Cuando abra el documento"
+      aria-describedby={`${idPrefix}-trigger-error`}
+      data-field-control="trigger"
       required
     />
+    <FieldError id={`${idPrefix}-trigger-error`} field="trigger" />
   </div>
   <div>
     <label class="mb-2 block text-sm font-medium text-dim" for={`${idPrefix}-act`}>Acción</label>
@@ -25,8 +30,11 @@ const { idPrefix, paired = false } = Astro.props;
       id={`${idPrefix}-act`}
       name="act"
       placeholder="Ej. Escribir el primer párrafo"
+      aria-describedby={`${idPrefix}-act-error`}
+      data-field-control="act"
       required
     />
+    <FieldError id={`${idPrefix}-act-error`} field="act" />
   </div>
   <div>
     <label class="mb-2 block text-sm font-medium text-dim" for={`${idPrefix}-obstacle`}>Obstáculo · opcional</label>
@@ -34,7 +42,10 @@ const { idPrefix, paired = false } = Astro.props;
       class="min-h-[58px] w-full rounded-field border border-glass-border bg-[color-mix(in_srgb,var(--page-bg)_72%,transparent)] px-4 text-base text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent md:min-h-14"
       id={`${idPrefix}-obstacle`}
       name="obstacle"
+      aria-describedby={`${idPrefix}-obstacle-error`}
+      data-field-control="obstacle"
     />
+    <FieldError id={`${idPrefix}-obstacle-error`} field="obstacle" />
   </div>
   <div>
     <label class="mb-2 block text-sm font-medium text-dim" for={`${idPrefix}-estimate`}>Minutos estimados · opcional</label>
@@ -46,6 +57,9 @@ const { idPrefix, paired = false } = Astro.props;
       min="1"
       step="1"
       inputmode="numeric"
+      aria-describedby={`${idPrefix}-estimate-error`}
+      data-field-control="estimateMinutes"
     />
+    <FieldError id={`${idPrefix}-estimate-error`} field="estimateMinutes" />
   </div>
 </div>

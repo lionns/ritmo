@@ -2,6 +2,8 @@
 import type { PortfolioProject } from "../../../contracts/portfolio.ts";
 import { EFFORT_MINUTE_OPTIONS } from "../../lib/entry-form.ts";
 import { readAsSentence } from "../../lib/project-row.ts";
+import FieldError from "../atoms/FieldError.astro";
+import ListboxField from "../molecules/ListboxField.astro";
 
 interface Props {
   projects: PortfolioProject[];
@@ -12,7 +14,7 @@ const { projects, selectedProject } = Astro.props;
 const initialProject = selectedProject?.id ?? projects[0]?.id;
 ---
 
-<form class="glass-panel p-[22px] md:p-7" data-entry-form>
+<form class="glass-panel p-[22px] md:p-7" data-entry-form novalidate>
   {
     selectedProject && (
       <div class="mb-[22px]">
@@ -41,25 +43,24 @@ const initialProject = selectedProject?.id ?? projects[0]?.id;
       rows="3"
       required
       autofocus
+      aria-describedby="entry-what-error"
+      data-field-control="what"
       placeholder="Ej. Dejé lista la estructura del primer capítulo"
       class="min-h-[132px] w-full resize-y rounded-field border border-glass-border bg-[color-mix(in_srgb,var(--page-bg)_72%,transparent)] p-4 text-base leading-[1.45] text-ink placeholder:text-faint-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent md:min-h-[150px]"
     ></textarea>
+    <FieldError id="entry-what-error" field="what" />
   </div>
   {
     !selectedProject && (
-      <div class="mt-[22px]">
-        <label class="mb-[9px] block font-mono text-[8px] leading-[1.4] tracking-[0.2em] text-dim uppercase" for="entry-project">Proyecto</label>
-        <select
-          class="min-h-[58px] w-full rounded-field border border-glass-border bg-[color-mix(in_srgb,var(--page-bg)_72%,transparent)] p-4 text-base leading-[1.45] text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent md:min-h-14"
-          id="entry-project"
-          name="projectId"
-          required
-        >
-          {projects.map((project) => (
-            <option value={project.id} selected={project.id === initialProject}>{project.title}</option>
-          ))}
-        </select>
-      </div>
+      <ListboxField
+        class="mt-[22px]"
+        id="entry-project"
+        name="projectId"
+        label="Proyecto"
+        labelKind="eyebrow"
+        options={projects.map(({ id, title }) => ({ value: id, label: title }))}
+        selectedValue={initialProject}
+      />
     )
   }
   <fieldset class="mt-[22px]">
@@ -89,7 +90,7 @@ const initialProject = selectedProject?.id ?? projects[0]?.id;
   >
     Guardar entrada
   </button>
-  <p class="mx-0 mt-3 min-h-[42px] text-sm leading-normal text-dim" data-form-status aria-live="polite"></p>
+  <p class="mx-0 mt-3 min-h-[42px] text-sm leading-normal text-dim" data-entry-status data-form-status aria-live="polite"></p>
 </form>
 
 <script>
@@ -100,11 +101,21 @@ const initialProject = selectedProject?.id ?? projects[0]?.id;
     toggleEffortMinutes,
     type EffortMinuteOption,
   } from "../../lib/entry-form.ts";
+  import {
+    bindFieldErrorClearing,
+    clearFieldErrors,
+    fieldIssueFromServer,
+    fieldNames,
+    firstFieldIssue,
+    setFormStatus,
+    showFieldIssue,
+  } from "../../lib/form-errors.ts";
 
   const form = document.querySelector<HTMLFormElement>("[data-entry-form]");
-  const status = document.querySelector<HTMLElement>("[data-form-status]");
+  const status = document.querySelector<HTMLElement>("[data-entry-status]");
   const effortButtons = [...document.querySelectorAll<HTMLButtonElement>("[data-effort-minutes]")];
   let effortMinutes: EffortMinuteOption | undefined;
+  if (form !== null) bindFieldErrorClearing(form);
 
   effortButtons.forEach((button) => {
     button.addEventListener("click", () => {
@@ -122,11 +133,30 @@ const initialProject = selectedProject?.id ?? projects[0]?.id;
     const projectId = form.elements.namedItem("projectId");
     if (
       !(what instanceof HTMLTextAreaElement) ||
-      (!(projectId instanceof HTMLSelectElement) && !(projectId instanceof HTMLInputElement))
+      !(projectId instanceof HTMLInputElement)
     ) return;
 
+    const issue = firstFieldIssue([
+      {
+        name: "what",
+        value: what.value,
+        requiredMessage: "Escribe una línea sobre lo que moviste.",
+      },
+      {
+        name: "projectId",
+        value: projectId.value,
+        requiredMessage: "Elige un proyecto.",
+      },
+    ]);
+    if (issue !== null) {
+      showFieldIssue(form, issue);
+      setFormStatus(status, "", "idle");
+      return;
+    }
+    clearFieldErrors(form);
+
     if (submit !== null) submit.disabled = true;
-    if (status !== null) status.textContent = "Guardando…";
+    setFormStatus(status, "Guardando…", "loading");
     const submittedEffortMinutes = effortMinutes;
 
     try {
@@ -137,24 +167,28 @@ const initialProject = selectedProject?.id ?? projects[0]?.id;
       });
       const body: unknown = await response.json();
       if (!response.ok) {
-        const message =
+        const rawError =
           typeof body === "object" && body !== null && "error" in body && typeof body.error === "string"
             ? body.error
-            : "No se pudo guardar la entrada";
-        throw new Error(message);
+            : "";
+        const serverIssue = fieldIssueFromServer(rawError, fieldNames(form));
+        if (serverIssue !== null) {
+          showFieldIssue(form, serverIssue);
+          setFormStatus(status, "", "idle");
+        } else {
+          setFormStatus(status, "No se pudo guardar la entrada. Recarga la página e inténtalo otra vez.", "error");
+        }
+        return;
       }
 
       what.value = "";
       effortMinutes = undefined;
       syncEffortButtons();
-      if (status !== null) status.textContent = "Entrada guardada.";
+      setFormStatus(status, "Entrada guardada.", "success");
       growTodayMarks(submittedEffortMinutes);
       what.focus();
-    } catch (error) {
-      if (status !== null) {
-        const detail = error instanceof Error ? error.message : "No se pudo guardar la entrada";
-        status.textContent = `${detail}. Revisa la conexión e inténtalo otra vez.`;
-      }
+    } catch {
+      setFormStatus(status, "No se pudo conectar. Revisa la conexión e inténtalo otra vez.", "error");
     } finally {
       if (submit !== null) submit.disabled = false;
     }

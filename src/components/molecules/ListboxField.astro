@@ -1,0 +1,204 @@
+---
+import FieldError from "../atoms/FieldError.astro";
+
+interface ListboxOption {
+  value: string;
+  label: string;
+}
+
+interface Props {
+  id: string;
+  name: string;
+  label: string;
+  options: ListboxOption[];
+  selectedValue?: string;
+  labelKind?: "standard" | "eyebrow";
+  class?: string;
+}
+
+const {
+  id,
+  name,
+  label,
+  options,
+  selectedValue,
+  labelKind = "standard",
+  class: className,
+} = Astro.props;
+const selectedIndex = Math.max(0, options.findIndex(({ value }) => value === selectedValue));
+const selected = options[selectedIndex];
+const labelId = `${id}-label`;
+const triggerId = `${id}-trigger`;
+const listboxId = `${id}-listbox`;
+const errorId = `${id}-error`;
+const labelClass = labelKind === "eyebrow"
+  ? "mb-[9px] block font-mono text-[8px] leading-[1.4] tracking-[0.2em] text-dim uppercase"
+  : "mb-2 block text-sm font-medium text-dim";
+---
+
+<div class:list={["relative", className]} data-listbox>
+  <label id={labelId} class={labelClass} for={triggerId}>{label}</label>
+  <input type="hidden" name={name} value={selected?.value ?? ""} data-listbox-value />
+  <button
+    id={triggerId}
+    class="flex min-h-[58px] w-full items-center justify-between gap-4 rounded-field border border-glass-border bg-[color-mix(in_srgb,var(--page-bg)_72%,transparent)] px-4 text-left text-base text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent md:min-h-14"
+    type="button"
+    aria-haspopup="listbox"
+    aria-controls={listboxId}
+    aria-expanded="false"
+    aria-describedby={errorId}
+    data-field-control={name}
+    data-listbox-trigger
+    disabled={options.length === 0}
+  >
+    <span data-listbox-label>{selected?.label ?? "Sin opciones"}</span>
+    <svg class="size-3 shrink-0 text-dim" aria-hidden="true" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="m2.5 4.5 3.5 3 3.5-3"></path>
+    </svg>
+  </button>
+  <ul
+    id={listboxId}
+    class="absolute top-full right-0 left-0 z-20 mt-2 max-h-[min(18rem,50dvh)] list-none overflow-y-auto rounded-field border border-glass-border bg-[var(--page-glass-fallback)] p-1 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+    role="listbox"
+    tabindex="-1"
+    aria-labelledby={labelId}
+    data-listbox-options
+    hidden
+  >
+    {options.map((option, index) => (
+      <li
+        id={`${id}-option-${index}`}
+        class="flex min-h-[58px] cursor-pointer items-center justify-between gap-3 rounded-[14px] px-3 text-base text-ink md:min-h-14"
+        role="option"
+        aria-selected={index === selectedIndex ? "true" : "false"}
+        data-listbox-option
+        data-value={option.value}
+      >
+        <span>{option.label}</span>
+        <span class="font-mono text-sm" data-listbox-check aria-hidden="true" hidden={index !== selectedIndex}>✓</span>
+      </li>
+    ))}
+  </ul>
+  <FieldError id={errorId} field={name} />
+</div>
+
+<script>
+  import { findTypeaheadIndex, moveListboxIndex, type ListboxMoveKey } from "../../lib/listbox.ts";
+
+  document.querySelectorAll<HTMLElement>("[data-listbox]").forEach((root) => {
+    const trigger = root.querySelector<HTMLButtonElement>("[data-listbox-trigger]");
+    const listbox = root.querySelector<HTMLElement>("[data-listbox-options]");
+    const value = root.querySelector<HTMLInputElement>("[data-listbox-value]");
+    const label = root.querySelector<HTMLElement>("[data-listbox-label]");
+    const options = [...root.querySelectorAll<HTMLElement>("[data-listbox-option]")];
+    if (trigger === null || listbox === null || value === null || label === null) return;
+
+    let activeIndex = Math.max(0, options.findIndex((option) => option.getAttribute("aria-selected") === "true"));
+    let typeahead = "";
+    let typeaheadTimer: number | undefined;
+
+    const setActive = (index: number) => {
+      if (index < 0 || index >= options.length) return;
+      activeIndex = index;
+      options.forEach((option, optionIndex) => {
+        option.dataset.active = String(optionIndex === activeIndex);
+      });
+      const active = options[activeIndex];
+      if (active === undefined) return;
+      listbox.setAttribute("aria-activedescendant", active.id);
+      active.scrollIntoView({ block: "nearest" });
+    };
+
+    const open = (index = activeIndex) => {
+      if (options.length === 0) return;
+      listbox.hidden = false;
+      trigger.setAttribute("aria-expanded", "true");
+      setActive(index);
+      listbox.focus();
+    };
+
+    const close = (returnFocus: boolean) => {
+      listbox.hidden = true;
+      listbox.removeAttribute("aria-activedescendant");
+      trigger.setAttribute("aria-expanded", "false");
+      if (returnFocus) trigger.focus();
+    };
+
+    const choose = (index: number) => {
+      const option = options[index];
+      if (option === undefined) return;
+      options.forEach((candidate, optionIndex) => {
+        const selected = optionIndex === index;
+        candidate.setAttribute("aria-selected", String(selected));
+        const check = candidate.querySelector<HTMLElement>("[data-listbox-check]");
+        if (check !== null) check.hidden = !selected;
+      });
+      value.value = option.dataset.value ?? "";
+      label.textContent = option.textContent?.replace("✓", "").trim() ?? "";
+      value.dispatchEvent(new Event("change", { bubbles: true }));
+      close(true);
+    };
+
+    const move = (key: ListboxMoveKey) => {
+      setActive(moveListboxIndex(activeIndex, options.length, key));
+    };
+
+    const search = (key: string) => {
+      window.clearTimeout(typeaheadTimer);
+      typeahead += key;
+      const match = findTypeaheadIndex(
+        options.map((option) => option.textContent?.replace("✓", "").trim() ?? ""),
+        typeahead,
+        activeIndex,
+      );
+      if (match >= 0) setActive(match);
+      typeaheadTimer = window.setTimeout(() => { typeahead = ""; }, 650);
+    };
+
+    trigger.addEventListener("click", () => {
+      if (trigger.getAttribute("aria-expanded") === "true") close(true);
+      else open();
+    });
+
+    trigger.addEventListener("keydown", (event) => {
+      if (event.key === "ArrowDown" || event.key === "ArrowUp" || event.key === "Home" || event.key === "End") {
+        event.preventDefault();
+        open(moveListboxIndex(activeIndex, options.length, event.key));
+      } else if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        open();
+      } else if (event.key.length === 1 && !event.ctrlKey && !event.metaKey && !event.altKey) {
+        event.preventDefault();
+        open();
+        search(event.key);
+      }
+    });
+
+    listbox.addEventListener("keydown", (event) => {
+      if (event.key === "ArrowDown" || event.key === "ArrowUp" || event.key === "Home" || event.key === "End") {
+        event.preventDefault();
+        move(event.key);
+      } else if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        choose(activeIndex);
+      } else if (event.key === "Escape") {
+        event.preventDefault();
+        close(true);
+      } else if (event.key === "Tab") {
+        close(false);
+      } else if (event.key.length === 1 && !event.ctrlKey && !event.metaKey && !event.altKey) {
+        event.preventDefault();
+        search(event.key);
+      }
+    });
+
+    options.forEach((option, index) => {
+      option.addEventListener("pointermove", () => setActive(index));
+      option.addEventListener("click", () => choose(index));
+    });
+
+    document.addEventListener("pointerdown", (event) => {
+      if (event.target instanceof Node && !root.contains(event.target) && !listbox.hidden) close(false);
+    });
+  });
+</script>
