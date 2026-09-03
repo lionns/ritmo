@@ -156,6 +156,23 @@ Ritmo está en construcción y estas piezas están especificadas pero sin constr
 
 ---
 
+## Versiones
+
+El producto y el arnés de desarrollo se versionan **por separado**. `docs/sdd/VERSION.md` es el
+changelog del arnés y no tiene nada que ver con el número de abajo.
+
+La versión del producto vive en `package.json` sin prefijo, y cada release lleva un tag anotado con
+`v` delante — `v0.1.0`. El prefijo no es parte de la versión; solo evita que un tag colisione con un
+nombre de rama.
+
+Mientras siga en `0.x`, la forma todavía puede cambiar:
+
+| | |
+|---|---|
+| `0.1.1` | arreglos sobre lo que ya existe |
+| `0.2.0` | una pieza nueva — `/semana`, `/p/:id`, objetivos |
+| `1.0.0` | cuando esté **desplegado y con autenticación**. Hoy `D-020` lo deja corriendo solo en la máquina del dueño, y eso es una etapa declarada, no un final |
+
 ## Para desarrollar
 
 El proyecto sigue un arnés de desarrollo guiado por especificación. Empieza por `AGENTS.md`,
