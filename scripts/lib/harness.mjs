@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { readFileSync, readdirSync, existsSync, realpathSync } from "node:fs";
 import { extname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -35,16 +36,43 @@ export function lineCount(text) {
   return text === "" ? 0 : text.replace(/\n$/, "").split(/\r?\n/).length;
 }
 
-/** Splits a task into its agreed plan and execution record at the first Outcome heading. */
+const FENCE = /^\s{0,3}(`{3,}|~{3,})/;
+const OUTCOME = /^## Outcome[ \t]*$/;
+
+/**
+ * Splits a task into its agreed plan and execution record at the first Outcome heading.
+ *
+ * Fenced regions are skipped: a task quoting `TEMPLATES.md` carries the whole template, heading
+ * included, and splitting there would measure the quote as a record (D-030, T-019). An indented
+ * code block still mis-splits — it fails loudly on the record budget rather than passing wrongly.
+ */
 export function taskBudgetSections(text) {
-  const outcome = /^## Outcome[ \t]*\r?$/m.exec(text);
-  if (!outcome) return { plan: text, record: "" };
-  return { plan: text.slice(0, outcome.index), record: text.slice(outcome.index) };
+  let offset = 0;
+  let fence = null;
+  for (const line of text.split(/(?<=\n)/)) {
+    const bare = line.replace(/\r?\n$/, "");
+    const marker = FENCE.exec(bare)?.[1];
+    if (fence) {
+      if (marker && marker[0] === fence[0] && marker.length >= fence.length) fence = null;
+    } else if (marker) {
+      fence = marker;
+    } else if (OUTCOME.test(bare)) {
+      return { plan: text.slice(0, offset), record: text.slice(offset) };
+    }
+    offset += line.length;
+  }
+  return { plan: text, record: "" };
 }
 
 const SCRIPT_EXTENSIONS = new Set([".cjs", ".js", ".mjs", ".ts", ".tsx"]);
 
-/** Finds every configured budget property read by source under scripts/, including nested readers. */
+/**
+ * Finds every configured budget property read by source under scripts/, including nested readers.
+ *
+ * The match is textual, not parsed: writing `budgets.<name>` in a comment or string under
+ * `scripts/` makes that key required in `harness.json`. Deliberate — it errs toward more
+ * enforcement, never less — but it means prose here must not spell the pattern out (D-031).
+ */
 export function enforcedBudgetKeys(root = ROOT) {
   const keys = new Set();
   const scan = (directory) => {
@@ -72,6 +100,14 @@ export function budgetContractProblems(budgets, enforced = enforcedBudgetKeys())
     ...declared.filter((key) => !enforced.includes(key))
       .map((key) => `declares \`${key}\`, which harness-lint does not enforce`),
   ];
+}
+
+/**
+ * The hash a manifest records for one file. Newlines are normalised first: a CRLF checkout of the
+ * same bytes is the same file, and hashing it as different would break Windows on arrival (D-033).
+ */
+export function fileHash(path) {
+  return createHash("sha256").update(readFileSync(path, "utf8").replace(/\r\n/g, "\n")).digest("hex");
 }
 
 export function config(root = ROOT) {
@@ -142,14 +178,23 @@ export function traces(root = ROOT) {
   return listMarkdown(join(root, "docs/traces"));
 }
 
+/** Where the release history lives: the root changelog, or `VERSION.md` before 0.9.0 moved it. */
+export function changelogPath(root = ROOT) {
+  const moved = join(root, "CHANGELOG.md");
+  return existsSync(moved) ? moved : join(root, "docs/sdd/VERSION.md");
+}
+
+/** That file's path relative to the repository, so a failure can name the file it actually read. */
+export function changelogName(root = ROOT) {
+  return changelogPath(root) === join(root, "CHANGELOG.md") ? "CHANGELOG.md" : "docs/sdd/VERSION.md";
+}
+
 /**
- * The versions `docs/sdd/VERSION.md` declares, read from its `### x.y.z` changelog headings.
- *
- * Empty when the file is missing or declares none — a repo that has dropped the changelog cannot be
- * held to it, so the caller skips the check rather than failing every task (T-004).
+ * The versions the changelog declares, read from its `### x.y.z` headings. A repository that has
+ * not moved its history yet keeps working: the fallback reads the old location (D-032).
  */
 export function knownVersions(root = ROOT) {
-  const path = join(root, "docs/sdd/VERSION.md");
+  const path = changelogPath(root);
   if (!existsSync(path)) return [];
   return [...readFileSync(path, "utf8").matchAll(/^###\s+(\d+\.\d+\.\d+)/gm)].map((m) => m[1]);
 }

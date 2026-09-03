@@ -2,15 +2,14 @@
 
 # Status — ritmo
 
-Harness `0.8.1` · profile `team`
+Harness `0.9.0` · profile `team`
 
 ## Tasks
 
 | Task | State | Goal |
 |---|---|---|
-| [T-004](docs/tasks/T-004-harness-loose-ends.md) | `ready` | Close the three low-severity findings the T-002 review left in the harness tooling, keeping |
+| [T-016](docs/tasks/T-016-stop-carrying-the-harness.md) | `review` | Remove the harness governance this repository authored in place — one done task, one never |
 | [T-001](docs/tasks/T-001-skeleton-and-next-action.md) | `done` | Stand up the three-layer tree with every quality-gate command real and green, and prove it by |
-| [T-002](docs/tasks/T-002-split-task-budget.md) | `done` | Replace the single task-file budget with a plan budget and a record budget, enforced by |
 | [T-003](docs/tasks/T-003-loose-ends.md) | `done` | Close the six low-severity findings the T-001 review left open, so the schema states the |
 | [T-005](docs/tasks/T-005-first-loop-back.md) | `done` | Give the front two endpoints and the contracts behind them, so a real portfolio can be read |
 | [T-006](docs/tasks/T-006-first-loop-front.md) | `done` | Build the landing surface and the log form from the approved design, against the endpoints |
@@ -26,7 +25,7 @@ Harness `0.8.1` · profile `team`
 
 ## Next
 
-**T-004** (`ready`) — Close the three low-severity findings the T-002 review left in the harness tooling, keeping
+**T-016** (`review`) — Remove the harness governance this repository authored in place — one done task, one never
 
 ## Open decisions
 

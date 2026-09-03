@@ -6,7 +6,7 @@
 import { readFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import {
-  ROOT, config, tasks, decisions, journal, traces, knownVersions, specIds, section, sddDocLines, lineCount,
+  ROOT, config, tasks, decisions, journal, traces, knownVersions, changelogName, specIds, section, sddDocLines, lineCount, fileHash,
   budgetContractProblems, taskBudgetSections,
   TASK_STATES, DECISION_STATES,
 } from "./lib/harness.mjs";
@@ -24,6 +24,22 @@ for (const message of budgetContractProblems(budgets)) {
   fail("harness.json", `budget contract ${message}`);
 }
 
+// An installed harness is a copy, not a fork (D-033). The lock is verified wherever it is found:
+// in the repository that owns the harness it pins the release, and in one that installed it, the
+// copy. No lock means no check, so a repository from before 0.9.0 upgrades unchanged.
+const lockPath = join(ROOT, "harness.lock");
+if (existsSync(lockPath)) {
+  const lock = JSON.parse(readFileSync(lockPath, "utf8"));
+  const remedy = lock.source === cfg.project
+    ? "does not match harness.lock — run `node scripts/harness-manifest.mjs` to record the change"
+    : `does not match the ${lock.harness} harness — propose the change in ${lock.source}, then reinstall`;
+  for (const [path, hash] of Object.entries(lock.files ?? {})) {
+    const full = join(ROOT, path);
+    if (!existsSync(full)) fail(path, `listed in harness.lock but missing — ${remedy.replace(/^does not match/, "the copy")}`);
+    else if (fileHash(full) !== hash) fail(path, remedy);
+  }
+}
+
 if (!PROFILES.includes(cfg.profile)) {
   fail("harness.json", `profile must be one of ${PROFILES.join(" | ")}, got "${cfg.profile}"`);
 }
@@ -31,6 +47,7 @@ if (!PROFILES.includes(cfg.profile)) {
 const decisionIds = new Set(decisions().map((d) => d.id));
 const journalIds = new Set(journal().map((e) => e.line.split("|")[1]?.trim()));
 const versions = knownVersions();
+const changelog = changelogName();
 const traceFiles = traces();
 const TRACE_NAME = /^\d{4}-\d{2}-\d{2}_([A-Z]+-\d+)_[a-z-]+\.md$/;
 const declaredIds = specIds();
@@ -83,7 +100,7 @@ for (const task of tasks()) {
   // A version the changelog never declared makes the front-matter unverifiable, so tasks could claim
   // rules that never existed. Skipped entirely when VERSION.md declares nothing (D-013).
   if (task.meta.harness && versions.length && !versions.includes(task.meta.harness)) {
-    fail(where, `harness "${task.meta.harness}" is not a version in docs/sdd/VERSION.md (${versions.join(", ")})`);
+    fail(where, `harness "${task.meta.harness}" is not a version in ${changelog} (${versions.join(", ")})`);
   }
 
   // Closure integrity: `done` is a claim the Definition of Done makes checkable (D-013).
