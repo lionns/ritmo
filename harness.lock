@@ -1,0 +1,22 @@
+{
+  "harness": "0.9.0",
+  "source": "sdd-harness",
+  "algorithm": "sha256",
+  "files": {
+    "docs/sdd/HARNESS.md": "eddd53205ce48984d5818c0d70fa4403e21f77d1e6d06a6d76812ae44f16d717",
+    "docs/sdd/PROTOCOLS.md": "97355c4ffa02de906d357db4e9e11d31b6b4ebda3083b8b0fc1eca9ea8f934ae",
+    "docs/sdd/README.md": "4c005f39e016b970b9abb9b429e58d6320b31b97a28bfab9635e105d38145198",
+    "docs/sdd/ROLES.md": "6843507a3b98f903e0b419b8ef54089642203d48b7460ee82c718f8a97cf1b67",
+    "docs/sdd/TEMPLATES.md": "df3e10dc65a11196208363051da07886a98ca7ae2f9f64139c57645772294791",
+    "docs/sdd/VERSION.md": "e168019a1ef3519fc652868bdb090a4ba075a4624dac51115d77f695f1c712c7",
+    "scripts/lib/harness.mjs": "4d1b26b1d2ac33f84a7205351d3693375ae1f1154a0138a4215338c741f0b9c6",
+    "scripts/harness-status.mjs": "8b57384323a23bb0fa8aae75e82038f4508c2cd9a72f69dffb8423de90977f00",
+    "scripts/harness-lint.mjs": "daec17677ec6891b0b808e4f4ffda6575061c9cf54286fa821a09cf5b6551039",
+    ".githooks/pre-push": "6bc12225a8157f4c2a7d986f7f7427930d584461c61db41bbc422db530c164e1",
+    ".claude/hooks/harness-gate.mjs": "5a145759d910facbf9f9a84b951e1433e1ce50451873e58f9b132e5bd06a28c0",
+    ".claude/settings.json": "1f02d3e6fe8f703bf648db71852d4ea64583c33b35dc06f77d76e5afa0a80c20",
+    ".claude/skills/close-task/SKILL.md": "dd0a14ba689f3596db810cc640f77955bf30e59f9049e4ee4e8f4a51dacd18df",
+    ".claude/skills/plan-task/SKILL.md": "0e2aeab60f628b3ed82b461c2d00cd24d506f6bdca122f780e469a5b15a411d8",
+    ".claude/skills/propose-governance-change/SKILL.md": "f42ab2a73795d0236c88d2c75b7253e4f0e03ae0763eea8c94bf41d141778cc9"
+  }
+}

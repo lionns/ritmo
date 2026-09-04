@@ -21,8 +21,6 @@ rather than editing. Template in `../sdd/TEMPLATES.md`.
 | [D-012](D-012-tests-dependency-count.md) | 2026-08-31 | node --test for the core, and the five dependencies the platform really costs | `superseded` | D-006 |
 | [D-013](D-013-version-pinning.md) | 2026-08-31 | Exact pins, a committed lockfile, and upgrades as their own task | `accepted` | none |
 | [D-014](D-014-types-node-dev-dependency.md) | 2026-08-31 | `@types/node`, the sixth dev dependency | `superseded` | D-012 |
-| [D-015](D-015-task-budget-plan-and-record.md) | 2026-08-31 | Split the task budget: the plan is bounded, the record is not the same thing | `accepted` | none |
-| [D-016](D-016-budget-contract-both-ways.md) | 2026-08-31 | The linter and `harness.json` must agree on which budgets exist | `accepted` | none |
 | [D-017](D-017-boundaries-src-lib-is-front.md) | 2026-09-01 | `src/lib/` is front, and the check has to be able to say so | `accepted` | D-009 |
 | [D-018](D-018-runtime-node-local.md) | 2026-09-02 | Node on the owner's machine, not V8 isolates on someone else's | `accepted` | D-001 |
 | [D-019](D-019-data-local-sqlite.md) | 2026-09-02 | SQLite in the process, and the durability that comes back with it | `accepted` | D-002 |

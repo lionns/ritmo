@@ -149,3 +149,5 @@ task. Standing exceptions also belong in `docs/project/quality-gates.md`.
 - Preserve existing work; do not rewrite specifications unless the task says so.
 - Do not invent product requirements inside implementation tasks.
 - Escalate when sources of truth conflict or acceptance criteria are ambiguous.
+- An installed harness is a copy: changes to `docs/sdd/`, `scripts/` and the gates are proposed in
+  the repository that owns it, and `harness.lock` fails the lint where a copy drifted instead.
