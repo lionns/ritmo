@@ -6,9 +6,11 @@ interface Props {
   progress: PortfolioProject[];
   outstanding: PortfolioProject[];
   shelved: PortfolioProject[];
+  /** Decided once on the server and passed down, so no two rows disagree about the day. */
+  today: string;
 }
 
-const { progress, outstanding, shelved } = Astro.props;
+const { progress, outstanding, shelved, today } = Astro.props;
 const isEmpty = progress.length === 0 && outstanding.length === 0 && shelved.length === 0;
 ---
 
@@ -28,7 +30,7 @@ const isEmpty = progress.length === 0 && outstanding.length === 0 && shelved.len
       )
     ) : (
       <div class="portfolio-progress mt-1.5">
-        {progress.map((project) => <ProjectCard project={project} kind="progress" />)}
+        {progress.map((project) => <ProjectCard project={project} kind="progress" today={today} />)}
       </div>
     )
   }
@@ -37,7 +39,7 @@ const isEmpty = progress.length === 0 && outstanding.length === 0 && shelved.len
       <section class="portfolio-outstanding mt-[34px] border-t border-hair pt-6" aria-labelledby="outstanding-heading">
         <h2 id="outstanding-heading" class="m-0 font-mono text-[8px] leading-[1.4] font-normal tracking-[0.22em] text-dim uppercase md:text-[9px]">Para cuando vuelvas</h2>
         <div class="mt-1.5">
-          {outstanding.map((project) => <ProjectCard project={project} kind="outstanding" />)}
+          {outstanding.map((project) => <ProjectCard project={project} kind="outstanding" today={today} />)}
         </div>
       </section>
     )
@@ -47,7 +49,7 @@ const isEmpty = progress.length === 0 && outstanding.length === 0 && shelved.len
       <section class="portfolio-shelved mt-[34px] border-t border-hair pt-6" aria-labelledby="shelved-heading">
         <h2 id="shelved-heading" class="m-0 font-mono text-[8px] leading-[1.4] font-normal tracking-[0.22em] text-dim uppercase md:text-[9px]">Archivados</h2>
         <div class="mt-1.5">
-          {shelved.map((project) => <ProjectCard project={project} kind="shelved" />)}
+          {shelved.map((project) => <ProjectCard project={project} kind="shelved" today={today} />)}
         </div>
       </section>
     )

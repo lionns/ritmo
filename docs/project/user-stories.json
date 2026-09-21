@@ -35,10 +35,10 @@
   {
     "id": "US-4",
     "title": "Logging on a twenty-minute day",
-    "story": "As the owner with twenty minutes between a deploy and dinner, I want the next action already written so that I spend the time working rather than deciding.",
-    "implements": ["FR-4", "FR-6", "NFR-1"],
+    "story": "As the owner with twenty minutes between a deploy and dinner, I want what I will do already decided so that I spend the time working rather than deciding.",
+    "implements": ["FR-4", "FR-6", "FR-22", "NFR-1"],
     "criteria": [
-      "Each active project shows exactly one next action, written as trigger and act.",
+      "The steps marked for today are on the landing surface, read as prose, so the twenty minutes are spent working rather than choosing.",
       "A progress entry can be saved in under 20 seconds from opening the app.",
       "Effort and note are optional on the entry."
     ]

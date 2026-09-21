@@ -7,10 +7,13 @@ import {
   readPortfolio,
   type PortfolioProject as CorePortfolioProject,
 } from "../../../core/rules/portfolio.ts";
+import { calendarDateOf } from "../../../core/rules/step.ts";
+
 import type {
   PortfolioErrorResponse,
   PortfolioProject,
   PortfolioResponse,
+  PortfolioStep,
 } from "../../../contracts/portfolio.ts";
 
 const clock: Clock = { now: () => new Date() };
@@ -24,6 +27,7 @@ export async function handleGetPortfolio(injectedStore?: Store): Promise<Respons
       return Response.json(
         {
           setupRequired: true,
+          today: calendarDateOf(clock.now()),
           ownerId: null,
           activeCap: null,
           activeCount: 0,
@@ -43,6 +47,7 @@ export async function handleGetPortfolio(injectedStore?: Store): Promise<Respons
     const allActive = [...portfolio.progress, ...portfolio.outstanding];
     const response: PortfolioResponse = {
       setupRequired: false,
+      today: calendarDateOf(clock.now()),
       ownerId: owner.id,
       activeCap: owner.activeCap,
       activeCount: allActive.filter(({ area }) => area.countsAgainstCap).length,
@@ -87,16 +92,12 @@ function toContractProject(value: CorePortfolioProject): PortfolioProject {
       note: entry.note,
     })),
     progressSincePlan: value.progressSincePlan,
-    nextAction:
-      value.nextAction === null
-        ? null
-        : {
-            id: value.nextAction.id,
-            trigger: value.nextAction.trigger,
-            act: value.nextAction.act,
-            obstacle: value.nextAction.obstacle,
-            estimateMinutes: value.nextAction.estimateMinutes,
-            createdAt: value.nextAction.createdAt,
-          },
+    openSteps: value.openSteps.map((step): PortfolioStep => ({
+      id: step.id,
+      title: step.title,
+      estimateMinutes: step.estimateMinutes,
+      markedFor: step.markedFor,
+      createdAt: step.createdAt,
+    })),
   };
 }

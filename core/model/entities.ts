@@ -61,16 +61,15 @@ export interface Commitment {
   reserve: number;
 }
 
-export interface NextAction {
+export interface Step {
   id: string;
   ownerId: string;
   projectId: string;
-  trigger: string;
-  act: string;
-  obstacle: string | null;
+  title: string;
   estimateMinutes: number | null;
+  markedFor: CalendarDate | null;
   createdAt: Timestamp;
-  closedAt: Timestamp | null;
+  doneAt: Timestamp | null;
 }
 
 export interface Entry {

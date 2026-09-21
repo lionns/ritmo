@@ -4,7 +4,7 @@ import { handlePostArea } from "../../src/pages/api/areas.ts";
 import { handlePostProject, handlePatchProject } from "../../src/pages/api/projects.ts";
 import { handleGetSettings, handlePatchSettings } from "../../src/pages/api/settings.ts";
 import { handlePostSetup } from "../../src/pages/api/setup.ts";
-import { handlePostNextAction } from "../../src/pages/api/next-actions.ts";
+import { handlePatchStep, handlePostStep } from "../../src/pages/api/steps.ts";
 import type { Store } from "../../core/ports/store.ts";
 
 export function testApplication(store: Store) {
@@ -28,8 +28,11 @@ export function testApplication(store: Store) {
     if (pathname === "/api/projects" && request.method === "PATCH") {
       return handlePatchProject(request, store);
     }
-    if (pathname === "/api/next-actions" && request.method === "POST") {
-      return handlePostNextAction(request, store);
+    if (pathname === "/api/steps" && request.method === "POST") {
+      return handlePostStep(request, store);
+    }
+    if (pathname === "/api/steps" && request.method === "PATCH") {
+      return handlePatchStep(request, store);
     }
     if (pathname === "/api/settings" && request.method === "GET") {
       return handleGetSettings(store);

@@ -63,15 +63,12 @@ Al crearla decides una sola cosa:
 - **Sin marcar** — el trabajo fijo. Sus proyectos no compiten por ese límite, porque no elegiste
   tenerlos.
 
-**Un proyecto** vive en un área y **nace con su primera acción**. Eso no es opcional: un proyecto sin
-próxima acción es un proyecto que no sabes cómo continuar. La acción se escribe en dos partes:
+**Un proyecto** vive en un área y **nace con su primer paso**. Eso no es opcional: un proyecto sin
+un próximo paso es un proyecto que no sabes cómo continuar.
 
-| | |
-|---|---|
-| **Disparador** | la situación, no la hora — *"Cuando termine el bloque de trabajo"* |
-| **Acción** | lo que harás — *"abrir la escena y probar una luz direccional"* |
-
-Opcionalmente un **obstáculo** y unos **minutos estimados**.
+Un **paso** es una cosa pequeña que sí puedes hacer — *"abrir la escena y probar una luz
+direccional"*. Un proyecto lleva una lista corta de ellos, **sólo del tramo siguiente, nunca del
+proyecto entero**. Opcionalmente, unos **minutos estimados**.
 
 **Si el límite está lleno**, el proyecto se crea archivado y Ritmo te dice el conteo, sin regañarte.
 Los archivados siguen visibles en el portafolio.
@@ -86,7 +83,7 @@ Los archivados siguen visibles en el portafolio.
 
 - **Las marcas** — un círculo lleno por cada avance registrado desde que abriste el plan actual, un
   círculo vacío para el paso siguiente, un rombo para el objetivo. Es un camino, no un puntaje.
-- **La próxima acción**, leída como una frase.
+- **Los pasos que marcaste para hoy**, leídos como frases. Nunca una lista con casillas.
 - **Lo último** que registraste.
 
 **El gráfico de fondo** son tus últimos 28 días (14 en móvil). La altura de cada marca son los
@@ -97,18 +94,25 @@ minutos sube al piso mínimo; un día con minutos crece proporcional.
 
 ![Registrar: el proyecto como contexto, una línea y los minutos opcionales](docs/images/03-registrar.jpg)
 
-Tocas un proyecto y llegas al registro con **ese proyecto ya puesto** y su próxima acción a la vista
+Tocas un proyecto y llegas al registro con **ese proyecto ya puesto** y sus pasos de hoy a la vista
 — para que actúes en vez de decidir. Escribes **una línea** sobre lo que moviste. Los minutos son
 cuatro botones, `15 / 30 / 60 / 120`, y son **opcionales**: si tocas el que ya estaba puesto, se
 suelta.
 
 La confirmación es que la marca de hoy crece en el gráfico. No hay mensaje de felicitación.
 
-### Cerrar una acción y escribir la siguiente
+### Elegir lo de hoy
 
-En cada proyecto del portafolio, **"Cerrar y escribir la siguiente"** cierra la acción actual y abre
-su reemplazo en el mismo gesto. No se puede cerrar sin escribir la que sigue — un proyecto activo
-siempre tiene exactamente un paso siguiente. La cerrada queda como historial.
+En cada proyecto abres su lista de pasos y marcas los que harás hoy. **Sin hora, sin duración, sin
+condición y sin tope** — el único límite sigue siendo cuántos proyectos tienes activos esta semana,
+que es el número que respondiste en el primer arranque.
+
+La marca **caduca al acabar el día**. Un paso que marcaste y no hiciste vuelve a la lista sin dejar
+rastro: no hay contador, no se acumula, nunca sale en rojo. Es la misma regla que ya tenía la semana
+— la que termina no le pasa deuda a la siguiente —, a escala de un día.
+
+La lista completa de pasos vive **dentro del proyecto**. En la pantalla de inicio sólo aparece lo
+que marcaste para hoy, para que abrir Ritmo no sea nunca ver pendientes.
 
 ---
 
@@ -119,7 +123,9 @@ siempre tiene exactamente un paso siguiente. La cerrada queda como historial.
 - **Nunca hay rojo, ni deuda, ni contadores de fallo.** Una semana en blanco no borra nada de lo que
   ya estaba.
 - **No manda notificaciones**, ni recordatorios, ni correos de "te faltó X". Lo abres cuando lo abres.
-- **No agenda horas.** Un disparador es una situación, no un hueco en el calendario.
+- **No agenda horas.** Marcar un paso para hoy no le pone hora, ni duración, ni una condición que
+  tenga que cumplirse antes.
+- **No acumula pendientes.** Un paso sin hacer no se cuenta, no se arrastra y no se muestra.
 
 ---
 
@@ -148,11 +154,12 @@ Ritmo está en construcción y estas piezas están especificadas pero sin constr
 |---|---|
 | `/semana` | el ritual semanal: propuesta al abrir la semana, cierre al terminarla |
 | `/p/:id` | detalle de un proyecto con su historial |
-| `/archivo` | el respaldo de lo archivado, latente y cerrado |
+| `/archivo` | el respaldo de lo archivado y lo latente |
 | Objetivos | el nivel sobre los proyectos, y su estado latente |
 | Compromisos | lo que te propones por semana, con reserva |
 | Calibración | comparar lo estimado contra lo registrado |
 | Autenticación | diseñada (`D-004`), sin construir — por eso corre solo en local |
+| Terminar un proyecto | **no existe todavía en ninguna parte.** Hoy un proyecto sólo puede estar activo o archivado, y archivar es una pausa, no un final. Propuesto en `D-025`, sin aceptar |
 
 ---
 

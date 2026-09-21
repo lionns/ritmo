@@ -52,7 +52,7 @@ const selectedProject = projects.find(({ id }) => id === selectedProjectId);
           >
         </section>
       ) : (
-        <EntryForm projects={projects} selectedProject={selectedProject} />
+        <EntryForm projects={projects} selectedProject={selectedProject} today={portfolio?.today ?? ""} />
       )
     }
     <HeroChart slot="chart" entries={entries} />

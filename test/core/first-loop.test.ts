@@ -1,13 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
-import type {
-  Area,
-  Entry,
-  NextAction,
-  Owner,
-  Project,
-} from "../../core/model/entities.ts";
+import type { Area, Entry, Owner, Project, Step } from "../../core/model/entities.ts";
 import type { Clock } from "../../core/ports/clock.ts";
 import type { IdGen } from "../../core/ports/id-gen.ts";
 import type { Store } from "../../core/ports/store.ts";
@@ -46,7 +40,7 @@ describe("the first portfolio loop", () => {
       portfolio.progress[0].recentEntries.some(({ id }) => id === justOutside.id),
       false,
     );
-    assert.equal(portfolio.progress[1].nextAction, null);
+    assert.deepEqual(portfolio.progress[1].openSteps, [], "no step, no plan open");
     assert.equal(portfolio.progress[0].progressSincePlan, 1);
     assert.equal(portfolio.progress[1].progressSincePlan, 0);
     assert.deepEqual(portfolio.outstanding.map(({ project }) => project.id), [quietProject.id]);
@@ -131,16 +125,15 @@ const shelvedProject: Project = {
   title: "Shelved",
   state: "shelved",
 };
-const actionFor = (projectId: string): NextAction => ({
-  id: `action-${projectId}`,
+const stepFor = (projectId: string): Step => ({
+  id: `step-${projectId}`,
   ownerId: owner.id,
   projectId,
-  trigger: "When ready",
-  act: "Move it",
-  obstacle: null,
+  title: "Move it",
   estimateMinutes: null,
+  markedFor: null,
   createdAt: "2026-08-20T12:00:00.000Z",
-  closedAt: null,
+  doneAt: null,
 });
 const entry: Entry = {
   id: "entry-recent",
@@ -169,8 +162,8 @@ function populatedStore(): MemoryStore {
     store.projects.set(project.id, project);
   }
   for (const project of [activeProject, quietProject]) {
-    const action = actionFor(project.id);
-    store.actions.set(action.id, action);
+    const step = stepFor(project.id);
+    store.steps.set(step.id, step);
   }
   return store;
 }
@@ -179,7 +172,7 @@ class MemoryStore implements Store {
   readonly owners = new Map<string, Owner>();
   readonly areas = new Map<string, Area>();
   readonly projects = new Map<string, Project>();
-  readonly actions = new Map<string, NextAction>();
+  readonly steps = new Map<string, Step>();
   readonly entries = new Map<string, Entry>();
 
   async createOwner(value: Owner) { this.owners.set(value.id, value); }
@@ -202,9 +195,9 @@ class MemoryStore implements Store {
     return [...this.areas.values()].filter((value) => areaIds.includes(value.id));
   }
   async createProject(value: Project) { this.projects.set(value.id, value); }
-  async createProjectWithNextAction(value: Project, action: NextAction) {
+  async createProjectWithStep(value: Project, step: Step) {
     this.projects.set(value.id, value);
-    this.actions.set(action.id, action);
+    this.steps.set(step.id, step);
   }
   async getProject(id: string) { return this.projects.get(id) ?? null; }
   async listProjects(ownerId: string) {
@@ -222,34 +215,31 @@ class MemoryStore implements Store {
     }
   }
   async hasClosedWeek(_ownerId: string) { return false; }
-  async createNextAction(value: NextAction) { this.actions.set(value.id, value); }
-  async getNextAction(id: string) { return this.actions.get(id) ?? null; }
-  async findOpenNextAction(projectId: string) {
-    return [...this.actions.values()].find(
-      (value) => value.projectId === projectId && value.closedAt === null,
-    ) ?? null;
-  }
-  async readOpenNextActionsWithProgress(projectIds: string[]) {
-    return [...this.actions.values()]
-      .filter((action) => projectIds.includes(action.projectId) && action.closedAt === null)
-      .map((action) => ({
-        action,
+  async createStep(_value: Step) { throw new Error("not used"); }
+  async getStep(_id: string) { return null; }
+  async listOpenSteps(_projectId: string) { return []; }
+  async readStepsMarkedFor(_ownerId: string, _date: string) { return []; }
+  async readOpenStepsWithProgress(projectIds: string[]) {
+    return projectIds.flatMap((projectId) => {
+      const steps = [...this.steps.values()]
+        .filter((value) => value.projectId === projectId && value.doneAt === null)
+        .sort((left, right) => left.createdAt.localeCompare(right.createdAt));
+      if (steps.length === 0) return [];
+      const openedAt = steps[0].createdAt;
+      return [{
+        projectId,
+        steps,
         progressSincePlan: [...this.entries.values()].filter(
           (value) =>
-            value.projectId === action.projectId &&
+            value.projectId === projectId &&
             value.kind === "progress" &&
-            value.occurredAt >= action.createdAt,
+            value.occurredAt >= openedAt,
         ).length,
-      }));
+      }];
+    });
   }
-  async replaceNextAction(id: string, closedAt: string, replacement: NextAction) {
-    const value = this.actions.get(id);
-    if (value === undefined || value.closedAt !== null) return false;
-    if (this.actions.has(replacement.id)) throw new Error("duplicate action");
-    this.actions.set(id, { ...value, closedAt });
-    this.actions.set(replacement.id, replacement);
-    return true;
-  }
+  async markStepFor(_id: string, _ownerId: string, _date: string | null) { return false; }
+  async setStepDone(_id: string, _ownerId: string, _doneAt: string) { return false; }
   async createEntry(value: Entry) { this.entries.set(value.id, value); }
   async readRecentEntries(projectIds: string[], occurredSince: string) {
     return [...this.entries.values()]

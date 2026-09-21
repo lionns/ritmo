@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
-import type { Area, Entry, NextAction, Owner, Project } from "../../core/model/entities.ts";
+import type { Area, Entry, Owner, Project, Step } from "../../core/model/entities.ts";
 import type { Store } from "../../core/ports/store.ts";
 import {
   changeProjectState,
@@ -48,17 +48,16 @@ describe("the active project cap", () => {
     assert.equal(fixedJob.project.state, "active");
     assert.equal(fixedJob.activeCount, 2);
     assert.equal(fixedJob.countsAgainstCap, false);
-    assert.equal(store.actions.size, 4);
-    assert.deepEqual(first.nextAction, {
+    assert.equal(store.steps.size, 4, "every project is born with somewhere to start");
+    assert.deepEqual(first.step, {
       id: "project-2",
       ownerId: owner.id,
       projectId: first.project.id,
-      trigger: "When the project opens",
-      act: "Take the next step",
-      obstacle: null,
+      title: "Take the next step",
       estimateMinutes: null,
+      markedFor: null,
       createdAt: "2026-09-02T10:00:00.000Z",
-      closedAt: null,
+      doneAt: null,
     });
   });
 
@@ -131,10 +130,7 @@ function newProject(areaId: string, title: string) {
     ownerId: owner.id,
     areaId,
     title,
-    trigger: "When the project opens",
-    act: "Take the next step",
-    obstacle: null,
-    estimateMinutes: null,
+    firstStep: { title: "Take the next step", estimateMinutes: null },
   };
 }
 
@@ -150,7 +146,7 @@ class MemoryStore implements Store {
   readonly owners = new Map<string, Owner>();
   readonly areas = new Map<string, Area>();
   readonly projects = new Map<string, Project>();
-  readonly actions = new Map<string, NextAction>();
+  readonly steps = new Map<string, Step>();
   closedWeek = false;
 
   async createOwner(value: Owner) { this.owners.set(value.id, value); }
@@ -169,9 +165,9 @@ class MemoryStore implements Store {
     return [...this.areas.values()].filter((value) => areaIds.includes(value.id));
   }
   async createProject(value: Project) { this.projects.set(value.id, value); }
-  async createProjectWithNextAction(value: Project, action: NextAction) {
+  async createProjectWithStep(value: Project, step: Step) {
     this.projects.set(value.id, value);
-    this.actions.set(action.id, action);
+    this.steps.set(step.id, step);
   }
   async getProject(id: string) { return this.projects.get(id) ?? null; }
   async listProjects(ownerId: string) {
@@ -189,13 +185,13 @@ class MemoryStore implements Store {
     }
   }
   async hasClosedWeek(_ownerId: string) { return this.closedWeek; }
-  async createNextAction(_value: NextAction) { throw new Error("not used"); }
-  async getNextAction(_id: string) { return null; }
-  async findOpenNextAction(_projectId: string) { return null; }
-  async readOpenNextActionsWithProgress(_projectIds: string[]) { return []; }
-  async replaceNextAction(_id: string, _closedAt: string, _replacement: NextAction) {
-    return false;
-  }
+  async createStep(_value: Step) { throw new Error("not used"); }
+  async getStep(_id: string) { return null; }
+  async listOpenSteps(_projectId: string) { return []; }
+  async readStepsMarkedFor(_ownerId: string, _date: string) { return []; }
+  async readOpenStepsWithProgress(_projectIds: string[]) { return []; }
+  async markStepFor(_id: string, _ownerId: string, _date: string | null) { return false; }
+  async setStepDone(_id: string, _ownerId: string, _doneAt: string) { return false; }
   async createEntry(_value: Entry) { throw new Error("not used"); }
   async readRecentEntries(_projectIds: string[], _occurredSince: string) { return []; }
 }

@@ -161,20 +161,21 @@ Every project inside the glass panel. Drawn in the approved canvas (`L-Escritori
 page `page-ux`) but never written down until now, so the first implementation could not build it.
 **Settled with the owner on 2026-09-01**, reading the artboards back.
 
-- **Four elements, in this order:** the marker row, the project title, the next action as one
-  sentence, and the last movement. Nothing else.
+- **Four elements, in this order:** the marker row, the project title, **today's steps** as
+  sentences, and the last movement. Nothing else.
   No area label, no field labels, no per-field rows. The artboards carry four fewer text blocks than
   a labelled form does, and that difference is the design.
 - **The markers, above the title.** A small path, left to right: one **filled `accent` circle per
   progress entry logged since the current plan opened**, then one **`faint` outlined circle** — the
   next step, always drawn — then a **`faint` diamond** for the objective. A project with nothing
   logged against that plan opens at its empty circle.
-  The outline is not conditional: `data-model.md` requires every active project to carry exactly one
-  open next action, so the step always exists, and all three rows of the canvas draw it.
+  The outline is drawn whenever the project has an open step, which `FR-6` makes the ordinary case
+  — a project whose stretch is finished draws no outline, and that absence is the prompt to write
+  the next few. It is no longer unconditional: `D-024` retired the invariant that guaranteed it.
   | Mark | Geometry | Desktop | Mobile |
   |---|---|---|---|
   | Progress | circle, filled `accent` | 12px | 11px |
-  | Open next action | circle, `1.5px` border in `faint`, no fill | 12px | 11px |
+  | Next step | circle, `1.5px` border in `faint`, no fill | 12px | 11px |
   | Objective | square rotated `45deg`, filled `faint`, `margin-left: 5px` | 9px | 8px |
   Row is `flex`, `align-items: center`, `gap: 10px`.
 - **Filled circles cap at four.** Owner's number, not the canvas's — the artboards only ever draw
@@ -183,14 +184,24 @@ page `page-ux`) but never written down until now, so the first implementation co
 - **The markers are a path, not a score.** They carry no number, no streak and no target, and a
   missed period removes nothing that was there (`NFR-7`, `AC-X4`). If a count is ever rendered
   beside them, that rule is the one it breaks.
-- **The sentence is the next action, read as language.** `trigger` and `act` join into one line in
-  `dim`: the trigger already carries its own *Cuando* / *Si* / *El sábado*, so the rendering joins
-  them with a comma and closes the sentence, never doubling punctuation the act already carries. The
-  act joins **verbatim** — settled 2026-09-01, after lowercasing its first letter mangled proper
-  nouns (`Notion` → `notion`). No heuristic separates a name from a verb, and a capital after a
-  comma is a benign oddity where a corrupted name is not. The register belongs to how the action is
-  written, which the screen that writes one can prompt for. A project with no open next action shows
-  the prompt to write one instead, also in `dim`.
+- **Today's steps are read as language, never as a checklist.** Each step marked for today renders
+  as its own line in `dim`, verbatim — no leading box, no checkmark, no strikethrough, no count.
+  **An unchecked box on the landing surface is a debt symbol**, which is exactly what `NFR-7` and
+  `brief.md` § Constraints refuse, and it is the reason this rendering is specified rather than
+  left to the implementation. Steps join nothing and parse nothing: `D-024` removed the trigger, so
+  there is no second clause to comma together and no punctuation to reconcile. The verbatim rule
+  survives from 2026-09-01, where lowercasing a first letter mangled proper nouns (`Notion` →
+  `notion`). A project with nothing marked for today shows the prompt to mark something, in `dim`;
+  a project whose step list is empty shows the prompt to write the next few instead.
+- **The full step list never renders here.** Only what is marked for today. The list lives inside
+  the project, and no count of unmarked or undone steps appears on `/`, ever — the third guardrail
+  of `D-024`, shaped after the week-attribution ones in `brief.md` § Constraints.
+- **How the list can sit on `/` without being on the landing surface.** The disclosure holds it in
+  the document, and a collapsed `<details>` renders nothing: the owner sees the list only after
+  choosing to open it, which is the opposite of a landing view. Two rules keep that true, and T-020
+  tests both — **the summary carries no number**, so the collapsed state leaks no count, and the
+  rows carry **no checkbox**. Settled 2026-09-21, against fetching the list on open: `D-007` made
+  the interface server-rendered, and a fetch would put the owner's plan behind a spinner.
 - **The last movement closes the row**, in `dim`, prefixed `Último:` in `faint-text`. Restored
   2026-09-01: the canvas draws three elements, but with only three, writing an entry can leave `/`
   unchanged — a project already first and already at the mark cap, logging without minutes, moves no
@@ -198,8 +209,8 @@ page `page-ux`) but never written down until now, so the first implementation co
   mark grows… no toast") and the untimed floor is fixed, so that confirmation never arrives for
   exactly the cheapest entry to write (`NFR-1`). This line is what makes `AC-5` true.
 - **The marks are `aria-hidden`.** Everything they encode is already in text on the same screen:
-  the section heading says whether the project moved, and the sentence says whether a next action is
-  open. Only the count of advances is theirs alone, and `NFR-7` does not want that spoken any more
+  the section heading says whether the project moved, and the sentences say what is marked for
+  today. Only the count of advances is theirs alone, and `NFR-7` does not want that spoken any more
   than it wants it drawn. Shape already carries the states for anyone reading them (§ Accessibility
   Notes, "Progress dots pair fill with an outline shape").
 - **Spacing.** `14px` above and below the row on mobile, `16px` on desktop, a `hair` rule between
@@ -207,18 +218,17 @@ page `page-ux`) but never written down until now, so the first implementation co
   hierarchy of the row; compact height mode takes its space from the outer padding (down to `12px`)
   and never from them.
 - **The visual row is the link** to `/registrar?project=<id>`, which preserves the prefilled project
-  for the fast log (`NFR-1`). T-013 adds one control immediately after that row, inside the same
-  project item: “Escribir la próxima acción” when the action is missing, or “Cerrar y escribir la
-  siguiente” when one is open. It is a native disclosure with its own 58/56px target, not nested in
-  the log link. Opening it reveals the replacement form in place; closing is never offered without
-  the replacement fields already visible. The earlier sentence that no second call to action
-  belonged in the card described the approved canvas before the action cycle existed.
+  for the fast log (`NFR-1`). One control sits immediately after the row, inside the same project
+  item: a native disclosure with its own 58/56px target, not nested in the log link. It opens the
+  project's step list, where each step can be marked for today and new steps written. The control
+  reads “Elegir lo de hoy”, or “Escribir los próximos pasos” when the list is empty.
 
-**The cycle form uses the action's own shape.** “Disparador” and “Acción” are required text fields;
-“Obstáculo · opcional” and “Minutos estimados · opcional” follow. The first two examples make the
-register concrete (“Cuando abra el documento” / “Escribir el primer párrafo”) without pre-filling
-an answer. Saving reloads the portfolio so the sentence itself becomes the confirmation. A repair
-uses the same fields and control; no special warning marks a project created before T-013.
+**The step form is one field.** “Paso” is the only required input; “Minutos estimados · opcional”
+follows, and nothing else. `D-024` removed “Disparador” and “Acción” as a pair and removed
+“Obstáculo” with them — all three rested on research §6, which that decision overrides. The example
+makes the register concrete (“Escribir el primer párrafo”) without pre-filling an answer. Marking a
+step for today reloads the portfolio so the sentence appearing in the row is the confirmation, in
+the shape § Interaction States already uses: the screen changes, and nothing congratulates.
 
 ## The Log Form
 
@@ -226,9 +236,9 @@ Drawn in `R-Movil` (`page-ux`) and written down by T-008 so the screen can be re
 reverse-engineering the canvas. The form keeps one decision per block and the project is context,
 not another question, when the owner enters from its portfolio row.
 
-- **With a prefilled project:** its title is the form heading, followed by the open next action
-  under its own mono label, then the progress field. The action uses § The Project Row's sentence
-  rendering. Invalid data with no action renders no replacement copy.
+- **With a prefilled project:** its title is the form heading, followed by whatever is marked for
+  today under its own mono label, then the progress field. The steps use § The Project Row's
+  rendering. A project with nothing marked renders no replacement copy.
 - **Without a prefilled project:** the existing project select remains. An unknown `project` query
   also falls back to that select rather than silently writing against a different project.
 - **Minutes are four chips:** `15 / 30 / 60 / 120`, under `MINUTOS · OPCIONAL`. They are buttons,
@@ -285,9 +295,9 @@ holds the area form and a native disclosure whose summary is the area count; the
 while both creation forms remain visible. An area asks for a name and one checkbox: “Cuenta dentro
 del límite”. The helper names the exception directly: leave it clear for the fixed job, whose
 projects do not compete for this cap (FR-15). `PROYECTOS` holds the active count, the cap edit and
-`NUEVO PROYECTO`: title, area, the four action fields from § The Project Row, and one button. Trigger
-and act are required so the first open action is part of project creation; obstacle and estimate
-remain optional. With no areas it keeps the factual next action, “Crea un área en Ajustes antes del
+`NUEVO PROYECTO`: title, area, one first step, and one button. The step is required so a project is
+never created without somewhere to start; its estimate remains optional. `D-024` cut this form from
+four action fields to one. With no areas it keeps the factual instruction, “Crea un área en Ajustes antes del
 primer proyecto.” There is no objective or deadline field here; both remain outside this slice.
 
 **The portfolio returns to reading.** Immediately after setup, `EN MOVIMIENTO` stays in place and
@@ -324,7 +334,7 @@ with the `2xl` column gap. Below `1200px` they stack in document flow as every o
 after the first full-width build shipped single-column fields inside 624px cards: every input ran
 566px wide to hold “45”, which spent the width on length instead of height and left Áreas at 465px
 beside Proyectos at 1091px — a 627px void under the short card, and 635px of page scroll. Fields
-pair across the card — `Nombre|Área`, `Disparador|Acción`, `Obstáculo|Minutos` — and the cap
+pair across the card — `Nombre|Área`, `Paso|Minutos` — and the cap
 **editor** sits with the areas while the `X DE Y ACTIVOS` count stays above the project form, where
 it is read. That brings the pair to roughly 501px and 719px, so a 900px viewport holds the screen
 without scrolling. **Two cards of different content will not match, and are not made to**: ~218px
@@ -345,8 +355,8 @@ Six routes, three levels deep. Settled with the owner on 2026-08-30 after drawin
 
 | Route | What it is | How you reach it |
 |---|---|---|
-| `/` | **Portfolio.** What moved, before what is outstanding (US-3). The landing. | The wordmark, from anywhere. |
-| `/p/:id` | **Project.** History, next action, dormant state, log form inline. | Tapping a project. |
+| `/` | **Portfolio.** What moved, before what is outstanding (US-3). Carries today's steps and where they are marked (FR-22) — a state of this route, not a seventh one, settled with the owner 2026-09-21. The landing. | The wordmark, from anywhere. |
+| `/p/:id` | **Project.** History, the full step list, dormant state, log form inline. | Tapping a project. |
 | `/semana` | **The ritual.** One route, two states: proposal when the week opens (FR-10), close when it ends (US-7, US-8). | A strip below the header on `/`, shown only when the week is due. |
 | `/archivo` | **Shelved, dormant, closed.** The backlog that may never be the landing. | A footer link at the end of the portfolio list. |
 | `/ajustes` | Capacity cap (US-1), areas, projects, tags, **export** (FR-21), passkey. | A footer link beside the archive. |

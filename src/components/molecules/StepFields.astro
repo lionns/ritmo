@@ -1,0 +1,50 @@
+---
+import FieldError from "../atoms/FieldError.astro";
+
+interface Props {
+  idPrefix: string;
+  paired?: boolean;
+  /**
+   * The field's name. `title` everywhere the step is the only thing named; `step` inside the
+   * create form, where the project already owns `title` and two fields of one name would make
+   * `form.elements.namedItem` return a list instead of an input.
+   */
+  fieldName?: "title" | "step";
+}
+
+// design-handoff.md § The Project Row: one required field. D-024 removed the trigger-and-act pair
+// and the obstacle with it — all three rested on research §6, which that decision overrides.
+// Kept in the frontmatter, not as an HTML comment: an HTML comment is served to the page.
+const { idPrefix, paired = false, fieldName = "title" } = Astro.props;
+---
+
+<div class:list={["grid gap-4", paired && "xl:grid-cols-2"]}>
+  <div>
+    <label class="mb-2 block text-sm font-medium text-dim" for={`${idPrefix}-title`}>Paso</label>
+    <input
+      class="min-h-[58px] w-full rounded-field border border-glass-border bg-[color-mix(in_srgb,var(--page-bg)_72%,transparent)] px-4 text-base text-ink placeholder:text-faint-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent md:min-h-14"
+      id={`${idPrefix}-title`}
+      name={fieldName}
+      placeholder="Ej. Escribir el primer párrafo"
+      aria-describedby={`${idPrefix}-title-error`}
+      data-field-control={fieldName}
+      required
+    />
+    <FieldError id={`${idPrefix}-title-error`} field={fieldName} />
+  </div>
+  <div>
+    <label class="mb-2 block text-sm font-medium text-dim" for={`${idPrefix}-estimate`}>Minutos estimados · opcional</label>
+    <input
+      class="min-h-[58px] w-full rounded-field border border-glass-border bg-[color-mix(in_srgb,var(--page-bg)_72%,transparent)] px-4 font-mono text-base text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent md:min-h-14"
+      id={`${idPrefix}-estimate`}
+      name="estimateMinutes"
+      type="number"
+      min="1"
+      step="1"
+      inputmode="numeric"
+      aria-describedby={`${idPrefix}-estimate-error`}
+      data-field-control="estimateMinutes"
+    />
+    <FieldError id={`${idPrefix}-estimate-error`} field="estimateMinutes" />
+  </div>
+</div>

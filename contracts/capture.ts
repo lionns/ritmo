@@ -1,4 +1,4 @@
-import type { NextActionContract, NextActionRequestFields } from "./next-actions.ts";
+import type { StepContract } from "./steps.ts";
 
 export interface SetupRequest {
   activeCap: number;
@@ -42,9 +42,12 @@ export interface CreateAreaResponse {
   area: CaptureArea;
 }
 
-export interface CreateProjectRequest extends NextActionRequestFields {
+export interface CreateProjectRequest {
   title: string;
   areaId: string;
+  /** The first step. A project without one is a project you do not know how to continue. */
+  step: string;
+  estimateMinutes?: number;
 }
 
 export interface UpdateProjectStateRequest {
@@ -60,7 +63,7 @@ export interface ProjectMutationResponse {
 }
 
 export interface CreateProjectResponse extends ProjectMutationResponse {
-  nextAction: NextActionContract;
+  step: StepContract;
 }
 
 export interface CaptureErrorResponse {

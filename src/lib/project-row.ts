@@ -1,4 +1,4 @@
-import type { PortfolioNextAction } from "../../contracts/portfolio.ts";
+import type { PortfolioStep } from "../../contracts/portfolio.ts";
 
 /** design-handoff.md § The Project Row: the row of filled marks stops at four. */
 export const PROGRESS_MARK_CAP = 4;
@@ -10,14 +10,24 @@ export function countProgressMarks(progressSincePlan: number): number {
 }
 
 /**
- * The next action read as one sentence. `trigger` already carries its own opener
- * ("Cuando…", "Si…", "El sábado…"), so the two halves join on a comma. The act is joined
- * verbatim: no heuristic separates a proper noun from a verb, and lowercasing "Notion" is a
- * worse failure than a capital after a comma. Owner settled 2026-09-01.
+ * Only what the owner marked for today reaches the row. A mark for any other day is not history
+ * and is never rendered, counted or summed (`FR-22`, `data-model.md` § Data lifecycle).
  */
-export function readAsSentence({ trigger, act }: PortfolioNextAction): string {
-  const opener = trigger.trim().replace(/[,;:.]+$/, "");
-  const body = act.trim();
-  if (body === "") return `${opener}.`;
-  return TERMINAL_PUNCTUATION.test(body) ? `${opener}, ${body}` : `${opener}, ${body}.`;
+export function markedForToday(
+  openSteps: PortfolioStep[],
+  today: string,
+): PortfolioStep[] {
+  return openSteps.filter(({ markedFor }) => markedFor === today);
+}
+
+/**
+ * A step read as language. `D-024` removed the trigger, so there is no second clause to join and
+ * no punctuation to reconcile — only the closing period the owner did not type. The title is used
+ * verbatim otherwise: no heuristic separates a proper noun from a verb, and lowercasing "Notion"
+ * is a worse failure than an odd capital. Owner settled 2026-09-01, kept through `D-024`.
+ */
+export function readAsSentence({ title }: PortfolioStep): string {
+  const body = title.trim();
+  if (body === "") return "";
+  return TERMINAL_PUNCTUATION.test(body) ? body : `${body}.`;
 }

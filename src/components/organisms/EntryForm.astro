@@ -1,16 +1,17 @@
 ---
 import type { PortfolioProject } from "../../../contracts/portfolio.ts";
 import { EFFORT_MINUTE_OPTIONS } from "../../lib/entry-form.ts";
-import { readAsSentence } from "../../lib/project-row.ts";
+import { markedForToday, readAsSentence } from "../../lib/project-row.ts";
 import FieldError from "../atoms/FieldError.astro";
 import ListboxField from "../molecules/ListboxField.astro";
 
 interface Props {
   projects: PortfolioProject[];
   selectedProject?: PortfolioProject;
+  today: string;
 }
 
-const { projects, selectedProject } = Astro.props;
+const { projects, selectedProject, today } = Astro.props;
 const initialProject = selectedProject?.id ?? projects[0]?.id;
 ---
 
@@ -22,14 +23,14 @@ const initialProject = selectedProject?.id ?? projects[0]?.id;
           {selectedProject.title}
         </h2>
         <input type="hidden" name="projectId" value={selectedProject.id} />
-        {selectedProject.nextAction && (
+        {markedForToday(selectedProject.openSteps, today).length > 0 && (
           <div class="mt-5">
             <p class="font-mono text-[8px] leading-[1.4] tracking-[0.2em] text-dim uppercase">
-              Próxima acción
+              Hoy
             </p>
-            <p class="mt-2 text-[15px] leading-[1.45] text-dim">
-              {readAsSentence(selectedProject.nextAction)}
-            </p>
+            {markedForToday(selectedProject.openSteps, today).map((step) => (
+              <p class="mt-2 text-[15px] leading-[1.45] text-dim">{readAsSentence(step)}</p>
+            ))}
           </div>
         )}
       </div>

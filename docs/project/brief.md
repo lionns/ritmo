@@ -38,8 +38,13 @@ accumulated progress rather than accumulated debt, and therefore keeps opening i
   in the fixed job on Docker, servers, or AI counts toward a learning objective. This is inter-goal
   facilitation, and it is the only mechanism in the design that creates time rather than spending
   it. (§11)
-- **Next action per active project.** Exactly one, written in if–then form with an optional obstacle
-  field. (§5, §6)
+- **Steps per active project, and a day list.** A project carries a short list of next steps — the
+  next stretch only, never the whole project. Once a day the owner marks which of them they will do
+  today, from projects already active that week: no hour, no duration, no condition, and no daily
+  cap beyond the weekly one. A mark expires with the day and leaves nothing behind. This replaced
+  the single if–then next action after weeks of real use, and the trade is recorded in `D-024`: it
+  overrides §6, and what stands in its place is §1's own remedy — commit to a day, not a clock slot
+  — together with the half of §12 no requirement had ever carried, a day view. (§1, §5, §10, §12)
 - **Flexible weekly commitments.** Frequency or volume over a week, expressed as `target + reserve`.
   The reserve is automatic — `ceil(0.30 × target)`, minimum 1 — and the adaptive proposal tunes it
   from how much of it gets spent. Spending a reserve is a recorded, unpunished event, never a
@@ -80,7 +85,7 @@ accumulated progress rather than accumulated debt, and therefore keeps opening i
 - **Full export.** The owner can download their entire database as a SQLite file at any time. This
   is the condition the privacy reversal rests on: the data lives on Cloudflare, but the owner always
   holds a complete copy, so losing account access never means losing the record. (`D-005`, FR-21)
-- **Estimate calibration.** An estimate is captured on each next action — which is exactly the "next
+- **Estimate calibration.** An estimate is captured on each step — which is exactly the "next
   stretch" §10 says to decompose, so no subtask tree is needed. The actual is *derived* from the
   effort logged on that project while the action was open, rather than typed a second time, and the
   ratio comes back as a personal calibration signal, never as a failure. (§10)
@@ -96,6 +101,8 @@ accumulated progress rather than accumulated debt, and therefore keeps opening i
   built. The data model must nonetheless keep them addable — see Constraints.
 - **Time tracking as billing or timesheets.** Effort is logged for calibration only.
 - **Task management for its own sake:** subtask trees, dependencies, Gantt charts, kanban boards.
+  The step list of `D-024` is none of these: it is flat, it is bounded to the next stretch, and it
+  is never the landing view. A list that grows to cover a whole project has crossed this line.
 - **Native mobile applications.** Web, responsive, in this phase.
 - **Notifications that chase the owner** — push, email nags, or "you missed X" prompts. (§15)
 - **Counting leisure hours.** Ritmo never records how long anything outside a project took, and never
@@ -130,6 +137,12 @@ accumulated progress rather than accumulated debt, and therefore keeps opening i
   the evidence rejects, so three rules bind it: it appears **only in the weekly close**, never on the
   landing surface · it is **never rendered in red and never accumulated as a debt across weeks** ·
   and the word "lost" is never used. A week closed without a tag is as complete as one with it.
+- **Guardrails on the step list.** The owner's own history is detailed plans abandoned once the gap
+  to reality showed, so the list that `D-024` introduces is the feature most able to rebuild that
+  gap. Three rules bind it, in the shape the week-attribution ones use: the full list lives **inside
+  the project and never on the landing surface** · **no count of unmarked or undone steps is ever
+  rendered**, anywhere · **never in red**. A day with nothing marked is a complete day, and a step
+  that was not done leaves no trace when the day turns.
 - **Single owner today, extensible tomorrow.** *Owner's call, against the recommendation to close
   this permanently.* Sharing is not built, but the data model must not assume a single owner so
   deeply that adding a second party later means a migration: ownership is modelled explicitly even
@@ -144,7 +157,7 @@ accumulated progress rather than accumulated debt, and therefore keeps opening i
 - **Median time from opening the app to a saved progress entry is under 20 seconds.**
 - After a week where a commitment was missed, the owner returns and logs again the following week in
   the large majority of cases — the "what the hell" collapse does not occur. (§7, §8)
-- **Every active project has a current next action** at the end of each weekly close.
+- **Every active project has at least one open step** at the end of each weekly close.
 - Active projects stay at or under the WIP cap without the cap being raised to accommodate drift.
 - At six months, the owner can point to objectives outside paid work — a trip, a course, a personal
   project — that measurably advanced, and to shelved ones shelved deliberately rather than dropped.
@@ -158,16 +171,18 @@ four questions the data model carried are settled too (2026-08-30).
 
 Still open:
 
-- **Is the estimate on a next action required or optional?** The field exists now; whether writing an
-  action without one is allowed is a use question. §10 notes the benefit of decomposing fades on easy
+- **Is the estimate on a step required or optional?** The field exists now; whether writing a step
+  without one is allowed is a use question. §10 notes the benefit of decomposing fades on easy
   or distant work, which argues for optional.
 
 Settled by the owner and recorded in Scope and Constraints above rather than in `docs/decisions/`:
 objectives carry no target; capacity is inferred and labelled at close; reserves default to 30% of
 target; the active cap is asked for at setup and audited by stale rate; sharing stays unbuilt but
-must remain addable without a migration (2026-08-28). The estimate lives on the next action and the
-actual is derived from its open window; the proposed target is retained beside the accepted one
-(2026-08-29). An objective is **not** required between an area and a project, so
+must remain addable without a migration (2026-08-28). The estimate lives on the step — moved there
+from the next action by `D-024` (2026-09-21) — and the actual is derived from its open window; the
+proposed
+target is retained beside the accepted one (2026-08-29). An objective is **not** required between
+an area and a project, so
 `Project.objectiveId` is nullable while `areaId` stays required; a commitment is stored per week and
 pre-filled from the week before rather than defined once; and the proposed target moves only when the
 reserve reads the same way across two closed weeks — untouched in both raises it by one, exhausted in

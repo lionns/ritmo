@@ -1,7 +1,13 @@
-import type { Area, Entry, NextAction, Owner, Project } from "../model/entities.ts";
+import type { Area, Entry, Owner, Project, Step } from "../model/entities.ts";
 
-export interface OpenNextActionWithProgress {
-  action: NextAction;
+/**
+ * A project's open steps, with the entries logged since the oldest of them was written — which is
+ * what "since the current plan opened" means once the plan is a list (`design-handoff.md`
+ * § The Project Row).
+ */
+export interface OpenStepsWithProgress {
+  projectId: string;
+  steps: Step[];
   progressSincePlan: number;
 }
 
@@ -15,17 +21,19 @@ export interface Store {
   listAreas(ownerId: string): Promise<Area[]>;
   readAreas(areaIds: string[]): Promise<Area[]>;
   createProject(project: Project): Promise<void>;
-  createProjectWithNextAction(project: Project, action: NextAction): Promise<void>;
+  createProjectWithStep(project: Project, step: Step): Promise<void>;
   getProject(id: string): Promise<Project | null>;
   listProjects(ownerId: string): Promise<Project[]>;
   listActiveProjects(ownerId: string): Promise<Project[]>;
   setProjectState(id: string, ownerId: string, state: Project["state"]): Promise<void>;
   hasClosedWeek(ownerId: string): Promise<boolean>;
-  createNextAction(action: NextAction): Promise<void>;
-  getNextAction(id: string): Promise<NextAction | null>;
-  findOpenNextAction(projectId: string): Promise<NextAction | null>;
-  readOpenNextActionsWithProgress(projectIds: string[]): Promise<OpenNextActionWithProgress[]>;
-  replaceNextAction(id: string, closedAt: string, replacement: NextAction): Promise<boolean>;
+  createStep(step: Step): Promise<void>;
+  getStep(id: string): Promise<Step | null>;
+  listOpenSteps(projectId: string): Promise<Step[]>;
+  readStepsMarkedFor(ownerId: string, date: string): Promise<Step[]>;
+  readOpenStepsWithProgress(projectIds: string[]): Promise<OpenStepsWithProgress[]>;
+  markStepFor(id: string, ownerId: string, date: string | null): Promise<boolean>;
+  setStepDone(id: string, ownerId: string, doneAt: string): Promise<boolean>;
   createEntry(entry: Entry): Promise<void>;
   readRecentEntries(projectIds: string[], occurredSince: string): Promise<Entry[]>;
 }

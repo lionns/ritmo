@@ -1,21 +1,25 @@
 ---
 import type { PortfolioProject } from "../../../contracts/portfolio.ts";
-import { countProgressMarks, readAsSentence } from "../../lib/project-row.ts";
-import NextActionCycle from "../organisms/NextActionCycle.astro";
+import { countProgressMarks, markedForToday, readAsSentence } from "../../lib/project-row.ts";
+import StepList from "../organisms/StepList.astro";
 
 interface Props {
   project: PortfolioProject;
   kind: "progress" | "outstanding" | "shelved";
+  today: string;
 }
 
-const { project, kind } = Astro.props;
+const { project, kind, today } = Astro.props;
 const latestEntry = project.recentEntries[0];
 const progressMarks = project.state === "active" ? countProgressMarks(project.progressSincePlan) : 0;
 const logHref = `/registrar?project=${encodeURIComponent(project.id)}`;
 const areaName = project.area.name;
-const line = project.nextAction === null
-  ? "Escribe la próxima acción cuando esté clara."
-  : readAsSentence(project.nextAction);
+// design-handoff.md § The Project Row: today's steps read as language, never as a checklist —
+// an unchecked box on the landing surface is a debt symbol (NFR-7, D-024).
+const todaySteps = markedForToday(project.openSteps, today);
+const emptyLine = project.openSteps.length === 0
+  ? "Escribe los próximos pasos cuando los sepas."
+  : "Elige lo de hoy cuando lo sepas.";
 ---
 
 {
@@ -37,11 +41,21 @@ const line = project.nextAction === null
               <span class="mark-progress block size-[11px] rounded-full bg-accent md:size-3" data-mark-index={index} />
             ))
           }
-          <span class="mark-open block size-[11px] rounded-full border-[1.5px] border-faint md:size-3" />
+          {project.openSteps.length > 0 && (
+            <span class="mark-open block size-[11px] rounded-full border-[1.5px] border-faint md:size-3" />
+          )}
           <span class="mark-goal ml-[5px] block size-2 rotate-45 bg-faint md:size-[9px]" />
         </span>
         <h3 class="project-title mt-2 mb-0 text-[17px] leading-[1.15] font-semibold tracking-[-0.02em] text-ink md:text-xl">{project.title}</h3>
-        <span class="project-line mt-2 block min-h-[26px] text-sm leading-[1.45] text-dim transition-colors duration-[120ms] motion-reduce:transition-none md:text-[15px]">{line}</span>
+        {
+          todaySteps.length === 0 ? (
+            <span class="project-line mt-2 block min-h-[26px] text-sm leading-[1.45] text-dim transition-colors duration-[120ms] motion-reduce:transition-none md:text-[15px]">{emptyLine}</span>
+          ) : (
+            todaySteps.map((step) => (
+              <span class="project-line mt-2 block min-h-[26px] text-sm leading-[1.45] text-dim transition-colors duration-[120ms] motion-reduce:transition-none md:text-[15px]">{readAsSentence(step)}</span>
+            ))
+          )
+        }
         {
           latestEntry && (
             <span class="project-latest mt-1.5 block text-sm leading-[1.45] text-dim md:text-[15px]">
@@ -50,7 +64,7 @@ const line = project.nextAction === null
           )
         }
       </a>
-      <NextActionCycle project={project} />
+      <StepList project={project} today={today} />
     </article>
   )
 }

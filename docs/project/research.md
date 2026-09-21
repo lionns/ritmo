@@ -83,8 +83,12 @@ of Effects and Processes*, Advances in Experimental Social Psychology 38, 69–1
 *A Meta-Analysis of the Effects of Mental Contrasting With Implementation Intentions on Goal
 Attainment*, Frontiers in Psychology, 2021.
 
-**Rule.** The next-action field is cued, not free-form: it prompts for the trigger as well as the
-act. An obstacle field is offered, not required.
+**Rule — overridden by `D-024` (2026-09-21).** The finding above and its effect size stand
+untouched; what changed is Ritmo's response to them. Weeks of real use showed the trigger asked the
+owner to predict a day whose shape is not knowable, and §1's own remedy — commit to a day, not a
+clock slot — together with §12's day view is what replaced it. The rule as written was: *the
+next-action field is cued, not free-form: it prompts for the trigger as well as the act. An
+obstacle field is offered, not required.*
 
 ## 7. Consecutive-day streaks are a liability
 
@@ -166,8 +170,10 @@ the next one; the effect is strongest when the prior task was left unfinished.
 **Source.** Leroy, *Why is it so hard to do my work? The challenge of attention residue when
 switching between work tasks*, OBHDP 109(2), 168–181, 2009.
 
-**Rule.** Reinforces the WIP cap in §11, and argues for a day view that names one or two focus
-projects rather than listing all of them.
+**Rule.** Reinforces the WIP cap in §11 (`FR-13`), and argues for a day view that names one or two
+focus projects rather than listing all of them. The day view went uncarried by any requirement
+until `FR-22` (`D-024`, 2026-09-21); the owner chose no daily cap there, because `FR-13` already
+asks that question at setup, and the divergence from "one or two" is deliberate.
 
 ## 13. Goals must stay self-concordant to survive
 

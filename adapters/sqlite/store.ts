@@ -3,11 +3,11 @@ import type { DatabaseSync, SQLInputValue } from "node:sqlite";
 import type {
   Area,
   Entry,
-  NextAction,
   Owner,
   Project,
+  Step,
 } from "../../core/model/entities.ts";
-import type { Store } from "../../core/ports/store.ts";
+import type { OpenStepsWithProgress, Store } from "../../core/ports/store.ts";
 import { openDatabase } from "./database.ts";
 
 interface OwnerRow {
@@ -34,17 +34,6 @@ interface ProjectRow {
   deadline_source: string | null;
 }
 
-interface NextActionRow {
-  id: string;
-  owner_id: string;
-  project_id: string;
-  trigger: string;
-  act: string;
-  obstacle: string | null;
-  estimate_minutes: number | null;
-  created_at: string;
-  closed_at: string | null;
-}
 
 interface EntryRow {
   id: string;
@@ -58,9 +47,17 @@ interface EntryRow {
   note: string | null;
 }
 
-interface OpenNextActionWithProgressRow extends NextActionRow {
-  progress_since_plan: number;
+interface StepRow {
+  id: string;
+  owner_id: string;
+  project_id: string;
+  title: string;
+  estimate_minutes: number | null;
+  marked_for: string | null;
+  created_at: string;
+  done_at: string | null;
 }
+
 
 let runtimeDatabase: DatabaseSync | undefined;
 
@@ -155,22 +152,15 @@ export class SqliteStore implements Store {
       );
   }
 
-  async createProjectWithNextAction(
-    project: Project,
-    action: NextAction,
-  ): Promise<void> {
-    if (
-      action.ownerId !== project.ownerId ||
-      action.projectId !== project.id ||
-      action.closedAt !== null
-    ) {
-      throw new Error(`Next action ${action.id} must open on project ${project.id}`);
+  async createProjectWithStep(project: Project, step: Step): Promise<void> {
+    if (step.ownerId !== project.ownerId || step.projectId !== project.id || step.doneAt !== null) {
+      throw new Error(`Step ${step.id} must open on project ${project.id}`);
     }
 
     this.#database.exec("BEGIN IMMEDIATE");
     try {
       await this.createProject(project);
-      await this.createNextAction(action);
+      await this.createStep(step);
       this.#database.exec("COMMIT");
     } catch (error) {
       this.#database.exec("ROLLBACK");
@@ -214,96 +204,103 @@ export class SqliteStore implements Store {
       .get(ownerId) !== undefined;
   }
 
-  async createNextAction(action: NextAction): Promise<void> {
+  async createStep(step: Step): Promise<void> {
     this.#database
       .prepare(
-        `INSERT INTO next_actions
-          (id, owner_id, project_id, trigger, act, obstacle, estimate_minutes, created_at, closed_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        `INSERT INTO steps
+          (id, owner_id, project_id, title, estimate_minutes, marked_for, created_at, done_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
       )
       .run(
-        action.id,
-        action.ownerId,
-        action.projectId,
-        action.trigger,
-        action.act,
-        action.obstacle,
-        action.estimateMinutes,
-        action.createdAt,
-        action.closedAt,
+        step.id,
+        step.ownerId,
+        step.projectId,
+        step.title,
+        step.estimateMinutes,
+        step.markedFor,
+        step.createdAt,
+        step.doneAt,
       );
   }
 
-  async getNextAction(id: string): Promise<NextAction | null> {
-    const row = this.#database.prepare("SELECT * FROM next_actions WHERE id = ?").get(id);
-    return row === undefined ? null : toNextAction(row as unknown as NextActionRow);
+  async getStep(id: string): Promise<Step | null> {
+    const row = this.#database.prepare("SELECT * FROM steps WHERE id = ?").get(id);
+    return row === undefined ? null : toStep(row as unknown as StepRow);
   }
 
-  async findOpenNextAction(projectId: string): Promise<NextAction | null> {
-    const row = this.#database
-      .prepare("SELECT * FROM next_actions WHERE project_id = ? AND closed_at IS NULL")
-      .get(projectId);
-    return row === undefined ? null : toNextAction(row as unknown as NextActionRow);
+  async listOpenSteps(projectId: string): Promise<Step[]> {
+    const rows = this.#database
+      .prepare("SELECT * FROM steps WHERE project_id = ? AND done_at IS NULL ORDER BY created_at")
+      .all(projectId);
+    return (rows as unknown as StepRow[]).map(toStep);
   }
 
-  async readOpenNextActionsWithProgress(
-    projectIds: string[],
-  ): Promise<Array<{ action: NextAction; progressSincePlan: number }>> {
+  /**
+   * The only read of `marked_for` there is, and it takes the date rather than defaulting to one:
+   * a mark for any other day is not history and no caller can ask for it (FR-22).
+   */
+  async readStepsMarkedFor(ownerId: string, date: string): Promise<Step[]> {
+    const rows = this.#database
+      .prepare(
+        `SELECT * FROM steps
+          WHERE owner_id = ? AND marked_for = ? AND done_at IS NULL
+          ORDER BY project_id, created_at`,
+      )
+      .all(ownerId, date);
+    return (rows as unknown as StepRow[]).map(toStep);
+  }
+
+  /**
+   * One query, anchored to the oldest open step: entries logged before the plan's current stretch
+   * began are not part of it. A project with no open steps returns no row at all, which the rule
+   * reads as zero.
+   */
+  async readOpenStepsWithProgress(projectIds: string[]): Promise<OpenStepsWithProgress[]> {
     if (projectIds.length === 0) return [];
     const placeholders = projectIds.map(() => "?").join(", ");
     const rows = this.#database
       .prepare(
-        `SELECT next_actions.*,
-                COUNT(entries.id) AS progress_since_plan
-         FROM next_actions
-         LEFT JOIN entries
-           ON entries.project_id = next_actions.project_id
-          AND entries.owner_id = next_actions.owner_id
-          AND entries.kind = 'progress'
-          AND entries.occurred_at >= next_actions.created_at
-         WHERE next_actions.closed_at IS NULL
-           AND next_actions.project_id IN (${placeholders})
-         GROUP BY next_actions.id
-         ORDER BY next_actions.project_id`,
+        `SELECT steps.*, (
+           SELECT COUNT(entries.id) FROM entries
+            WHERE entries.project_id = steps.project_id
+              AND entries.owner_id = steps.owner_id
+              AND entries.kind = 'progress'
+              AND entries.occurred_at >= (
+                SELECT MIN(oldest.created_at) FROM steps AS oldest
+                 WHERE oldest.project_id = steps.project_id AND oldest.done_at IS NULL
+              )
+         ) AS progress_since_plan
+         FROM steps
+         WHERE steps.done_at IS NULL AND steps.project_id IN (${placeholders})
+         ORDER BY steps.project_id, steps.created_at`,
       )
-      .all(...projectIds);
-    return (rows as unknown as OpenNextActionWithProgressRow[]).map((row) => ({
-      action: toNextAction(row),
-      progressSincePlan: row.progress_since_plan,
-    }));
+      .all(...(projectIds as SQLInputValue[]));
+
+    const byProject = new Map<string, OpenStepsWithProgress>();
+    for (const row of rows as unknown as Array<StepRow & { progress_since_plan: number }>) {
+      const carried = byProject.get(row.project_id) ?? {
+        projectId: row.project_id,
+        steps: [],
+        progressSincePlan: row.progress_since_plan,
+      };
+      carried.steps.push(toStep(row));
+      byProject.set(row.project_id, carried);
+    }
+    return [...byProject.values()];
   }
 
-  async replaceNextAction(
-    id: string,
-    closedAt: string,
-    replacement: NextAction,
-  ): Promise<boolean> {
-    this.#database.exec("BEGIN IMMEDIATE");
-    try {
-      const closeResult = this.#database
-        .prepare(
-          `UPDATE next_actions SET closed_at = ?
-           WHERE id = ? AND owner_id = ? AND project_id = ? AND closed_at IS NULL`,
-        )
-        .run(closedAt, id, replacement.ownerId, replacement.projectId);
-      if (closeResult.changes !== 1) {
-        this.#database.exec("ROLLBACK");
-        return false;
-      }
+  async markStepFor(id: string, ownerId: string, date: string | null): Promise<boolean> {
+    const result = this.#database
+      .prepare("UPDATE steps SET marked_for = ? WHERE id = ? AND owner_id = ? AND done_at IS NULL")
+      .run(date, id, ownerId);
+    return result.changes === 1;
+  }
 
-      this.#database
-        .prepare(
-          `INSERT INTO next_actions
-            (id, owner_id, project_id, trigger, act, obstacle, estimate_minutes, created_at, closed_at)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        )
-        .run(...nextActionValues(replacement));
-      this.#database.exec("COMMIT");
-      return true;
-    } catch (error) {
-      this.#database.exec("ROLLBACK");
-      throw error;
-    }
+  async setStepDone(id: string, ownerId: string, doneAt: string): Promise<boolean> {
+    const result = this.#database
+      .prepare("UPDATE steps SET done_at = ? WHERE id = ? AND owner_id = ? AND done_at IS NULL")
+      .run(doneAt, id, ownerId);
+    return result.changes === 1;
   }
 
   async createEntry(entry: Entry): Promise<void> {
@@ -339,20 +336,6 @@ export class SqliteStore implements Store {
       .all(...projectIds, occurredSince);
     return (rows as unknown as EntryRow[]).map(toEntry);
   }
-}
-
-function nextActionValues(action: NextAction): SQLInputValue[] {
-  return [
-    action.id,
-    action.ownerId,
-    action.projectId,
-    action.trigger,
-    action.act,
-    action.obstacle,
-    action.estimateMinutes,
-    action.createdAt,
-    action.closedAt,
-  ];
 }
 
 function toOwner(row: OwnerRow): Owner {
@@ -404,17 +387,16 @@ function toProject(row: ProjectRow): Project {
   };
 }
 
-function toNextAction(row: NextActionRow): NextAction {
+function toStep(row: StepRow): Step {
   return {
     id: row.id,
     ownerId: row.owner_id,
     projectId: row.project_id,
-    trigger: row.trigger,
-    act: row.act,
-    obstacle: row.obstacle,
+    title: row.title,
     estimateMinutes: row.estimate_minutes,
+    markedFor: row.marked_for,
     createdAt: row.created_at,
-    closedAt: row.closed_at,
+    doneAt: row.done_at,
   };
 }
 

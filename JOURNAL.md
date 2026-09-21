@@ -17,3 +17,7 @@
 2026-09-03 | T-014 | done | creation moves to the structure screen, and it stops fighting the stage | 12 files | unit 41/41, isolation, typecheck, build, integration 7/7 | -
 2026-09-03 | T-015 | done | errors that point at the field, and a listbox with real keyboard support | 18 files | unit 49/49, isolation, typecheck, build, integration 7/7 | -
 2026-09-03 | T-016 | done | the harness records leave Ritmo, and the vendored copy moves to 0.9.0 | 21 files | unit 45/45, isolation, typecheck, build, integration 7/7, lock verified | -
+2026-09-21 | T-017 | done | the trigger leaves the specification: steps, and a list for the day | 13 files | unit 45/45, isolation, typecheck, build, integration 7/7, no code touched | D-024
+2026-09-21 | T-018 | done | steps get a table, rules and the carry-across, beside the untouched next action | 12 files | unit 53/53, isolation, typecheck, build, integration 9/9 | D-024
+2026-09-21 | T-019 | done | steps reach the contract and the endpoints, beside the untouched next action | 7 files | unit 53/53, isolation, typecheck, build, integration 14/14 | D-024
+2026-09-21 | T-020 | done | the screens move to steps and the day list; the trigger leaves the product | 21 files | unit 53/53, isolation, typecheck, build, integration 14/14, probed in the built app | D-024

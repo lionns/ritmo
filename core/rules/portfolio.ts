@@ -1,4 +1,4 @@
-import type { Area, Entry, NextAction, Project } from "../model/entities.ts";
+import type { Area, Entry, Project, Step } from "../model/entities.ts";
 import type { Clock } from "../ports/clock.ts";
 import type { Store } from "../ports/store.ts";
 
@@ -9,7 +9,13 @@ export interface PortfolioProject {
   project: Project;
   area: Area;
   recentEntries: Entry[];
-  nextAction: NextAction | null;
+  /** Every open step, oldest first. What is marked for today is the subset the row renders. */
+  openSteps: Step[];
+  /**
+   * Entries logged since the **oldest open step** was written — "since the current plan opened"
+   * read against a list rather than a single action (`design-handoff.md` § The Project Row,
+   * `D-024`). A project with no open steps has no plan open, and counts zero.
+   */
   progressSincePlan: number;
 }
 
@@ -37,25 +43,23 @@ export async function readPortfolio(
   ).toISOString();
   const areaIds = [...new Set(projects.map(({ areaId }) => areaId))];
   const activeProjectIds = projects.filter(({ state }) => state === "active").map(({ id }) => id);
-  const [entries, actionReads, areas] = await Promise.all([
+  const [entries, stepReads, areas] = await Promise.all([
     store.readRecentEntries(projectIds, occurredSince),
-    store.readOpenNextActionsWithProgress(activeProjectIds),
+    store.readOpenStepsWithProgress(activeProjectIds),
     store.readAreas(areaIds),
   ]);
 
   const entriesByProject = groupEntries(entries);
-  const actionsByProject = new Map(
-    actionReads.map(({ action }) => [action.projectId, action]),
-  );
   const areasById = new Map(areas.map((area) => [area.id, area]));
+  const stepsByProject = new Map(stepReads.map((read) => [read.projectId, read.steps]));
   const progressByProject = new Map(
-    actionReads.map(({ action, progressSincePlan }) => [action.projectId, progressSincePlan]),
+    stepReads.map(({ projectId, progressSincePlan }) => [projectId, progressSincePlan]),
   );
   const assembled = projects.map((project) =>
     assembleProject(
       project,
       entriesByProject,
-      actionsByProject,
+      stepsByProject,
       areasById,
       progressByProject,
     ),
@@ -93,7 +97,7 @@ function groupEntries(entries: Entry[]): Map<string, Entry[]> {
 function assembleProject(
   project: Project,
   entriesByProject: Map<string, Entry[]>,
-  actionsByProject: Map<string, NextAction>,
+  stepsByProject: Map<string, Step[]>,
   areasById: Map<string, Area>,
   progressByProject: Map<string, number>,
 ): PortfolioProject {
@@ -105,7 +109,7 @@ function assembleProject(
     project,
     area,
     recentEntries: entriesByProject.get(project.id) ?? [],
-    nextAction: actionsByProject.get(project.id) ?? null,
+    openSteps: stepsByProject.get(project.id) ?? [],
     progressSincePlan: progressByProject.get(project.id) ?? 0,
   };
 }

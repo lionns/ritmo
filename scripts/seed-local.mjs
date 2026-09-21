@@ -19,27 +19,30 @@ const projects = [
   { id: seedId(7), areaId: areas[2].id, title: "Primera versión de Ritmo", state: "active" },
   { id: seedId(8), areaId: areas[2].id, title: "Sitio anterior", state: "shelved" },
 ];
-const actions = [
+// D-024: steps, not if-then actions. Two are marked for today so the portfolio row has
+// something to draw; the rest sit in their project's list, which is where a step lives.
+const today = new Date().toISOString().slice(0, 10);
+const steps = [
   {
     id: seedId(9),
     projectId: projects[0].id,
-    trigger: "Cuando pase el despliegue de la mañana",
-    act: "Verificar la réplica y guardar el resultado",
+    title: "Verificar la réplica y guardar el resultado",
     estimateMinutes: 25,
+    markedFor: today,
   },
   {
     id: seedId(10),
     projectId: projects[2].id,
-    trigger: "Cuando la línea base esté verde",
-    act: "Conectar la portada al contrato del portfolio",
+    title: "Conectar la portada al contrato del portfolio",
     estimateMinutes: 35,
+    markedFor: today,
   },
   {
     id: seedId(11),
     projectId: projects[1].id,
-    trigger: "Cuando termine el bloque de trabajo",
-    act: "Abrir la escena y probar una luz direccional",
+    title: "Abrir la escena y probar una luz direccional",
     estimateMinutes: 30,
+    markedFor: null,
   },
 ];
 const entries = [
@@ -69,12 +72,13 @@ const statements = [
       `VALUES (${sqlText(project.id)}, ${sqlText(ownerId)}, ${sqlText(project.areaId)}, NULL, ` +
       `${sqlText(project.title)}, ${sqlText(project.state)}, NULL, NULL)`,
   ),
-  ...actions.map(
-    (action) =>
-      `INSERT OR IGNORE INTO next_actions ` +
-      `(id, owner_id, project_id, trigger, act, obstacle, estimate_minutes, created_at, closed_at) ` +
-      `VALUES (${sqlText(action.id)}, ${sqlText(ownerId)}, ${sqlText(action.projectId)}, ` +
-      `${sqlText(action.trigger)}, ${sqlText(action.act)}, NULL, ${action.estimateMinutes}, ` +
+  ...steps.map(
+    (step) =>
+      `INSERT OR IGNORE INTO steps ` +
+      `(id, owner_id, project_id, title, estimate_minutes, marked_for, created_at, done_at) ` +
+      `VALUES (${sqlText(step.id)}, ${sqlText(ownerId)}, ${sqlText(step.projectId)}, ` +
+      `${sqlText(step.title)}, ${step.estimateMinutes}, ` +
+      `${step.markedFor === null ? "NULL" : sqlText(step.markedFor)}, ` +
       `${sqlText(occurredAt(13))}, NULL)`,
   ),
   ...entries.map(
@@ -85,10 +89,10 @@ const statements = [
       `${sqlText(projectId)}, NULL, ${sqlText(occurredAt(daysAgo))}, ${sqlText(what)}, ` +
       `${effortMinutes ?? "NULL"}, NULL)`,
   ),
-  `SELECT projects.id AS project_id, COUNT(next_actions.id) AS open_next_actions
+  `SELECT projects.id AS project_id, COUNT(steps.id) AS open_steps
    FROM projects
-   LEFT JOIN next_actions
-     ON next_actions.project_id = projects.id AND next_actions.closed_at IS NULL
+   LEFT JOIN steps
+     ON steps.project_id = projects.id AND steps.done_at IS NULL
    WHERE projects.state = 'active'
    GROUP BY projects.id
    ORDER BY projects.id`,
@@ -101,4 +105,4 @@ console.log(
 const database = openDatabase();
 database.exec(`${statements.join(";\n")};`);
 database.close();
-console.log("Seed complete: 1 owner, 3 areas, 4 projects, 3 next actions, 10 entries.");
+console.log("Seed complete: 1 owner, 3 areas, 4 projects, 3 steps, 10 entries.");

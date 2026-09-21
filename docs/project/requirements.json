@@ -32,9 +32,9 @@
     },
     {
       "id": "FR-6",
-      "title": "Next action per active project",
-      "statement": "Each active project shall carry exactly one next action written as a trigger and an act, with an optional obstacle field.",
-      "source": "research.md §5, §6"
+      "title": "Steps per active project",
+      "statement": "Each active project shall carry a short list of next steps covering only the next stretch of work, never a decomposition of the whole project, with an optional estimate on each step.",
+      "source": "research.md §5, §10 · D-024"
     },
     {
       "id": "FR-7",
@@ -117,14 +117,20 @@
     {
       "id": "FR-20",
       "title": "Estimate calibration",
-      "statement": "The system shall capture an estimate on each next action and compare it against the effort actually logged while that action was open, feeding the ratio back as a personal calibration signal rather than as a failure.",
-      "source": "research.md §10"
+      "statement": "The system shall capture an estimate on each step and compare it against the effort actually logged while that step was open, feeding the ratio back as a personal calibration signal rather than as a failure.",
+      "source": "research.md §10 · D-024"
     },
     {
       "id": "FR-21",
       "title": "Full export",
       "statement": "The system shall export the owner's entire database to a downloadable SQLite file on demand, so that the owner always holds a complete copy of their own record.",
       "source": "D-005 — the mitigation the privacy reversal is conditional on"
+    },
+    {
+      "id": "FR-22",
+      "title": "The day list",
+      "statement": "The system shall let the owner mark, at any point in the day, which steps they will do that day, drawn from projects active in the current week; the mark shall carry no hour, no duration and no condition, shall be subject to no daily cap beyond FR-13's weekly one, and shall expire at the end of the day leaving no record of what went unmarked or undone.",
+      "source": "research.md §1, §12 · D-024"
     }
   ],
   "nonFunctional": [

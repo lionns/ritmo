@@ -14,7 +14,7 @@ erDiagram
     AREA      ||--o{ OBJECTIVE   : contains
     AREA      ||--o{ PROJECT     : "contains directly"
     OBJECTIVE ||--o{ PROJECT     : contains
-    PROJECT   ||--o| NEXT_ACTION : "one while active"
+    PROJECT   ||--o{ STEP        : "the next stretch"
     PROJECT   ||--o{ COMMITMENT  : "one per week"
     PROJECT   ||--o{ ENTRY       : receives
     OBJECTIVE ||--o{ ENTRY       : "also credited by"
@@ -134,23 +134,23 @@ requires.
 | reserve | integer | yes | Defaults to `ceil(0.30 × target)`, minimum 1. |
 | reserveSpent | derived | — | Count of `reserve_spend` entries in the week. |
 
-### NextAction
+### Step
 
-*The single field that buys back mental quiet: writing a concrete plan removes an unfinished
-task's cognitive intrusion as well as finishing it does. One **open** row per active project — closed
-rows stay as the history FR-20 calibrates against. It is also the unit research §10 says to
-decompose: the next stretch, never the whole project.*
+*Writing a concrete plan removes an unfinished task's cognitive intrusion as well as finishing it
+does (§5), and this list is that plan. It is the unit research §10 says to decompose — the next
+stretch, never the whole project. `D-024` replaced the single if–then next action with a list after
+weeks of real use showed the trigger, a moment the day had to hit, was what stopped the logging.
+The `trigger` and `obstacle` fields left with it: both came from §6, which `D-024` overrides.*
 
 | Field | Type | Required | Notes |
 | --- | --- | --- | --- |
 | id | string | yes | |
-| projectId | string | yes | Exactly one per active project (FR-6). |
-| trigger | text | yes | The "if" — a situation, not a time. |
-| act | text | yes | The "then". |
-| obstacle | text | no | Offered, never required (research §6). |
-| estimateMinutes | integer | no | What you think it will take, captured when you write the action. Half of FR-20. |
+| projectId | string | yes | Many per project, bounded to the next stretch (FR-6). Ordered by `createdAt`; no order field, because a list that needs sorting is already too long. |
+| title | text | yes | What you will do. The only thing typed. |
+| estimateMinutes | integer | no | What you think it will take. Half of FR-20. |
+| markedFor | date | no | The day the owner said they would do it (FR-22). Read **only** when it equals today: a past value is not history, is never counted or rendered, and is cleared without record. Never an hour, never a duration. |
 | createdAt | timestamp | yes | Opens the window used to derive the actual. |
-| closedAt | timestamp | no | Null while current. Exactly one open row per active project; the rest are history. |
+| doneAt | timestamp | no | Null while open. Closes the window. |
 
 ### Entry
 
@@ -207,11 +207,11 @@ Never stored, always computed, so they cannot drift from the log.
   consecutive-day count, which a single miss could zero (FR-18).
 - **Week attribution pattern** — the distribution of `Week.tagId` across roughly eight weeks. No
   duration is ever computed for anything outside a project (NFR-8).
-- **Actual against estimate** — for a closed `NextAction`, the actual is the sum of
-  `Entry.effortMinutes` on its project between `createdAt` and `closedAt`. *Assumption:* effort
-  logged on the project in that window belongs to that next action. It is an approximation, taken
+- **Actual against estimate** — for a done `Step`, the actual is the sum of
+  `Entry.effortMinutes` on its project between `createdAt` and `doneAt`. *Assumption:* effort
+  logged on the project in that window belongs to that step. It is an approximation, taken
   deliberately so that no extra field has to be filled at logging time (NFR-1). The calibration
-  factor is actual ÷ estimate across the **last 20 closed actions**, not the whole history. Bounded
+  factor is actual ÷ estimate across the **last 20 done steps**, not the whole history. Bounded
   for two reasons: the 10 ms CPU ceiling of `D-001` applies to every render, and how you estimated
   two years ago says nothing about how you estimate now. Twenty is a starting value.
 - **Proposed target** — over the **last two closed weeks**: reserve untouched in both proposes
@@ -230,18 +230,33 @@ Never stored, always computed, so they cannot drift from the log.
 - `Project.state` transitions only on a week boundary; within a week the active set is immutable.
 - The count of active projects in areas where `countsAgainstCap` is true must not exceed
   `Owner.activeCap` without a recorded cap raise.
-- An active project must have exactly one `NextAction` with `closedAt` null.
+- A `Step` carries `markedFor` for at most one day at a time, and only a project that is `active`
+  in the current week may have a step marked. No rule caps how many are marked: `Owner.activeCap`
+  is the only cap (FR-22, FR-13).
+- No `Step` field stores an hour, a duration or a condition that has to be met before doing it.
 - `reserve >= 1` on every commitment.
 - No entity stores a duration for anything that is not an `Entry` on a project.
 - No entity stores a start time, a clock slot, or a calendar event.
-- Referential actions: `NextAction` and `Commitment` cascade from `Project` — neither means anything
+- Referential actions: `Step` and `Commitment` cascade from `Project` — neither means anything
   without it. `Entry` **restricts**: a project carrying history cannot be deleted, which is the
   retention rule below expressed as a constraint rather than as a convention.
+
+### Retired: NextAction
+
+*The table `next_actions` survives with **no reader anywhere in the code** (`T-021`). `D-024`
+replaced it with `Step`, and the rows were not dropped: the five triggers the owner wrote are the
+record of why the product changed — four of the five hang off finishing a day's work, which is the
+evidence the decision rests on. A guard test in `test/core/page-layout.test.ts` fails if any file
+under `core/`, `contracts/`, `adapters/`, `src/` or `scripts/` names it again. Dropping it would
+destroy the owner's own words and needs its own decision.*
 
 ## Data lifecycle
 
 - **Week rollover.** Closing a week freezes it. Nothing missed is copied forward: no debt field
   exists to copy it into (FR-19).
+- **Day rollover.** A `markedFor` date that is not today is dead the moment the day turns. Nothing
+  reads it, nothing counts what went undone, and clearing it is not an event (FR-22). It is the
+  week-rollover rule at a day's scale: there is no debt field to copy it into.
 - **Shelving.** Reversible, keeps history and stays visible in the portfolio. Distinct from deleting.
 - **Retention.** The log is the product; entries are never pruned automatically.
 - **Sharing.** A plain-text weekly summary the owner can copy out is the only sharing affordance,
@@ -259,9 +274,10 @@ All four decisions this file carried as open were settled with the owner on 2026
 3. **The proposed target moves on a two-week signal, not a percentage band.** See Derived values.
 4. **Ids are ULIDs stored as `TEXT`, generated behind a port.** `D-011`.
 
-One question in `brief.md` § Open Questions still touches this file: whether `estimateMinutes` on a
-next action is required. It is modelled here as optional, which is an assumption until the brief
-records it.
+One question in `brief.md` § Open Questions still touches this file: whether `estimateMinutes` is
+required. It is modelled here as optional, on a `Step` rather than on the retired next action, and
+stays an assumption until the brief records it. `D-024` kept the field deliberately: the
+calibration it feeds is unbuilt, and this is an MVP — absent today is not absent for good.
 
 ## Requirement coverage
 

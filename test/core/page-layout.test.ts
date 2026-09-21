@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
+import { join } from "node:path";
 import { describe, it } from "node:test";
 
 import { PROGRESS_MARK_CAP, countProgressMarks, readAsSentence } from "../../src/lib/project-row.ts";
@@ -137,14 +138,14 @@ describe("the first-loop page composition", () => {
     assert.match(card, /class="project-marks flex items-center gap-2\.5"/);
     assert.match(card, /countProgressMarks\(project\.progressSincePlan\)/);
     assert.doesNotMatch(card, /countProgressMarks\(project\.recentEntries\.length\)/);
-    // The next step is always drawn: an active project always carries one (data-model.md).
-    // Guarded by shape, not by one spelling — any conditional around the mark fails this.
+    // The next-step mark is drawn only where a plan is open. D-024 retired the invariant that
+    // guaranteed one per active project, so the mark became conditional — and its absence is
+    // what tells the owner this project has no next stretch written.
     const markLines = card.split("\n");
     const openAt = markLines.findIndex((l) => l.includes("mark-open"));
     assert.notEqual(openAt, -1, "the row needs the next-step mark");
     assert.equal(markLines.filter((l) => l.includes("mark-open")).length, 1);
-    assert.doesNotMatch(markLines[openAt], /&&|\?|nextAction|map\(/);
-    assert.doesNotMatch(markLines[openAt - 1].trim(), /(&&|\?|=>|\{)$/);
+    assert.match(markLines[openAt - 1], /project\.openSteps\.length > 0 &&/);
     // No mono field labels and no second call to action. Shelved rows may name their area.
     assert.doesNotMatch(card, />Cuando<|>Entonces</);
     assert.doesNotMatch(card, /Registrar avance/);
@@ -157,31 +158,30 @@ describe("the first-loop page composition", () => {
     assert.match(card, /href=\{logHref\}/);
   });
 
-  it("caps the filled marks and reads the next action as language", () => {
+  it("caps the filled marks and reads a step as language", () => {
     assert.equal(PROGRESS_MARK_CAP, 4);
     assert.equal(countProgressMarks(0), 0);
     assert.equal(countProgressMarks(2), 2);
     assert.equal(countProgressMarks(4), 4);
     assert.equal(countProgressMarks(15), 4);
 
-    const sentence = (trigger: string, act: string) =>
+    const sentence = (title: string) =>
       readAsSentence({
-        id: "na",
-        trigger,
-        act,
-        obstacle: null,
+        id: "step",
+        title,
         estimateMinutes: null,
+        markedFor: null,
         createdAt: "2026-09-01T12:00:00.000Z",
       });
 
-    // The act joins verbatim: no case transform, so a proper noun survives intact.
-    assert.equal(sentence("Cuando X", "Notion queda ordenado"), "Cuando X, Notion queda ordenado.");
-    assert.equal(sentence("Si tengo la lista,", "RSVP montado."), "Si tengo la lista, RSVP montado.");
+    // Verbatim: no case transform, so a proper noun survives intact (D-024 kept this rule).
+    assert.equal(sentence("Notion queda ordenado"), "Notion queda ordenado.");
+    assert.equal(sentence("RSVP montado."), "RSVP montado.");
     // Terminal punctuation is never doubled.
-    assert.equal(sentence("Cuando X", "¿Confirmar con Ana?"), "Cuando X, ¿Confirmar con Ana?");
-    assert.equal(sentence("Cuando X", "Esperar…"), "Cuando X, Esperar…");
-    // An act that is only whitespace must not render a bare comma and period.
-    assert.equal(sentence("Cuando X", "   "), "Cuando X.");
+    assert.equal(sentence("¿Confirmar con Ana?"), "¿Confirmar con Ana?");
+    assert.equal(sentence("Esperar…"), "Esperar…");
+    // A title that is only whitespace renders nothing, not a bare period.
+    assert.equal(sentence("   "), "");
   });
 
   it("asks for an owner answer before exposing capture", () => {
@@ -217,7 +217,7 @@ describe("the first-loop page composition", () => {
   it("spends the structure card width on paired fields", () => {
     const settings = source("src/components/organisms/SettingsPanel.astro");
     const capture = source("src/components/organisms/ProjectCapture.astro");
-    const fields = source("src/components/molecules/NextActionFields.astro");
+    const fields = source("src/components/molecules/StepFields.astro");
     const capFormAt = settings.indexOf("data-cap-form");
     const projectsPanelAt = settings.indexOf('aria-labelledby="projects-heading"');
 
@@ -226,14 +226,14 @@ describe("the first-loop page composition", () => {
     assert.equal(settings.match(/xl:\[grid-template-rows:subgrid\]/g)?.length, 2);
     assert.ok(capFormAt > -1 && capFormAt < projectsPanelAt, "the cap editor belongs to the areas card");
     assert.match(capture, /class="[^"]*xl:grid-cols-2[^"]*" data-project-fields/);
-    assert.match(capture, /<NextActionFields idPrefix="project-action" paired \/>/);
+    assert.match(capture, /<StepFields idPrefix="project-step" fieldName="step" paired \/>/);
     assert.match(fields, /paired && "xl:grid-cols-2"/);
   });
 
   it("shows disclosure state and normalises number chrome", () => {
     const styles = source("src/styles/global.css");
     const settings = source("src/components/organisms/SettingsPanel.astro");
-    const cycle = source("src/components/organisms/NextActionCycle.astro");
+    const cycle = source("src/components/organisms/StepList.astro");
 
     assert.match(settings, /data-disclosure-marker[^>]*>\+<\/span>/);
     assert.match(cycle, /data-disclosure-marker[^>]*>\+<\/span>/);
@@ -250,13 +250,13 @@ describe("the first-loop page composition", () => {
       source("src/components/organisms/EntryForm.astro"),
       source("src/components/organisms/SettingsPanel.astro"),
       source("src/components/organisms/ProjectCapture.astro"),
-      source("src/components/organisms/NextActionCycle.astro"),
+      source("src/components/organisms/StepList.astro"),
     ];
     const allSource = forms.join("\n");
     const listbox = source("src/components/molecules/ListboxField.astro");
     const fieldError = source("src/components/atoms/FieldError.astro");
     const errorLogic = source("src/lib/form-errors.ts");
-    const actionFields = source("src/components/molecules/NextActionFields.astro");
+    const stepFields = source("src/components/molecules/StepFields.astro");
     const styles = source("src/styles/global.css");
 
     assert.equal(allSource.match(/<form\b/g)?.length, 6);
@@ -275,7 +275,7 @@ describe("the first-loop page composition", () => {
     assert.match(fieldError, /text-ink/);
     assert.match(fieldError, /aria-hidden="true"/);
     assert.doesNotMatch(`${fieldError}\n${styles}`, /\bred\b/);
-    assert.match(actionFields, /aria-describedby=\{`\$\{idPrefix\}-trigger-error`\}/);
+    assert.match(stepFields, /aria-describedby=\{`\$\{idPrefix\}-title-error`\}/);
     assert.match(errorLogic, /setAttribute\("aria-invalid", "true"\)/);
     assert.match(errorLogic, /classList\.toggle\("text-ink", state === "error"\)/);
     assert.match(listbox, /close\(true\)/);
@@ -287,23 +287,53 @@ describe("the first-loop page composition", () => {
     assert.equal(allSource.match(/data-field-error/g)?.length ?? 0, 0, "field errors come from the shared atom");
   });
 
-  it("keeps the first and replacement action on one field shape", () => {
-    const fields = source("src/components/molecules/NextActionFields.astro");
+  it("keeps the first step and every later one on one field shape", () => {
+    const fields = source("src/components/molecules/StepFields.astro");
     const capture = source("src/components/organisms/ProjectCapture.astro");
-    const cycle = source("src/components/organisms/NextActionCycle.astro");
+    const list = source("src/components/organisms/StepList.astro");
+    const card = source("src/components/molecules/ProjectCard.astro");
     const inputFor = (name: string) =>
       [...fields.matchAll(/<input[\s\S]*?\/>/g)]
         .map(([input]) => input)
-        .find((input) => input.includes(`name="${name}"`)) ?? "";
+        .find((input) => input.includes(name)) ?? "";
 
-    assert.match(capture, /<NextActionFields idPrefix="project-action" paired \/>/);
-    assert.match(inputFor("trigger"), /\brequired\b/);
-    assert.match(inputFor("act"), /\brequired\b/);
-    assert.doesNotMatch(inputFor("obstacle"), /\brequired\b/);
-    assert.doesNotMatch(inputFor("estimateMinutes"), /\brequired\b/);
-    assert.match(cycle, /Escribir la próxima acción/);
-    assert.match(cycle, /Cerrar y escribir la siguiente/);
-    assert.match(cycle, /name="currentActionId"/);
-    assert.match(cycle, /fetch\("\/api\/next-actions"/);
+    assert.match(capture, /<StepFields idPrefix="project-step" fieldName="step" paired \/>/);
+    assert.match(list, /<StepFields idPrefix=\{formPrefix\} \/>/);
+    assert.match(inputFor("name={fieldName}"), /\brequired\b/);
+    assert.doesNotMatch(inputFor('name="estimateMinutes"'), /\brequired\b/);
+    // D-024: the pair and the obstacle went with the trigger.
+    assert.doesNotMatch(fields, /name="trigger"|name="act"|name="obstacle"/);
+    assert.match(list, /Elegir lo de hoy/);
+    assert.match(list, /fetch\("\/api\/steps"/);
+
+    // The row reads steps as language. A checkbox on the landing surface is a debt symbol.
+    assert.doesNotMatch(card, /type="checkbox"/);
+    assert.doesNotMatch(card, /openSteps\.length\}|todaySteps\.length\}/);
+  });
+});
+
+describe("the next action left the code", () => {
+  it("keeps next_actions readerless — only the migrations and the records may name it", () => {
+    // D-024 replaced it and T-021 deleted every reader. The table itself stays, by the owner's
+    // call, because the five triggers in it are the record of why the product changed. This test
+    // is what stops a later task quietly growing a reader back.
+    const root = new URL("../../", import.meta.url).pathname;
+    const roots = ["core", "contracts", "adapters", "src", "scripts"].map((d) => join(root, d));
+    const offenders: string[] = [];
+    const walk = (directory: string) => {
+      for (const found of readdirSync(directory, { withFileTypes: true })) {
+        const path = join(directory, found.name);
+        if (found.isDirectory()) {
+          walk(path);
+          continue;
+        }
+        if (!/\.(ts|astro|mjs|css)$/.test(found.name)) continue;
+        const body = readFileSync(path, "utf8");
+        if (/next_actions|NextAction/.test(body)) offenders.push(path);
+      }
+    };
+    for (const root of roots) walk(root);
+
+    assert.deepEqual(offenders, [], `these still read the retired table: ${offenders.join(", ")}`);
   });
 });

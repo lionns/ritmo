@@ -7,12 +7,12 @@ export interface PortfolioEntry {
   note: string | null;
 }
 
-export interface PortfolioNextAction {
+export interface PortfolioStep {
   id: string;
-  trigger: string;
-  act: string;
-  obstacle: string | null;
+  title: string;
   estimateMinutes: number | null;
+  /** The day the owner said they would do it, or null. Only today's is ever rendered (FR-22). */
+  markedFor: string | null;
   createdAt: string;
 }
 
@@ -26,7 +26,12 @@ export interface PortfolioProject {
     countsAgainstCap: boolean;
   };
   recentEntries: PortfolioEntry[];
-  nextAction: PortfolioNextAction | null;
+  /**
+   * Every open step, oldest first. The row renders only those whose `markedFor` is today; the
+   * rest reach the page inside a collapsed disclosure, which renders nothing until opened. No
+   * count of them is rendered anywhere — the third guardrail of `D-024`.
+   */
+  openSteps: PortfolioStep[];
   progressSincePlan: number;
 }
 
@@ -38,6 +43,12 @@ export interface PortfolioArea {
 
 export interface PortfolioReadyResponse {
   setupRequired: false;
+  /**
+   * Today, in the owner's own calendar, decided once on the server (`D-020`). The screens compare
+   * `PortfolioStep.markedFor` against it rather than reading a clock of their own, so a page open
+   * across midnight cannot disagree with itself about which day it is showing.
+   */
+  today: string;
   ownerId: string;
   activeCap: number;
   activeCount: number;
@@ -49,6 +60,7 @@ export interface PortfolioReadyResponse {
 
 export interface PortfolioSetupResponse {
   setupRequired: true;
+  today: string;
   ownerId: null;
   activeCap: null;
   activeCount: 0;

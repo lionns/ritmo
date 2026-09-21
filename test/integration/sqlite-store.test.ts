@@ -1,4 +1,4 @@
-import { mkdtempSync, rmSync } from "node:fs";
+import { copyFileSync, mkdirSync, mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { DatabaseSync } from "node:sqlite";
@@ -7,8 +7,8 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from
 import { LOCAL_OWNER_ID } from "../../adapters/local-owner.ts";
 import { applyMigrations, openDatabase } from "../../adapters/sqlite/database.ts";
 import { closeRuntimeDatabase, SqliteStore } from "../../adapters/sqlite/store.ts";
-import type { Area, Entry, NextAction, Owner, Project } from "../../core/model/entities.ts";
-import { closeNextAction, createNextAction } from "../../core/rules/next-action.ts";
+import type { Area, Entry, Owner, Project, Step } from "../../core/model/entities.ts";
+import { calendarDateOf } from "../../core/rules/step.ts";
 import type {
   CreateAreaResponse,
   CreateProjectResponse,
@@ -17,10 +17,7 @@ import type {
   SetupResponse,
 } from "../../contracts/capture.ts";
 import type { CreateEntryErrorResponse, CreateEntryResponse } from "../../contracts/entries.ts";
-import type {
-  NextActionErrorResponse,
-  WriteNextActionResponse,
-} from "../../contracts/next-actions.ts";
+import type { StepErrorResponse, StepResponse } from "../../contracts/steps.ts";
 import type { PortfolioResponse } from "../../contracts/portfolio.ts";
 import { handlePostEntry } from "../../src/pages/api/entries.ts";
 import { handleGetPortfolio } from "../../src/pages/api/portfolio.ts";
@@ -32,7 +29,7 @@ let fetchApplication: ReturnType<typeof testApplication>;
 let temporaryDirectory: string;
 let databaseSequence = 0;
 
-describe("SqliteStore with the next-action rule", () => {
+describe("SqliteStore with the step rules", () => {
   beforeAll(() => {
     temporaryDirectory = mkdtempSync(join(tmpdir(), "ritmo-integration-"));
   });
@@ -48,85 +45,6 @@ describe("SqliteStore with the next-action rule", () => {
   afterEach(() => database.close());
   afterAll(() => rmSync(temporaryDirectory, { recursive: true }));
 
-  it("stores and reads a project and its sole open next action", async () => {
-    await store.createOwner({ ...owner, id: "owner-2" });
-    await expect(
-      store.createProject({ ...project, id: "cross-owner-project", ownerId: "owner-2" }),
-    ).rejects.toThrow();
-
-    await store.createProject(project);
-    await createNextAction(store, action);
-
-    expect(await store.getOwner(owner.id)).toEqual(owner);
-    expect(await store.getArea(area.id)).toEqual(area);
-    expect(await store.readAreas([area.id])).toEqual([area]);
-    expect(await store.getProject(project.id)).toEqual(project);
-    expect(await store.getNextAction(action.id)).toEqual(action);
-    await expect(
-      createNextAction(store, { ...action, id: "action-2" }),
-    ).rejects.toThrow(action.id);
-
-    const replacement = { ...action, id: "action-2", createdAt: "2026-09-01T11:00:01.000Z" };
-    await closeNextAction(
-      store,
-      action.id,
-      "2026-09-01T11:00:00.000Z",
-      replacement,
-    );
-    await expect(
-      closeNextAction(
-        store,
-        action.id,
-        "2026-09-01T11:00:00.500Z",
-        { ...replacement, id: "action-3" },
-      ),
-    ).rejects.toThrow(action.id);
-
-    expect((await store.getNextAction(action.id))?.closedAt).toBe("2026-09-01T11:00:00.000Z");
-    expect(await store.findOpenNextAction(project.id)).toEqual(replacement);
-
-    await store.createNextAction({
-      ...action,
-      id: "action-id-collision",
-      createdAt: "2026-08-31T10:00:00.000Z",
-      closedAt: "2026-08-31T10:30:00.000Z",
-    });
-    await expect(
-      closeNextAction(store, replacement.id, "2026-09-01T12:00:00.000Z", {
-        ...replacement,
-        id: "action-id-collision",
-        createdAt: "2026-09-01T12:00:01.000Z",
-      }),
-    ).rejects.toThrow();
-    expect(await store.findOpenNextAction(project.id)).toEqual(replacement);
-
-    const otherProject = { ...project, id: "project-other" };
-    await store.createProject(otherProject);
-    const mismatchedReplacement = {
-      ...replacement,
-      id: "action-mismatched-replacement",
-      projectId: otherProject.id,
-    };
-    expect(
-      await store.replaceNextAction(
-        replacement.id,
-        "2026-09-01T12:30:00.000Z",
-        mismatchedReplacement,
-      ),
-    ).toBe(false);
-    expect(await store.findOpenNextAction(project.id)).toEqual(replacement);
-    expect(await store.getNextAction(mismatchedReplacement.id)).toBeNull();
-
-    const rolledBackProject = { ...project, id: "project-rolled-back" };
-    await expect(
-      store.createProjectWithNextAction(rolledBackProject, {
-        ...action,
-        id: "action-id-collision",
-        projectId: rolledBackProject.id,
-      }),
-    ).rejects.toThrow();
-    expect(await store.getProject(rolledBackProject.id)).toBeNull();
-  });
 
   it("starts from an empty database and captures setup, areas, projects, and progress", async () => {
     database.close();
@@ -175,18 +93,16 @@ describe("SqliteStore with the next-action rule", () => {
     expect(invalidProjectResponse.status).toBe(400);
     expect(await store.listProjects(setup.ownerId)).toEqual([]);
 
-    const missingActResponse = await postJson("/api/projects", {
-      title: "No act",
+    const blankStepResponse = await postJson("/api/projects", {
+      title: "Blank step",
       areaId: cappedArea.id,
-      trigger: "When the document opens",
+      step: "   ",
     });
-    expect(missingActResponse.status).toBe(400);
+    expect(blankStepResponse.status).toBe(400);
     expect(await store.listProjects(setup.ownerId)).toEqual([]);
 
     const first = await createProjectViaApi("First", cappedArea.id, {
-      trigger: "When the document opens",
-      act: "Write the first paragraph",
-      obstacle: "The scope is too broad",
+      step: "Write the first paragraph",
       estimateMinutes: 25,
     });
     const second = await createProjectViaApi("Second", cappedArea.id);
@@ -198,17 +114,17 @@ describe("SqliteStore with the next-action rule", () => {
     expect(overflow.activeCount).toBe(2);
     expect(fixedJob.project.state).toBe("active");
     expect(fixedJob.activeCount).toBe(2);
-    expect(first.nextAction).toEqual(expect.objectContaining({
+    expect(first.step).toEqual(expect.objectContaining({
       projectId: first.project.id,
-      trigger: "When the document opens",
-      act: "Write the first paragraph",
-      obstacle: "The scope is too broad",
+      title: "Write the first paragraph",
       estimateMinutes: 25,
+      markedFor: null,
+      doneAt: null,
     }));
-    expect(second.nextAction.estimateMinutes).toBeNull();
-    expect(await store.findOpenNextAction(first.project.id)).toEqual(
-      expect.objectContaining({ id: first.nextAction.id }),
-    );
+    expect(second.step.estimateMinutes).toBeNull();
+    expect(await store.listOpenSteps(first.project.id)).toEqual([
+      expect.objectContaining({ id: first.step.id }),
+    ]);
 
     const portfolioBeforeEntry = (await (
       await fetchWorker("/api/portfolio")
@@ -220,43 +136,8 @@ describe("SqliteStore with the next-action rule", () => {
       overflow.project.id,
     ]);
     expect(
-      portfolioBeforeEntry.outstanding.find(({ id }) => id === first.project.id)?.nextAction,
-    ).toEqual(expect.objectContaining({
-      trigger: "When the document opens",
-      act: "Write the first paragraph",
-    }));
-
-    const replacementResponse = await postJson("/api/next-actions", {
-      projectId: first.project.id,
-      currentActionId: first.nextAction.id,
-      trigger: "When the outline is visible",
-      act: "Draft section two",
-    });
-    expect(replacementResponse.status).toBe(201);
-    const replacement = (await replacementResponse.json()) as WriteNextActionResponse;
-    expect(replacement.replacedActionId).toBe(first.nextAction.id);
-    expect((await store.getNextAction(first.nextAction.id))?.closedAt).not.toBeNull();
-    expect(await store.findOpenNextAction(first.project.id)).toEqual(
-      expect.objectContaining({
-        id: replacement.nextAction.id,
-        trigger: "When the outline is visible",
-        estimateMinutes: null,
-      }),
-    );
-
-    const duplicateCloseResponse = await postJson("/api/next-actions", {
-      projectId: first.project.id,
-      currentActionId: first.nextAction.id,
-      trigger: "When this should fail",
-      act: "Do not replace the open action",
-    });
-    expect(duplicateCloseResponse.status).toBe(422);
-    expect(((await duplicateCloseResponse.json()) as NextActionErrorResponse).error).toContain(
-      first.nextAction.id,
-    );
-    expect((await store.findOpenNextAction(first.project.id))?.id).toBe(
-      replacement.nextAction.id,
-    );
+      portfolioBeforeEntry.outstanding.find(({ id }) => id === first.project.id)?.openSteps,
+    ).toEqual([expect.objectContaining({ title: "Write the first paragraph" })]);
 
     const settingsResponse = await fetchWorker("/api/settings");
     expect(settingsResponse.status).toBe(200);
@@ -290,16 +171,16 @@ describe("SqliteStore with the next-action rule", () => {
     expect(portfolioAfterEntry.progress[0]).toEqual(expect.objectContaining({
       id: first.project.id,
       recentEntries: [expect.objectContaining({ what: "Moved from a blank database" })],
-      nextAction: expect.objectContaining({ act: "Draft section two" }),
+      openSteps: [expect.objectContaining({ title: "Write the first paragraph" })],
     }));
   });
 
   it("drives POST entries and GET portfolio through the real SQLite adapter", async () => {
     const quietProject: Project = { ...project, id: "project-quiet", title: "Quiet project" };
-    const actionlessProject: Project = {
+    const stepless: Project = {
       ...project,
-      id: "project-actionless",
-      title: "Needs a next action",
+      id: "project-stepless",
+      title: "Needs its next steps",
     };
     const shelvedProject: Project = {
       ...project,
@@ -309,19 +190,24 @@ describe("SqliteStore with the next-action rule", () => {
     };
     await store.createProject(project);
     await store.createProject(quietProject);
-    await store.createProject(actionlessProject);
+    await store.createProject(stepless);
     await store.createProject(shelvedProject);
-    await createNextAction(store, action);
-    await createNextAction(store, {
-      ...action,
-      id: "action-quiet",
-      projectId: quietProject.id,
+    const openStep = (id: string, projectId: string): Step => ({
+      id,
+      ownerId: owner.id,
+      projectId,
+      title: "Take the next step",
+      estimateMinutes: null,
+      markedFor: null,
+      createdAt: "2026-09-01T10:00:00.000Z",
+      doneAt: null,
     });
-    await store.createNextAction({
-      ...action,
-      id: "action-now-closed",
-      projectId: actionlessProject.id,
-      closedAt: "2026-09-01T11:00:00.000Z",
+    await store.createStep(openStep("step-first", project.id));
+    await store.createStep(openStep("step-quiet", quietProject.id));
+    // The stepless project carries one already done: a finished stretch is not an open plan.
+    await store.createStep({
+      ...openStep("step-done", stepless.id),
+      doneAt: "2026-09-01T11:00:00.000Z",
     });
     const createdResponse = await postEntry({
       projectId: project.id,
@@ -347,17 +233,16 @@ describe("SqliteStore with the next-action rule", () => {
         note: null,
       }),
     ]);
-    expect(portfolio.progress[0].nextAction?.id).toBe(action.id);
+    expect(portfolio.progress[0].openSteps.map(({ id }) => id)).toEqual(["step-first"]);
+    // Ordered by project id, which the rename from "actionless" to "stepless" reversed.
     expect(portfolio.outstanding.map(({ id }) => id)).toEqual([
-      actionlessProject.id,
       quietProject.id,
+      stepless.id,
     ]);
+    expect(portfolio.outstanding.find(({ id }) => id === stepless.id)?.openSteps).toEqual([]);
     expect(
-      portfolio.outstanding.find(({ id }) => id === actionlessProject.id)?.nextAction,
-    ).toBeNull();
-    expect(portfolio.outstanding.find(({ id }) => id === quietProject.id)?.nextAction?.id).toBe(
-      "action-quiet",
-    );
+      portfolio.outstanding.find(({ id }) => id === quietProject.id)?.openSteps.map(({ id }) => id),
+    ).toEqual(["step-quiet"]);
     expect(
       [...portfolio.progress, ...portfolio.outstanding].some(
         ({ id }) => id === shelvedProject.id,
@@ -365,24 +250,22 @@ describe("SqliteStore with the next-action rule", () => {
     ).toBe(false);
     expect(portfolio.shelved.map(({ id }) => id)).toEqual([shelvedProject.id]);
 
-    const repairedResponse = await postJson("/api/next-actions", {
-      projectId: actionlessProject.id,
-      trigger: "When the test is green",
-      act: "Keep the repaired action",
-      obstacle: "",
+    // A project whose stretch is finished gets its next one written through the steps route.
+    const repairedResponse = await postJson("/api/steps", {
+      projectId: stepless.id,
+      title: "Write the next stretch",
     });
     expect(repairedResponse.status).toBe(201);
     const repairedPortfolio = (await (
       await fetchWorker("/api/portfolio")
     ).json()) as PortfolioResponse;
     expect(
-      repairedPortfolio.outstanding.find(({ id }) => id === actionlessProject.id)?.nextAction,
-    ).toEqual(expect.objectContaining({
-      trigger: "When the test is green",
-      act: "Keep the repaired action",
-      obstacle: null,
+      repairedPortfolio.outstanding.find(({ id }) => id === stepless.id)?.openSteps,
+    ).toEqual([expect.objectContaining({
+      title: "Write the next stretch",
+      markedFor: null,
       estimateMinutes: null,
-    }));
+    })]);
 
     const countBeforeRejections = await entryCount();
     for (const projectId of ["missing-project", shelvedProject.id]) {
@@ -400,12 +283,6 @@ describe("SqliteStore with the next-action rule", () => {
     const daysAgo = (days: number) =>
       new Date(now.getTime() - days * 24 * 60 * 60 * 1_000).toISOString();
     const oldProject: Project = { ...project, id: "project-old-plan", title: "Old plan" };
-    const oldAction: NextAction = {
-      ...action,
-      id: "action-old-plan",
-      projectId: oldProject.id,
-      createdAt: daysAgo(40),
-    };
     const oldProgress: Entry = {
       id: "entry-old-progress",
       ownerId: owner.id,
@@ -424,8 +301,20 @@ describe("SqliteStore with the next-action rule", () => {
       occurredAt: daysAgo(34),
       what: "Reserve event after the plan opened",
     };
+    // D-024 moved the anchor: "since the current plan opened" is now the oldest OPEN step, not
+    // the next action. The action still exists and is still returned; it no longer sets the count.
+    const oldStep: Step = {
+      id: "step-old-plan",
+      ownerId: owner.id,
+      projectId: oldProject.id,
+      title: "The stretch that is still open",
+      estimateMinutes: null,
+      markedFor: null,
+      createdAt: daysAgo(40),
+      doneAt: null,
+    };
     await store.createProject(oldProject);
-    await createNextAction(store, oldAction);
+    await store.createStep(oldStep);
     await store.createEntry(oldProgress);
     await store.createEntry(reserveSpend);
 
@@ -435,7 +324,8 @@ describe("SqliteStore with the next-action rule", () => {
     const result = portfolio.outstanding.find(({ id }) => id === oldProject.id);
 
     expect(result?.recentEntries).toEqual([]);
-    expect(result?.nextAction?.createdAt).toBe(oldAction.createdAt);
+    expect(result?.openSteps.map(({ id }) => id)).toEqual([oldStep.id]);
+    // One progress entry after the step opened; the reserve spend is not progress.
     expect(result?.progressSincePlan).toBe(1);
   });
 
@@ -462,6 +352,7 @@ describe("SqliteStore with the next-action rule", () => {
     applyMigrations(database);
     expect(database.prepare("SELECT name FROM _ritmo_migrations ORDER BY name").all()).toEqual([
       { name: "0001_initial_schema.sql" },
+      { name: "0002_steps.sql" },
     ]);
   });
 
@@ -525,22 +416,15 @@ async function patchJson(path: string, body: Record<string, unknown>): Promise<R
 async function createProjectViaApi(
   title: string,
   areaId: string,
-  actionFields: {
-    trigger?: string;
-    act?: string;
-    obstacle?: string;
-    estimateMinutes?: number;
-  } = {},
+  stepFields: { step?: string; estimateMinutes?: number } = {},
 ): Promise<CreateProjectResponse> {
   const response = await postJson("/api/projects", {
     title,
     areaId,
-    trigger: actionFields.trigger ?? "When the project opens",
-    act: actionFields.act ?? "Take the next step",
-    ...(actionFields.obstacle === undefined ? {} : { obstacle: actionFields.obstacle }),
-    ...(actionFields.estimateMinutes === undefined
+    step: stepFields.step ?? "Take the next step",
+    ...(stepFields.estimateMinutes === undefined
       ? {}
-      : { estimateMinutes: actionFields.estimateMinutes }),
+      : { estimateMinutes: stepFields.estimateMinutes }),
   });
   expect(response.status).toBe(201);
   return response.json() as Promise<CreateProjectResponse>;
@@ -556,6 +440,222 @@ async function entryCount(): Promise<number> {
     | undefined;
   return row?.count ?? 0;
 }
+
+describe("the steps routes and today's list in the portfolio", () => {
+  let stepsDirectory: string;
+  let stepsDatabase: DatabaseSync;
+  let stepsStore: SqliteStore;
+  let stepsFetch: ReturnType<typeof testApplication>;
+  let stepsSequence = 0;
+
+  beforeAll(() => {
+    stepsDirectory = mkdtempSync(join(tmpdir(), "ritmo-steps-"));
+  });
+
+  beforeEach(async () => {
+    stepsDatabase = openDatabase(join(stepsDirectory, `${stepsSequence++}.sqlite`));
+    stepsStore = new SqliteStore(stepsDatabase);
+    stepsFetch = testApplication(stepsStore);
+    await stepsStore.createOwner(owner);
+    await stepsStore.createArea(area);
+    await stepsStore.createProject(project);
+  });
+
+  afterEach(() => stepsDatabase.close());
+  afterAll(() => rmSync(stepsDirectory, { recursive: true }));
+
+  function call(path: string, init?: RequestInit): Promise<Response> {
+    return stepsFetch(new Request(`http://example.test${path}`, init));
+  }
+
+  function send(path: string, method: string, body: unknown): Promise<Response> {
+    return call(path, {
+      method,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+  }
+
+  async function projectInPortfolio() {
+    const portfolio = (await (await call("/api/portfolio")).json()) as PortfolioResponse;
+    return [...portfolio.progress, ...portfolio.outstanding].find(({ id }) => id === project.id);
+  }
+
+  /** What the row actually draws: only the steps marked for today (FR-22). */
+  async function markedForToday() {
+    const today = calendarDateOf(new Date());
+    const seen = await projectInPortfolio();
+    return (seen?.openSteps ?? []).filter((step) => step.markedFor === today);
+  }
+
+  it("writes a step, marks it for today, and carries it in the portfolio", async () => {
+    const written = await send("/api/steps", "POST", {
+      projectId: project.id,
+      title: "Draft the empty state",
+    });
+    expect(written.status).toBe(201);
+    const { step } = (await written.json()) as StepResponse;
+    expect(step.markedFor).toBeNull();
+    expect(step.title).toBe("Draft the empty state");
+
+    const today = calendarDateOf(new Date());
+    const marked = await send("/api/steps", "PATCH", { id: step.id, markedFor: today });
+    expect(marked.status).toBe(200);
+    expect(((await marked.json()) as StepResponse).step.markedFor).toBe(today);
+
+    expect(await markedForToday()).toEqual([
+      {
+        id: step.id,
+        title: step.title,
+        estimateMinutes: null,
+        markedFor: today,
+        createdAt: step.createdAt,
+      },
+    ]);
+  });
+
+  it("reads none of yesterday's marks, and puts no count in their place", async () => {
+    const yesterday = calendarDateOf(new Date(Date.now() - 24 * 60 * 60 * 1000));
+    const { step } = (await (await send("/api/steps", "POST", {
+      projectId: project.id,
+      title: "Yesterday's intention",
+    })).json()) as StepResponse;
+    await send("/api/steps", "PATCH", { id: step.id, markedFor: yesterday });
+
+    expect(await markedForToday()).toEqual([]);
+    const seen = await projectInPortfolio();
+    expect(seen?.openSteps).toHaveLength(1);
+    // The step is not closed, not counted and not carried: it is simply back in the project.
+    expect((await stepsStore.getStep(step.id))?.doneAt).toBeNull();
+    expect(await stepsStore.listOpenSteps(project.id)).toHaveLength(1);
+  });
+
+  it("refuses a blank title, an hour where a date belongs, and a shelved project", async () => {
+    const blank = await send("/api/steps", "POST", { projectId: project.id, title: "   " });
+    expect(blank.status).toBe(400);
+    expect(((await blank.json()) as StepErrorResponse).error).toContain("title");
+
+    const { step } = (await (await send("/api/steps", "POST", {
+      projectId: project.id,
+      title: "Real step",
+    })).json()) as StepResponse;
+
+    const hour = await send("/api/steps", "PATCH", {
+      id: step.id,
+      markedFor: "2026-09-21T18:00:00.000Z",
+    });
+    expect(hour.status).toBe(422);
+    expect((await stepsStore.getStep(step.id))?.markedFor).toBeNull();
+
+    await stepsStore.setProjectState(project.id, owner.id, "shelved");
+    const shelved = await send("/api/steps", "PATCH", {
+      id: step.id,
+      markedFor: calendarDateOf(new Date()),
+    });
+    expect(shelved.status).toBe(422);
+    expect(((await shelved.json()) as StepErrorResponse).error).toContain(project.id);
+    expect((await stepsStore.getStep(step.id))?.markedFor).toBeNull();
+  });
+
+  it("completes a step, which drops it out of today without closing anything else", async () => {
+    const today = calendarDateOf(new Date());
+    const { step } = (await (await send("/api/steps", "POST", {
+      projectId: project.id,
+      title: "Finish the migration",
+    })).json()) as StepResponse;
+    await send("/api/steps", "PATCH", { id: step.id, markedFor: today });
+
+    const done = await send("/api/steps", "PATCH", { id: step.id, done: true });
+    expect(done.status).toBe(200);
+    expect(((await done.json()) as StepResponse).step.doneAt).not.toBeNull();
+    expect(await markedForToday()).toEqual([]);
+    expect((await projectInPortfolio())?.openSteps).toEqual([]);
+    expect(await stepsStore.listOpenSteps(project.id)).toEqual([]);
+  });
+
+});
+
+describe("the 0002 carry-across, against a database written before it", () => {
+  let upgradeDirectory: string;
+  let legacyMigrations: string;
+
+  beforeAll(() => {
+    upgradeDirectory = mkdtempSync(join(tmpdir(), "ritmo-upgrade-"));
+    legacyMigrations = join(upgradeDirectory, "migrations");
+    mkdirSync(legacyMigrations);
+    copyFileSync(
+      join(process.cwd(), "migrations", "0001_initial_schema.sql"),
+      join(legacyMigrations, "0001_initial_schema.sql"),
+    );
+  });
+
+  afterAll(() => rmSync(upgradeDirectory, { recursive: true }));
+
+  it("carries every open action across, leaves the closed ones, and touches nothing else", async () => {
+    // A database exactly as the owner's was before D-024: 0001 only, real next actions in it.
+    // Written in SQL because T-021 deleted the rules that used to write them — the migration is
+    // SQL, the fixture it upgrades is SQL, and nothing in the product can produce one any more.
+    const legacy = openDatabase(join(upgradeDirectory, "owner.sqlite"), legacyMigrations);
+    const legacyStore = new SqliteStore(legacy);
+    await legacyStore.createOwner(owner);
+    await legacyStore.createArea(area);
+    await legacyStore.createProject(project);
+    const insertAction = legacy.prepare(
+      `INSERT INTO next_actions
+        (id, owner_id, project_id, trigger, act, obstacle, estimate_minutes, created_at, closed_at)
+       VALUES (?, ?, ?, ?, ?, NULL, ?, ?, ?)`,
+    );
+    insertAction.run("action-1", owner.id, project.id, "When the baseline is green",
+      "Implement the first slice", 30, "2026-09-01T10:00:00.000Z", "2026-09-02T09:00:00.000Z");
+    insertAction.run("action-2", owner.id, project.id, "When the outline is visible",
+      "Draft section two", 30, "2026-09-02T10:00:00.000Z", null);
+    expect(legacy.prepare("SELECT COUNT(*) AS count FROM next_actions").get())
+      .toEqual({ count: 2 });
+
+    // Opening the app again is what applies 0002 — there is no separate command.
+    applyMigrations(legacy);
+
+    const steps = legacy.prepare("SELECT * FROM steps ORDER BY id").all();
+    expect(steps).toHaveLength(1);
+    expect(await new SqliteStore(legacy).getStep("action-2")).toEqual({
+      id: "action-2",
+      ownerId: owner.id,
+      projectId: project.id,
+      title: "Draft section two",
+      estimateMinutes: 30,
+      markedFor: null,
+      createdAt: "2026-09-02T10:00:00.000Z",
+      doneAt: null,
+    } satisfies Step);
+
+    // The closed one stays where it is, and so does the table: T-021 removed every reader of
+    // `next_actions`, not the rows. Nothing the product can do will touch them again.
+    expect(legacy.prepare("SELECT COUNT(*) AS count FROM next_actions").get())
+      .toEqual({ count: 2 });
+
+    // And the ledger makes a second open a no-op rather than a second copy.
+    applyMigrations(legacy);
+    expect(legacy.prepare("SELECT COUNT(*) AS count FROM steps").get()).toEqual({ count: 1 });
+
+    legacy.close();
+  });
+
+  it("refuses an hour in marked_for, so FR-22 cannot be broken below the rules", () => {
+    const guarded = openDatabase(join(upgradeDirectory, "guarded.sqlite"));
+    expect(() =>
+      guarded.exec(
+        `INSERT INTO owners (id, active_cap, cap_raises) VALUES ('o', 1, '[]');
+         INSERT INTO areas (id, owner_id, name, counts_against_cap) VALUES ('a', 'o', 'A', 1);
+         INSERT INTO projects (id, owner_id, area_id, objective_id, title, state,
+           external_deadline, deadline_source) VALUES ('p', 'o', 'a', NULL, 'P', 'active', NULL, NULL);
+         INSERT INTO steps (id, owner_id, project_id, title, estimate_minutes, marked_for,
+           created_at, done_at)
+           VALUES ('s', 'o', 'p', 'T', NULL, '2026-09-21T18:00', '2026-09-21T09:00:00.000Z', NULL);`,
+      )
+    ).toThrow();
+    guarded.close();
+  });
+});
 
 const owner: Owner = { id: LOCAL_OWNER_ID, activeCap: 3, capRaises: [] };
 const area: Area = {
@@ -576,14 +676,3 @@ const project: Project = {
   deadlineSource: null,
 };
 
-const action: NextAction = {
-  id: "action-1",
-  ownerId: owner.id,
-  projectId: project.id,
-  trigger: "When the baseline is green",
-  act: "Implement the first slice",
-  obstacle: null,
-  estimateMinutes: 30,
-  createdAt: "2026-09-01T10:00:00.000Z",
-  closedAt: null,
-};

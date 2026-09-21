@@ -1,16 +1,15 @@
-import type { Area, NextAction, Owner, Project } from "../model/entities.ts";
+import type { Area, Owner, Project, Step } from "../model/entities.ts";
 import type { Clock } from "../ports/clock.ts";
 import type { IdGen } from "../ports/id-gen.ts";
 import type { Store } from "../ports/store.ts";
-import {
-  buildOpenNextAction,
-  type NextActionFields,
-} from "./next-action.ts";
+import { buildStep, type StepFields } from "./step.ts";
 
-export interface NewProject extends NextActionFields {
+export interface NewProject {
   ownerId: string;
   areaId: string;
   title: string;
+  /** The first step. Kept in its own field: a project's title and a step's are both `title`. */
+  firstStep: StepFields;
 }
 
 export interface ProjectCapResult {
@@ -21,7 +20,7 @@ export interface ProjectCapResult {
 }
 
 export interface ProjectCreationResult extends ProjectCapResult {
-  nextAction: NextAction;
+  step: Step;
 }
 
 export class ProjectRuleError extends Error {
@@ -58,14 +57,16 @@ export async function createProjectWithinCap(
     externalDeadline: null,
     deadlineSource: null,
   };
-  const nextAction = buildOpenNextAction(
+  // A project is created with somewhere to start, and marked for nothing: creating it is not
+  // deciding to work on it today (D-024, T-020 § Assumptions).
+  const step = buildStep(
     ids,
     input.ownerId,
     project.id,
     clock.now().toISOString(),
-    input,
+    input.firstStep,
   );
-  await store.createProjectWithNextAction(project, nextAction);
+  await store.createProjectWithStep(project, step);
   return {
     ...capResult(
       project,
@@ -73,7 +74,7 @@ export async function createProjectWithinCap(
       owner,
       currentCount + Number(area.countsAgainstCap && state === "active"),
     ),
-    nextAction,
+    step,
   };
 }
 

@@ -28,3 +28,5 @@ rather than editing. Template in `../sdd/TEMPLATES.md`.
 | [D-021](D-021-interface-astro-node-adapter.md) | 2026-09-02 | The same Astro, on the Node adapter | `accepted` | D-008 |
 | [D-022](D-022-tests-four-dev-dependencies.md) | 2026-09-02 | Four dev dependencies after the platform test harness leaves | `accepted` | D-014 |
 | [D-023](D-023-boundary-check-drops-the-vendor-clause.md) | 2026-09-02 | The boundary check stops naming a vendor the project left | `accepted` | none |
+| [D-024](D-024-steps-and-the-day-list.md) | 2026-09-21 | Steps and a day list replace the if–then trigger | `accepted` | none |
+| [D-025](D-025-finishing-a-project.md) | 2026-09-21 | Finishing a project is a state the product does not have | `proposed` | none |
