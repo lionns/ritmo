@@ -1,7 +1,7 @@
 ---
 id: T-021
 title: The next action leaves the code, and the manual catches up
-status: doing
+status: done
 profile: team
 harness: 0.9.0
 role: Backend Implementer
@@ -51,20 +51,23 @@ implements: [FR-6, FR-22]
 
 ## Acceptance Criteria
 
-- [ ] WHEN `grep -rn "NextAction\|next_actions\|nextAction" core/ src/ contracts/ adapters/ test/`
-      runs THE SYSTEM SHALL return only the retention note's own reference, if any.
-- [ ] `contracts/next-actions.ts`, `src/pages/api/next-actions.ts`, `core/rules/next-action.ts`
+- [x] WHEN `grep -rn "NextAction\|next_actions\|nextAction" core/ src/ contracts/ adapters/
+      scripts/` runs THE SYSTEM SHALL return nothing. *Corrected mid-task: `test/` was in the list
+      and cannot be — the migration test must build a pre-`0002` fixture in SQL, and the guard test
+      names the table to search for it. Those two files are the only ones, and both are tests of
+      the removal itself.*
+- [x] `contracts/next-actions.ts`, `src/pages/api/next-actions.ts`, `core/rules/next-action.ts`
       and `test/core/next-action.test.ts` do not exist.
-- [ ] WHEN a source file outside `migrations/` and `docs/` reads `next_actions` THE SYSTEM SHALL
+- [x] WHEN a source file outside `migrations/` and `docs/` reads `next_actions` THE SYSTEM SHALL
       fail the new guard test naming that file.
-- [ ] WHEN the portfolio endpoint responds THE SYSTEM SHALL return no `nextAction` field, and the
+- [x] WHEN the portfolio endpoint responds THE SYSTEM SHALL return no `nextAction` field, and the
       screens SHALL render exactly as they did at the end of `T-020` — the check that exercises
       this removal against what already works.
-- [ ] `data-model.md` states that `next_actions` is retained without readers, and why.
-- [ ] `grep -rn "Disparador\|próxima acción" README.md` returns nothing, and the four images in
+- [x] `data-model.md` states that `next_actions` is retained without readers, and why.
+- [x] `grep -rn "Disparador\|próxima acción" README.md` returns nothing, and the four images in
       `docs/images/` show steps rather than a trigger and an act.
-- [ ] `README.md` § Todavía no existe lists finishing a project, citing `D-025`.
-- [ ] The five gates are green and `node scripts/harness-lint.mjs` exits zero.
+- [x] `README.md` § Todavía no existe lists finishing a project, citing `D-025`.
+- [x] The five gates are green and `node scripts/harness-lint.mjs` exits zero.
 
 ## Verification
 
@@ -94,23 +97,42 @@ implements: [FR-6, FR-22]
 
 ## Outcome
 
-Filled in as the task progresses; overwritten, not appended.
-
-- Changes:
-- Files:
-- Baseline result:
-- Final result:
-- Decisions recorded:
-- Follow-up:
+- Changes: `contracts/next-actions.ts`, `src/pages/api/next-actions.ts`, `core/rules/next-action.ts`
+  and its unit test deleted; `NextAction` out of the model, five methods out of the port and the
+  adapter, `nextAction` out of the portfolio rule, contract and endpoint, the route out of the test
+  worker; the carry-across fixture rewritten in raw SQL; a guard test that fails naming any file
+  that reads the table again; the retained table recorded in `data-model.md`; the manual rewritten
+  and its four screenshots replaced.
+- Files: `core/**`, `contracts/**`, `adapters/sqlite/store.ts`, `src/pages/api/portfolio.ts`,
+  `test/**`, `scripts/seed-local.mjs`, `docs/project/data-model.md`, `README.md`,
+  `docs/images/*.jpg`.
+- Baseline result: unit 53/53 · isolation · typecheck 0 errors · build · integration 14/14.
+- Final result: unit 48/48 · isolation · typecheck 0 errors · build · integration 12/12. The counts
+  fall because deleted behaviour took its tests with it.
+- Decisions recorded: none new. `D-025` remains `proposed` and unrelated to this task.
+- Follow-up: `D-025` — finishing a project. Nothing else from `D-024` is outstanding.
 
 ## Review
 
-- Severity · `file:line` · issue · impact · recommendation
+Self-review as Reviewer; not validation under `team` (`PROTOCOLS.md`).
+
+- Medium · this file § Acceptance Criteria · A criterion was corrected mid-task for the third time
+  across `T-019`, `T-020` and this one. The pattern is mine: I write criteria more absolute than
+  the code can be, then correct them. Each correction was defensible on its own — here `test/`
+  cannot be barred from naming a table its own fixtures must create — but three in five tasks is a
+  habit, not three accidents, and a validator should weigh the criteria accordingly.
+- Low · `test/core/page-layout.test.ts` · The guard walks five directories on every unit run and
+  will slow as the tree grows. · Milliseconds today; if it ever matters, it becomes a lint rule.
+- Low · `docs/images/*.jpg` · Captured headlessly rather than through the owner's browser after
+  the extension clipped the panel three times. Same dimensions as the four they replace, ~100KB
+  each against the originals' 50–66KB. · The difference is JPEG quality, not content.
+- Note · The owner's `next_actions` still holds five rows, verified read-only after the build ran.
+  Their `steps` gained a sixth row during this task — their own, written through the new screens.
 
 ## Validation
 
-- Validated by:
-- Date:
+- Validated by: Juan Sebastián León Velásquez
+- Date: 2026-09-21
 
 ## Trace
 

@@ -8,7 +8,6 @@ Harness `0.9.0` · profile `team`
 
 | Task | State | Goal |
 |---|---|---|
-| [T-021](docs/tasks/T-021-the-next-action-leaves-the-code.md) | `doing` | Delete every line that still reads or writes a next action — contract, route, rules, model, |
 | [T-001](docs/tasks/T-001-skeleton-and-next-action.md) | `done` | Stand up the three-layer tree with every quality-gate command real and green, and prove it by |
 | [T-003](docs/tasks/T-003-loose-ends.md) | `done` | Close the six low-severity findings the T-001 review left open, so the schema states the |
 | [T-005](docs/tasks/T-005-first-loop-back.md) | `done` | Give the front two endpoints and the contracts behind them, so a real portfolio can be read |
@@ -26,11 +25,12 @@ Harness `0.9.0` · profile `team`
 | [T-018](docs/tasks/T-018-steps-in-the-model.md) | `done` | Give `Step` a table, a port, rules and tests, and carry the owner's open next actions across |
 | [T-019](docs/tasks/T-019-steps-through-the-contract.md) | `done` | Put steps and the day list behind contracts and API routes, and have the portfolio endpoint |
 | [T-020](docs/tasks/T-020-the-screens-move-to-steps.md) | `done` | Make every screen read and write steps instead of the if–then next action — today's steps on |
+| [T-021](docs/tasks/T-021-the-next-action-leaves-the-code.md) | `done` | Delete every line that still reads or writes a next action — contract, route, rules, model, |
 | [T-010](docs/tasks/T-010-passkey-and-the-signed-cookie.md) | `superseded` | Build `D-004` as specified — a passkey registered per device, verified with Web Crypto and no |
 
 ## Next
 
-**T-021** (`doing`) — Delete every line that still reads or writes a next action — contract, route, rules, model,
+Nothing open. Plan the next task before implementing anything.
 
 ## Open decisions
 
@@ -38,10 +38,10 @@ Harness `0.9.0` · profile `team`
 
 ## Journal — last 5
 
+- 2026-09-21 | T-021 | done | the next action leaves the code, the table stays, the manual catches up | 18 files | unit 48/48, isolation, typecheck, build, integration 12/12 | D-024
 - 2026-09-21 | T-020 | done | the screens move to steps and the day list; the trigger leaves the product | 21 files | unit 53/53, isolation, typecheck, build, integration 14/14, probed in the built app | D-024
 - 2026-09-21 | T-019 | done | steps reach the contract and the endpoints, beside the untouched next action | 7 files | unit 53/53, isolation, typecheck, build, integration 14/14 | D-024
 - 2026-09-21 | T-018 | done | steps get a table, rules and the carry-across, beside the untouched next action | 12 files | unit 53/53, isolation, typecheck, build, integration 9/9 | D-024
 - 2026-09-21 | T-017 | done | the trigger leaves the specification: steps, and a list for the day | 13 files | unit 45/45, isolation, typecheck, build, integration 7/7, no code touched | D-024
-- 2026-09-03 | T-016 | done | the harness records leave Ritmo, and the vendored copy moves to 0.9.0 | 21 files | unit 45/45, isolation, typecheck, build, integration 7/7, lock verified | -
 
 Full history: [`JOURNAL.md`](JOURNAL.md) · decisions: [`docs/decisions/`](docs/decisions/README.md)

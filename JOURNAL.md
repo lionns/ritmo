@@ -21,3 +21,4 @@
 2026-09-21 | T-018 | done | steps get a table, rules and the carry-across, beside the untouched next action | 12 files | unit 53/53, isolation, typecheck, build, integration 9/9 | D-024
 2026-09-21 | T-019 | done | steps reach the contract and the endpoints, beside the untouched next action | 7 files | unit 53/53, isolation, typecheck, build, integration 14/14 | D-024
 2026-09-21 | T-020 | done | the screens move to steps and the day list; the trigger leaves the product | 21 files | unit 53/53, isolation, typecheck, build, integration 14/14, probed in the built app | D-024
+2026-09-21 | T-021 | done | the next action leaves the code, the table stays, the manual catches up | 18 files | unit 48/48, isolation, typecheck, build, integration 12/12 | D-024
