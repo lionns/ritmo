@@ -10,16 +10,36 @@ interface Props {
    * `form.elements.namedItem` return a list instead of an input.
    */
   fieldName?: "title" | "step";
+  /**
+   * How the owner's estimates have gone (`FR-20`), or null below the minimum sample. Rendered
+   * under the estimate field because that is the moment it is useful: you are about to guess.
+   */
+  calibration?: { ratio: number; samples: number } | null;
 }
 
 // design-handoff.md § The Project Row: one required field. D-024 removed the trigger-and-act pair
 // and the obstacle with it — all three rested on research §6, which that decision overrides.
 // Kept in the frontmatter, not as an HTML comment: an HTML comment is served to the page.
-const { idPrefix, paired = false, fieldName = "title" } = Astro.props;
+const { idPrefix, paired = false, fieldName = "title", calibration = null } = Astro.props;
+
+// §14 forbids the reward layer, so an accurate estimate is reported and never congratulated: no
+// exclamation, no accent, no "bien hecho". The sample is named so the owner can judge whether to
+// believe the number — five steps is a hint, twenty is a habit.
+const calibrationLine = calibration === null
+  ? null
+  : calibration.ratio.toFixed(1) === "1.0"
+    ? `Tus últimos ${calibration.samples} pasos tardaron lo que estimaste.`
+    : `Tus últimos ${calibration.samples} pasos tardaron ${calibration.ratio.toLocaleString("es", { minimumFractionDigits: 1, maximumFractionDigits: 1 })}× lo estimado.`;
 ---
 
-<div class:list={["grid gap-4", paired && "xl:grid-cols-2"]}>
-  <div>
+<!--
+  Both columns sit on one grid and share the label row and the input row, so a label that wraps
+  never drops its own input out of line with the other. `SettingsPanel` already does this; this
+  component did not, and only looked aligned because the labels happened to fit. Found by the
+  owner on the canvas, 2026-09-22.
+-->
+<div class:list={["grid gap-4", paired && "xl:grid-cols-2 xl:grid-rows-[auto_auto] xl:gap-y-0"]}>
+  <div class:list={[paired && "xl:row-span-2 xl:grid xl:[grid-template-rows:subgrid] xl:gap-y-2"]}>
     <label class="mb-2 block text-sm font-medium text-dim" for={`${idPrefix}-title`}>Paso</label>
     <input
       class="min-h-[58px] w-full rounded-field border border-glass-border bg-[color-mix(in_srgb,var(--page-bg)_72%,transparent)] px-4 text-base text-ink placeholder:text-faint-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent md:min-h-14"
@@ -32,7 +52,7 @@ const { idPrefix, paired = false, fieldName = "title" } = Astro.props;
     />
     <FieldError id={`${idPrefix}-title-error`} field={fieldName} />
   </div>
-  <div>
+  <div class:list={[paired && "xl:row-span-2 xl:grid xl:[grid-template-rows:subgrid] xl:gap-y-2"]}>
     <label class="mb-2 block text-sm font-medium text-dim" for={`${idPrefix}-estimate`}>Minutos estimados · opcional</label>
     <input
       class="min-h-[58px] w-full rounded-field border border-glass-border bg-[color-mix(in_srgb,var(--page-bg)_72%,transparent)] px-4 font-mono text-base text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent md:min-h-14"
@@ -48,3 +68,10 @@ const { idPrefix, paired = false, fieldName = "title" } = Astro.props;
     <FieldError id={`${idPrefix}-estimate-error`} field="estimateMinutes" />
   </div>
 </div>
+{
+  calibrationLine !== null && (
+    <p class="mt-2.5 mb-0 font-mono text-[11px] leading-normal tracking-[0.06em] text-dim">
+      {calibrationLine}
+    </p>
+  )
+}

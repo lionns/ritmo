@@ -7,7 +7,7 @@ import type {
   Project,
   Step,
 } from "../../core/model/entities.ts";
-import type { OpenStepsWithProgress, Store } from "../../core/ports/store.ts";
+import type { CalibrationSample, OpenStepsWithProgress, Store } from "../../core/ports/store.ts";
 import { openDatabase } from "./database.ts";
 
 interface OwnerRow {
@@ -342,6 +342,30 @@ export class SqliteStore implements Store {
         entry.note,
         entry.stepId,
       );
+  }
+
+  /**
+   * The done steps that carry both halves, newest first. A step with no estimate or nothing
+   * attributed cannot answer and is not returned, rather than returned as a zero (`D-027`).
+   */
+  async readCalibrationSamples(ownerId: string, limit: number): Promise<CalibrationSample[]> {
+    const rows = this.#database
+      .prepare(
+        `SELECT steps.estimate_minutes AS estimate_minutes, SUM(entries.effort_minutes) AS effort_minutes
+           FROM steps
+           JOIN entries ON entries.step_id = steps.id AND entries.kind = 'progress'
+          WHERE steps.owner_id = ?
+            AND steps.done_at IS NOT NULL
+            AND steps.estimate_minutes > 0
+          GROUP BY steps.id
+         HAVING SUM(entries.effort_minutes) > 0
+          ORDER BY steps.done_at DESC, steps.id DESC
+          LIMIT ?`,
+      )
+      .all(ownerId, limit);
+    return (rows as unknown as Array<{ estimate_minutes: number; effort_minutes: number }>).map(
+      (row) => ({ estimateMinutes: row.estimate_minutes, effortMinutes: row.effort_minutes }),
+    );
   }
 
   /** Closed steps, newest first — the history they join is bounded the same way. */

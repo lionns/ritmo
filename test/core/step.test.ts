@@ -11,6 +11,11 @@ import {
   unmarkStep,
   writeStep,
 } from "../../core/rules/step.ts";
+import {
+  CALIBRATION_MINIMUM,
+  CALIBRATION_WINDOW,
+  readCalibration,
+} from "../../core/rules/calibration.ts";
 
 const clock = { now: () => new Date("2026-09-21T09:00:00.000Z") };
 
@@ -162,6 +167,7 @@ const step: Step = {
 class MemoryStore implements Store {
   readonly projects = new Map<string, Project>();
   readonly steps = new Map<string, Step>();
+  readonly entries = new Map<string, Entry>();
 
   async createOwner(_value: Owner) { throw new Error("not used"); }
   async getOwner(_id: string) { return null; }
@@ -225,8 +231,21 @@ class MemoryStore implements Store {
     this.steps.set(id, { ...value, doneAt });
     return true;
   }
-  async createEntry(_value: Entry) { throw new Error("not used"); }
+  async createEntry(value: Entry) { this.entries.set(value.id, value); }
   async readProjectEntries(_projectId: string, _limit: number) { return []; }
+  async readCalibrationSamples(_ownerId: string, limit: number) {
+    return [...this.steps.values()]
+      .filter((value) => value.doneAt !== null && (value.estimateMinutes ?? 0) > 0)
+      .sort((left, right) => (right.doneAt ?? "").localeCompare(left.doneAt ?? ""))
+      .map((value) => ({
+        estimateMinutes: value.estimateMinutes ?? 0,
+        effortMinutes: [...this.entries.values()]
+          .filter((entry) => entry.stepId === value.id && entry.kind === "progress")
+          .reduce((total, entry) => total + (entry.effortMinutes ?? 0), 0),
+      }))
+      .filter((value) => value.effortMinutes > 0)
+      .slice(0, limit);
+  }
   async readDoneSteps(projectId: string, limit: number) {
     return [...this.steps.values()]
       .filter((value) => value.projectId === projectId && value.doneAt !== null)
@@ -236,3 +255,64 @@ class MemoryStore implements Store {
   async readEffortForStep(_stepId: string) { return 0; }
   async readRecentEntries(_projectIds: string[], _occurredSince: string) { return []; }
 }
+
+describe("the calibration signal", () => {
+  const clock = { now: () => new Date("2026-09-22T10:00:00.000Z") };
+
+  async function sample(store: MemoryStore, id: string, estimate: number, effort: number | null) {
+    await store.createStep({
+      ...step,
+      id,
+      estimateMinutes: estimate,
+      doneAt: `2026-09-2${id.slice(-1)}T10:00:00.000Z`,
+    });
+    if (effort !== null) {
+      store.entries.set(id, {
+        id: `entry-${id}`,
+        ownerId: owner.id,
+        kind: "progress",
+        projectId: project.id,
+        creditsObjectiveId: null,
+        occurredAt: "2026-09-21T10:00:00.000Z",
+        what: "Moví algo",
+        effortMinutes: effort,
+        note: null,
+        stepId: id,
+      });
+    }
+  }
+
+  it("says nothing below five samples", async () => {
+    const store = new MemoryStore();
+    await store.createProject(project);
+    for (const id of ["s1", "s2", "s3", "s4"]) await sample(store, id, 30, 45);
+
+    assert.equal(await readCalibration(store, owner.id), null);
+  });
+
+  it("divides summed actual by summed estimate once five can answer", async () => {
+    const store = new MemoryStore();
+    await store.createProject(project);
+    for (const id of ["s1", "s2", "s3", "s4", "s5"]) await sample(store, id, 20, 30);
+
+    const calibration = await readCalibration(store, owner.id);
+    assert.equal(calibration?.samples, 5);
+    assert.equal(calibration?.ratio, 1.5, "150 actual over 100 estimated");
+  });
+
+  it("does not count a step whose effort was never attributed", async () => {
+    const store = new MemoryStore();
+    await store.createProject(project);
+    for (const id of ["s1", "s2", "s3", "s4"]) await sample(store, id, 20, 30);
+    // A fifth step, closed with an estimate and nothing attributed: D-027 refuses to guess, and
+    // counting it as a zero would drag the ratio toward "you are faster than you think".
+    await sample(store, "s5", 20, null);
+
+    assert.equal(await readCalibration(store, owner.id), null, "still four samples, not five");
+  });
+
+  it("exposes its two starting values rather than hiding them", () => {
+    assert.equal(CALIBRATION_MINIMUM, 5);
+    assert.equal(CALIBRATION_WINDOW, 20);
+  });
+});

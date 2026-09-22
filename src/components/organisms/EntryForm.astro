@@ -175,6 +175,7 @@ const initialProject = selectedProject?.id ?? projects[0]?.id;
     if (submit !== null) submit.disabled = true;
     setFormStatus(status, "Guardando…", "loading");
     const submittedEffortMinutes = effortMinutes;
+    const submittedWhat = what.value.trim();
 
     try {
       const response = await fetch("/api/entries", {
@@ -203,6 +204,15 @@ const initialProject = selectedProject?.id ?? projects[0]?.id;
       syncEffortButtons();
       setFormStatus(status, "Entrada guardada.", "success");
       growTodayMarks(submittedEffortMinutes);
+      // The chart is the confirmation (§ Interaction States). A screen that also shows a history
+      // beside this form listens for this and adds the row, so the list does not lie until the
+      // next reload — without costing the focus or the two taps NFR-1 protects.
+      document.dispatchEvent(new CustomEvent("ritmo:entry-saved", {
+        detail: {
+          what: submittedWhat,
+          minutes: submittedEffortMinutes ?? null,
+        },
+      }));
       what.focus();
     } catch {
       setFormStatus(status, "No se pudo conectar. Revisa la conexión e inténtalo otra vez.", "error");

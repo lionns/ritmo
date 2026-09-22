@@ -203,6 +203,7 @@ class MemoryStore implements Store {
   async setStepDone(_id: string, _ownerId: string, _doneAt: string) { return false; }
   async createEntry(_value: Entry) { throw new Error("not used"); }
   async readProjectEntries(_projectId: string, _limit: number) { return []; }
+  async readCalibrationSamples(_ownerId: string, _limit: number) { return []; }
   async readDoneSteps(_projectId: string, _limit: number) { return []; }
   async readEffortForStep(_stepId: string) { return 0; }
   async readRecentEntries(_projectIds: string[], _occurredSince: string) { return []; }

@@ -225,12 +225,32 @@ page `page-ux`) but never written down until now, so the first implementation co
   `/registrar?project=<id>` and the disclosure beside it both existed only because `/p/:id` did
   not; the log form now sits inline on that screen, first, so `NFR-1` keeps its two taps.
 
+**The calibration sits under the estimate field**, not on a screen of its own: it is useful at the
+moment the next guess is typed and nowhere else. It names its sample — "Tus últimos N pasos
+tardaron R× lo estimado" — so the owner can weigh it, stays silent below five, and reports an
+accurate estimate as plainly as an inaccurate one. §14 forbids the reward layer, so there is no
+exclamation and nothing in `accent`. **Both columns of `StepFields` share one grid**, label row and
+input row, so a wrapping label cannot drop its own input out of line; the component looked aligned
+only because its labels happened to fit until 2026-09-22.
+
 **An open step shows its estimate** under the title, in mono, and nothing where it has none — the
 field is optional and a row reading "sin estimar" would be a reproach. **A closed step stays in the
 history**, merged with the entries by time and marked by a filled `accent` circle, the same "filled
 means done" the row's marks use; an entry carries no circle. It reads "estimaste N", adds
 "· registraste M" only when M is above zero, and says neither when it has neither: `D-027` made the
 actual exact, and where it is unknown the screen is silent rather than printing a zero.
+
+**Archiving and finishing live behind one `···` disclosure beside the project's name** — not in
+the panel of its work, and not standing in the open, where two rare and heavy acts asked to be
+weighed on every visit. `···` and not an icon: the product has none, and a gear would say
+"configuration", which neither of these is. It is a native `<details>`, the family `SettingsPanel`
+already uses, with Escape and outside-pointer closing added as the custom listbox does, and it
+flips upward where it will not fit below. Its items read "Archivar" on an active project and
+"Activar" on a shelved one — the control `FR-14` describes and the product never had, a project having been able
+to leave `active` only by being created while the cap was full. A shelved project's screen offers
+neither the step form nor a mark for today, because the rules refuse both and offering them would
+be a lie; it says so in one line and offers "Activar". A refusal past the cap is shown where the
+button is, in the product's register and never in red (`FR-17`, `NFR-7`).
 
 **The project screen holds everything a project can be done to**, in this order: the log form, the
 step list, the history, and finishing. Order is the requirement, not a preference — a log form

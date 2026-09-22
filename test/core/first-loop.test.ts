@@ -255,6 +255,7 @@ class MemoryStore implements Store {
       .sort((left, right) => right.occurredAt.localeCompare(left.occurredAt))
       .slice(0, limit);
   }
+  async readCalibrationSamples(_ownerId: string, _limit: number) { return []; }
   async readDoneSteps(_projectId: string, _limit: number) { return []; }
   async readEffortForStep(stepId: string) {
     return [...this.entries.values()]

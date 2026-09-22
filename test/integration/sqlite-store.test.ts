@@ -726,6 +726,34 @@ describe("finishing a project through the API", () => {
     expect(missing.status).toBe(404);
   });
 
+  it("archives and activates a project, and refuses past the cap without changing anything", async () => {
+    // The owner's cap is 1 here, and `project` holds the only slot.
+    const second: Project = { ...project, id: "project-second", title: "Segundo", state: "shelved" };
+    await finishStore.createProject(second);
+
+    const archived = await patch({ id: project.id, state: "shelved" });
+    expect(archived.status).toBe(200);
+    const afterArchive = await portfolio();
+    if (afterArchive.setupRequired) return;
+    expect(afterArchive.progress.concat(afterArchive.outstanding).map(({ id }) => id)).toEqual([]);
+    expect(afterArchive.shelved.map(({ id }) => id).sort()).toEqual([project.id, second.id].sort());
+
+    // Reachable and whole while shelved, which is what FR-17 promises.
+    const detail = (await (await finishFetch(
+      new Request(`http://example.test/api/project/${project.id}`),
+    )).json()) as ProjectDetailResponse;
+    expect(detail.state).toBe("shelved");
+
+    const back = await patch({ id: project.id, state: "active" });
+    expect(back.status).toBe(200);
+
+    // Now the single slot is taken again, so the second one cannot come back.
+    const refused = await patch({ id: second.id, state: "active" });
+    expect(refused.status).toBe(422);
+    expect(((await refused.json()) as { error: string }).error).toContain("1 of 1");
+    expect((await finishStore.getProject(second.id))?.state).toBe("shelved");
+  });
+
   it("keeps a closed step in the history, with what it took when that is known", async () => {
     const today = calendarDateOf(new Date());
     await finishStore.createStep({

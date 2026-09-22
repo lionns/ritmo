@@ -116,7 +116,10 @@ está aquí, y en este orden:
 3. **Historial** — los avances que registraste **y los pasos que cerraste**, mezclados por fecha,
    de lo más reciente hacia atrás. Un punto lleno marca un paso cerrado; un avance escrito no
    lleva punto. Nada de casillas.
-4. **Terminar proyecto** — al final, discreto. Y si estaba terminado, **«Deshacer»** en su lugar.
+Y arriba, junto al nombre del proyecto, un **«···»**. Ahí dentro están las dos cosas que le haces
+al proyecto entero y casi nunca: **archivar** —o **activar**, si ya estaba archivado— y
+**terminar** —o **deshacer**—. Fuera del camino, porque no las necesitas casi nunca; a un toque,
+porque cuando las necesitas sabes dónde están.
 
 Marcar un paso con «Hoy» es lo que hace que aparezca en el portafolio a la mañana siguiente. Y es
 también lo que permite saber cuánto costó: si ese día **sólo** ese paso estaba marcado, los minutos
@@ -124,6 +127,14 @@ que registres se le apuntan. Así un paso cerrado puede decir *«estimaste 25 ·
 
 Cuando no se pudo saber — marcaste dos pasos el mismo día, o ninguno — **dice sólo lo que
 estimaste y se calla el resto**. No pone un cero ni un guion: no lo sabe, y no lo inventa.
+
+**Y con eso Ritmo aprende cómo estimas.** Debajo del campo de minutos, justo cuando vas a poner
+uno, aparece una línea: *«Tus últimos 12 pasos tardaron 1,4× lo estimado.»* Te dice sobre cuántos
+pasos está hecha la cuenta para que puedas juzgar si creértela.
+
+No sale hasta que **cinco pasos cerrados** tengan estimado y esfuerzo atribuido — con menos, el
+número es ruido. Si aciertas, lo dice igual de llano: *«tardaron lo que estimaste»*. Aquí tampoco
+hay felicitaciones.
 
 **Sin hora, sin duración, sin condición y sin tope** — el único límite sigue siendo cuántos
 proyectos tienes activos esta semana, que es el número que respondiste en el primer arranque.
@@ -140,6 +151,23 @@ cuando vuelvas», porque no va a volver. Lo encuentras en **el archivo** y en su
 con su historial entero. Dice «Terminado» y ya: no hay confeti aquí.
 
 
+### Archivar y activar
+
+Las dos viven en el **«···»** de arriba, junto al nombre.
+
+**Archivar es una pausa, no un final.** El proyecto sale del portafolio, libera su cupo, y sigue
+entero — con sus pasos y su historial — en su pantalla y en el archivo. **«Activar»** lo devuelve.
+
+Mientras está archivado no puedes escribirle pasos ni marcarlos para hoy: la pantalla no te lo
+ofrece, porque decidiste no tocarlo. Está todo ahí, esperando.
+
+Si el cupo está lleno, activar te dice cuántos tienes y no cambia nada. Sin regaños y sin rojo:
+**archiva otro primero.**
+
+> **Ojo:** `FR-14` dice que lo activo se cambia *los lunes* y queda fijo dentro de la semana. Hoy
+> puedes cambiarlo cualquier día, porque las semanas no existen todavía (`/semana` está sin
+> construir). Cuando existan, esto empezará a pedirte que esperes al lunes.
+
 ### El archivo
 
 `Archivo`, en el pie de cualquier pantalla. Dos listas y nada más:
@@ -151,9 +179,6 @@ con su historial entero. Dice «Terminado» y ya: no hay confeti aquí.
   lo que `FR-17` promete.
 
 Sin conteos, sin rojo, sin nada que reclame. Se llega por un toque deliberado, nunca al abrir.
-
-> Volver a activar un proyecto archivado todavía no se puede desde ninguna pantalla. Es una
-> decisión de lunes y vive con `/semana`, que no está construido.
 
 ## Lo que Ritmo no hace, a propósito
 

@@ -5,6 +5,12 @@ import type { Area, Entry, Owner, Project, Step } from "../model/entities.ts";
  * what "since the current plan opened" means once the plan is a list (`design-handoff.md`
  * § The Project Row).
  */
+/** A done step that can answer how the owner estimates: it has both halves (`D-027`). */
+export interface CalibrationSample {
+  estimateMinutes: number;
+  effortMinutes: number;
+}
+
 export interface OpenStepsWithProgress {
   projectId: string;
   steps: Step[];
@@ -40,4 +46,5 @@ export interface Store {
   readProjectEntries(projectId: string, limit: number): Promise<Entry[]>;
   readEffortForStep(stepId: string): Promise<number>;
   readDoneSteps(projectId: string, limit: number): Promise<Step[]>;
+  readCalibrationSamples(ownerId: string, limit: number): Promise<CalibrationSample[]>;
 }

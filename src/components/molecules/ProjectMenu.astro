@@ -1,0 +1,130 @@
+---
+import type { ProjectDetailResponse } from "../../../contracts/project.ts";
+
+interface Props {
+  project: ProjectDetailResponse;
+}
+
+const { project } = Astro.props;
+const finished = project.finishedAt !== null;
+const shelved = project.state === "shelved";
+// Archiving and finishing are rare and heavy, and standing in the open they asked to be weighed on
+// every visit. Behind one disclosure they are reachable and quiet — the owner's idea, drawn and
+// approved 2026-09-22. `···` rather than a gear: the product has no icons, and a gear would say
+// "configuration", which neither of these is. It sits beside the project's name, not in the panel
+// of its work.
+---
+
+<details class="relative" data-project-menu>
+  <summary
+    class="relative flex size-9 cursor-pointer list-none items-center justify-center rounded-full border border-glass-border bg-[color-mix(in_srgb,var(--page-bg)_72%,transparent)] font-mono text-[13px] leading-none text-dim transition-colors duration-[120ms] marker:content-none before:absolute before:-inset-1 before:content-[''] hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+    aria-label="Más acciones"
+    role="button"
+  >···</summary>
+  <div
+    class="absolute right-0 z-10 flex w-[220px] flex-col rounded-[18px] border border-glass-border bg-glass-fallback p-2 shadow-[0_18px_44px_rgba(0,0,0,0.5)] data-[drop=up]:bottom-11 data-[drop=down]:top-11"
+    data-menu-panel
+    data-drop="down"
+  >
+    <button
+      class="min-h-[44px] rounded-xl px-3.5 text-left text-sm font-medium text-ink transition-colors duration-[120ms] hover:bg-[color-mix(in_srgb,var(--page-ink)_8%,transparent)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+      type="button"
+      data-set-state={shelved ? "active" : "shelved"}
+      data-project={project.id}
+    >
+      {shelved ? "Activar" : "Archivar"}
+    </button>
+    <button
+      class="min-h-[44px] rounded-xl px-3.5 text-left text-sm font-medium text-ink transition-colors duration-[120ms] hover:bg-[color-mix(in_srgb,var(--page-ink)_8%,transparent)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+      type="button"
+      data-finish={finished ? undefined : project.id}
+      data-unfinish={finished ? project.id : undefined}
+    >
+      {finished ? "Deshacer" : "Terminar proyecto"}
+    </button>
+  </div>
+</details>
+
+<script>
+  import { setFormStatus } from "../../lib/form-errors.ts";
+
+  /*
+    A native <details> closes on its own for nothing: Escape and an outside pointer are ours to
+    add, the same two the custom listbox already answers. And it flips upward when there is no
+    room below, so the menu stays reachable near the bottom of a phone.
+  */
+  const menu = document.querySelector<HTMLDetailsElement>("[data-project-menu]");
+  if (menu !== null) {
+    const panel = menu.querySelector<HTMLElement>("[data-menu-panel]");
+    menu.addEventListener("toggle", () => {
+      if (!menu.open || panel === null) return;
+      const below = window.innerHeight - menu.getBoundingClientRect().bottom;
+      panel.dataset.drop = below < panel.offsetHeight + 24 ? "up" : "down";
+    });
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape" && menu.open) {
+        menu.open = false;
+        menu.querySelector<HTMLElement>("summary")?.focus();
+      }
+    });
+    document.addEventListener("pointerdown", (event) => {
+      if (menu.open && !menu.contains(event.target as Node)) menu.open = false;
+    });
+  }
+
+  function status(): HTMLElement | null {
+    return document.querySelector<HTMLElement>("[data-state-status]");
+  }
+
+  async function patch(body: Record<string, unknown>): Promise<Response> {
+    return fetch("/api/projects", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+  }
+
+  function bind(selector: string, body: (id: string, button: HTMLButtonElement) => Record<string, unknown>) {
+    document.querySelectorAll<HTMLButtonElement>(selector).forEach((button) => {
+      button.addEventListener("click", async () => {
+        const id = button.dataset.project ?? button.dataset.finish ?? button.dataset.unfinish;
+        if (id === undefined) return;
+        button.disabled = true;
+        setFormStatus(status(), "Guardando…", "loading");
+        try {
+          const response = await patch(body(id, button));
+          if (response.ok) {
+            window.location.reload();
+            return;
+          }
+          setFormStatus(status(), readStateError(await response.json()), "error");
+        } catch {
+          setFormStatus(status(), "No se pudo conectar. Revisa la conexión e inténtalo otra vez.", "error");
+        } finally {
+          button.disabled = false;
+        }
+      });
+    });
+  }
+
+  bind("[data-set-state]", (id, button) => ({ id, state: button.dataset.setState }));
+  bind("[data-finish]", (id) => ({ id, finished: true }));
+  bind("[data-unfinish]", (id) => ({ id, finished: false }));
+
+  /*
+    FR-14 and FR-17: the refusal is said where the button is, in the product's own register and
+    never in red. Activating past the cap names the count, and the project stays where it was.
+  */
+  function readStateError(body: unknown): string {
+    const message = typeof body === "object" && body !== null && "error" in body
+      && typeof body.error === "string" ? body.error : "";
+    const capped = /^(\d+) of (\d+) capped projects are active$/.exec(message);
+    if (capped !== null) {
+      return `Ya tienes ${capped[1]} de ${capped[2]} activos. Archiva otro antes de activar éste.`;
+    }
+    if (message.includes("week boundary")) {
+      return "Lo activo se cambia los lunes. Esta semana ya está en marcha.";
+    }
+    return "No se pudo cambiar. Recarga la página e inténtalo otra vez.";
+  }
+</script>

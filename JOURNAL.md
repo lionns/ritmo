@@ -28,3 +28,6 @@
 2026-09-21 | T-025 | done | a finished project leaves the landing at once | 6 files | unit 51/51, isolation, typecheck, build, integration 18/18 | D-026
 2026-09-21 | T-026 | done | effort attributed to a step as it is written, not derived from a broken window | 12 files | unit 51/51, isolation, typecheck, build, integration 23/23 | D-027
 2026-09-22 | T-027 | done | a closed step stays in the project's history, with what it took when that is known | 12 files | unit 51/51, isolation, typecheck, build, integration 25/25 | -
+2026-09-22 | T-028 | done | FR-14 gets the control it never had: archive and activate | 5 files | unit 51/51, isolation, typecheck, build, integration 26/26 | -
+2026-09-22 | T-029 | done | the calibration signal, where the estimate is written | 12 files | unit 55/55, isolation, typecheck, build, integration 26/26 | -
+2026-09-22 | T-030 | done | archiving and finishing behind one menu, and a history that keeps up | 7 files | unit 55/55, isolation, typecheck, build, integration 26/26 | -

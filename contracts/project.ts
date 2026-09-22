@@ -12,6 +12,12 @@ export interface ProjectDetailResponse {
   recentEntries: PortfolioEntry[];
   /** Entries and closed steps in one list, newest first. */
   history: ProjectHistoryItem[];
+  /**
+   * How the owner's estimates have actually gone (`FR-20`). Null below the minimum sample, where
+   * the honest answer is silence rather than a number said with confidence it has not earned.
+   * It describes the owner, not this project, and reads the same on every project's screen.
+   */
+  calibration: { ratio: number; samples: number } | null;
   progressSincePlan: number;
 }
 

@@ -32,6 +32,9 @@ Harness `0.9.0` · profile `team`
 | [T-025](docs/tasks/T-025-finished-leaves-the-landing.md) | `done` | Take finished projects out of every group on `/` the moment they are finished, and remove the |
 | [T-026](docs/tasks/T-026-effort-attributed-at-write-time.md) | `done` | Give `Entry` a `stepId` the log route fills from the day's marks, and replace the overlapping |
 | [T-027](docs/tasks/T-027-the-history-of-a-project.md) | `done` | Show what a step was estimated at while it is open, and keep it in the project's history once |
+| [T-028](docs/tasks/T-028-archiving-and-activating.md) | `done` | Put the archive/activate control on the project screen, so "what is active is changeable |
+| [T-029](docs/tasks/T-029-the-calibration-signal.md) | `done` | Finish `FR-20` — say how the owner's estimates have actually gone, under the field where the |
+| [T-030](docs/tasks/T-030-the-project-screen-after-use.md) | `done` | Put archiving and finishing behind one "más acciones" disclosure instead of two buttons that |
 | [T-010](docs/tasks/T-010-passkey-and-the-signed-cookie.md) | `superseded` | Build `D-004` as specified — a passkey registered per device, verified with Web Crypto and no |
 
 ## Next
@@ -44,10 +47,10 @@ None. All decisions are accepted or superseded.
 
 ## Journal — last 5
 
+- 2026-09-22 | T-030 | done | archiving and finishing behind one menu, and a history that keeps up | 7 files | unit 55/55, isolation, typecheck, build, integration 26/26 | -
+- 2026-09-22 | T-029 | done | the calibration signal, where the estimate is written | 12 files | unit 55/55, isolation, typecheck, build, integration 26/26 | -
+- 2026-09-22 | T-028 | done | FR-14 gets the control it never had: archive and activate | 5 files | unit 51/51, isolation, typecheck, build, integration 26/26 | -
 - 2026-09-22 | T-027 | done | a closed step stays in the project's history, with what it took when that is known | 12 files | unit 51/51, isolation, typecheck, build, integration 25/25 | -
 - 2026-09-21 | T-026 | done | effort attributed to a step as it is written, not derived from a broken window | 12 files | unit 51/51, isolation, typecheck, build, integration 23/23 | D-027
-- 2026-09-21 | T-025 | done | a finished project leaves the landing at once | 6 files | unit 51/51, isolation, typecheck, build, integration 18/18 | D-026
-- 2026-09-21 | T-024 | done | one project, one screen, and a landing that reads again | 17 files | unit 51/51, isolation, typecheck, build, integration 18/18, probed against the approved canvas | -
-- 2026-09-21 | T-023 | done | the archive, and a footer link that stops answering 404 | 8 files | unit 51/51, isolation, typecheck, build, integration 16/16, probed in the built app | -
 
 Full history: [`JOURNAL.md`](JOURNAL.md) · decisions: [`docs/decisions/`](docs/decisions/README.md)

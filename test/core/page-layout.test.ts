@@ -231,7 +231,7 @@ describe("the first-loop page composition", () => {
     assert.ok(capFormAt > -1 && capFormAt < projectsPanelAt, "the cap editor belongs to the areas card");
     assert.match(capture, /class="[^"]*xl:grid-cols-2[^"]*" data-project-fields/);
     assert.match(capture, /<StepFields idPrefix="project-step" fieldName="step" paired \/>/);
-    assert.match(fields, /paired && "xl:grid-cols-2"/);
+    assert.match(fields, /paired && "xl:grid-cols-2 xl:grid-rows-\[auto_auto\]/);
   });
 
   it("shows disclosure state and normalises number chrome", () => {
@@ -288,6 +288,8 @@ describe("the first-loop page composition", () => {
     assert.match(listbox, /event\.key === "ArrowDown" \|\| event\.key === "ArrowUp"\)[\s\S]*?trigger\.click\(\)/);
     assert.match(listbox, /open\(selectedOptionIndex\(\)\)/);
     assert.match(styles, /\[data-field-control\]\[aria-invalid="true"\][^{]*\{[^}]*border-style: dashed/);
+    // Six status regions in these six forms. The project menu's refusal (T-030) reports through
+    // the same treatment from its own component, which is not in this list.
     assert.equal(allSource.match(/data-form-status/g)?.length, 6);
     assert.equal(allSource.match(/data-field-error/g)?.length ?? 0, 0, "field errors come from the shared atom");
   });
@@ -303,12 +305,23 @@ describe("the first-loop page composition", () => {
         .find((input) => input.includes(name)) ?? "";
 
     assert.match(capture, /<StepFields idPrefix="project-step" fieldName="step" paired \/>/);
-    assert.match(list, /<StepFields idPrefix=\{formPrefix\} paired \/>/);
+    assert.match(list, /<StepFields idPrefix=\{formPrefix\} paired calibration=\{project\.calibration\} \/>/);
+    // T-029: both columns share one grid, so a label that wraps cannot drop its own input out of
+    // line with the other. Asserted on the markup because the wrap depends on the viewport.
+    assert.match(fields, /xl:grid-rows-\[auto_auto\]/);
+    assert.equal(fields.match(/xl:\[grid-template-rows:subgrid\]/g)?.length, 2);
+    // §14: the calibration reports and never congratulates.
+    assert.doesNotMatch(fields, /¡|Bien hecho|Genial|Felicidades/);
     assert.match(inputFor("name={fieldName}"), /\brequired\b/);
     assert.doesNotMatch(inputFor('name="estimateMinutes"'), /\brequired\b/);
     // D-024: the pair and the obstacle went with the trigger.
     assert.doesNotMatch(fields, /name="trigger"|name="act"|name="obstacle"/);
-    assert.match(list, /Terminar proyecto/);
+    // T-030: archiving and finishing left the panel for the menu beside the project's name.
+    assert.doesNotMatch(list, /Terminar proyecto|Archivar/);
+    const menu = source("src/components/molecules/ProjectMenu.astro");
+    assert.match(menu, /aria-label="Más acciones"/);
+    assert.match(menu, /data-set-state/);
+    assert.match(menu, /Terminar proyecto/);
     assert.match(list, /\/api\/steps/);
 
     // The row reads steps as language. A checkbox on the landing surface is a debt symbol.

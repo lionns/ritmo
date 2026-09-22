@@ -9,6 +9,7 @@ import {
   type ProjectDetail,
 } from "../../../../core/rules/project-detail.ts";
 import { calendarDateOf } from "../../../../core/rules/step.ts";
+import { readCalibration, type Calibration } from "../../../../core/rules/calibration.ts";
 import type {
   ProjectDetailErrorResponse,
   ProjectDetailResponse,
@@ -26,8 +27,11 @@ export async function handleGetProjectDetail(
     const store = injectedStore ?? runtimeStore();
     const owner = await store.getOnlyOwner();
     if (owner === null) return errorResponse("Complete setup first", 409);
-    const detail = await readProjectDetail(store, owner.id, id);
-    return Response.json(toResponse(detail), { headers: responseHeaders });
+    const [detail, calibration] = await Promise.all([
+      readProjectDetail(store, owner.id, id),
+      readCalibration(store, owner.id),
+    ]);
+    return Response.json(toResponse(detail, calibration), { headers: responseHeaders });
   } catch (error) {
     // A project that does not exist is a 404, not a 500: the id came from a URL someone typed.
     if (error instanceof ProjectDetailRuleError) return errorResponse(error.message, 404);
@@ -41,7 +45,7 @@ export async function handleGetProjectDetail(
 
 export const GET: APIRoute = ({ params }) => handleGetProjectDetail(params.id ?? "");
 
-function toResponse(detail: ProjectDetail): ProjectDetailResponse {
+function toResponse(detail: ProjectDetail, calibration: Calibration | null): ProjectDetailResponse {
   const { project, area, openSteps, recentEntries } = detail;
   // Counted since the oldest open step was written — the anchor the portfolio row uses (`D-024`).
   const openedAt = openSteps[0]?.createdAt ?? null;
@@ -60,6 +64,7 @@ function toResponse(detail: ProjectDetail): ProjectDetailResponse {
       createdAt: step.createdAt,
     })),
     history: mergedHistory(detail),
+    calibration,
     recentEntries: recentEntries.map((entry) => ({
       id: entry.id,
       kind: entry.kind,
