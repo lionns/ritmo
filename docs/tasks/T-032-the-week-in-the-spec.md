@@ -38,18 +38,34 @@ What the requirements already fix, and this task must **not** re-decide:
 
 What is open, and what this task answers:
 
-1. **Where a week begins.** `FR-14` says Monday. Local calendar or UTC, and what happens to an
-   entry logged at 00:30 on Monday about Sunday's work.
-2. **What a commitment is attached to** — a project, an area, or an objective — and how that
-   squares with `FR-15`, where the fixed job's projects have their own quota and never compete
-   for the active cap.
-3. **How `FR-10` derives next week's targets from logged history.** The requirement names no
-   window and no formula. Whatever is proposed is a starting value with no evidence behind it and
-   must say so in the decision, as `core/rules/calibration.ts` does for its own two constants.
-4. **A week the owner never closes.** Ritmo is used in a life that moves; a week will be missed.
-   Whether it closes itself, stays open, or is closed retroactively — and what `FR-19` means for
-   the week after it.
-5. **Whether a new week opens by itself** or on the owner's action.
+1. **Where a week begins** — answered above. What remains is what happens to an entry logged at
+   00:30 on Monday about Sunday's work.
+2. **What a commitment is attached to** — answered above: the project. What remains is `FR-15`,
+   where the fixed job's projects have their own quota and never compete for the active cap.
+3. **How `FR-10` derives next week's targets** — answered above. What remains is what the median
+   does with fewer than 4 closed weeks, which is where the product is today.
+4. **A week the owner never closes** — answered above: it closes itself, unlabelled.
+5. **Whether a new week opens by itself** — answered by (4): it does, in the same movement.
+
+## The owner's answers, 2026-09-22
+
+Recorded verbatim in effect, before the decision is drafted. Each number here is a starting value
+chosen by the Planner and accepted by the owner, not a value evidence produced — the decision must
+say so, as `core/rules/calibration.ts` does for its own two constants.
+
+1. **A week begins Monday on the local calendar**, matching `calendarDateOf` in
+   `core/rules/step.ts`, so the product keeps one idea of what day it is.
+2. **A commitment hangs off a project.** Each active project carries its own weekly target and
+   reserve, which is the shape `commitments` already has in `0001_initial_schema.sql`. `FR-15`'s
+   fixed-job quota still needs an answer inside this shape.
+3. **The proposal is the median of what was achieved over the last 4 closed weeks.** The 4 is the
+   Planner's number with nothing behind it.
+4. **A week nobody closes closes itself on Monday, with no capacity label, no tag and no
+   reflection**, and the next opens in the same movement. `NFR-8` already holds that a week closed
+   without a tag is as complete as one with it, so nothing is left incomplete and nothing asks the
+   owner to catch up — which is what `FR-19` forbids.
+5. **A commitment is a frequency or a volume, chosen per commitment**, as `FR-7` says. The
+   derivation in (3) must therefore work on both.
 
 ## Out of Scope
 

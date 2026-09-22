@@ -29,7 +29,9 @@ implements: [FR-21, NFR-4]
 ## Out of Scope
 
 - Importing, restoring, or scheduling. One direction, on demand, is the whole requirement.
-- Encrypting the export. Worth asking about; not assumed here.
+- Encrypting the export. **Asked and answered on 2026-09-22: the file is plain SQLite.** It opens
+  with any tool, today and in ten years, without Ritmo and without a key, which is what makes
+  `NFR-4`'s no-lock-in promise real. Whoever holds the file holds the whole record.
 
 ## Acceptance Criteria
 

@@ -31,7 +31,12 @@ implements: [NFR-2, NFR-4]
 ## Scope
 
 1. **The host.** The owner has said Cloudflare. Record it, and record what it costs.
-2. **The store.** `node:sqlite` is not available on Workers. This is the open technical question
+2. **The store — the owner chose Turso/libSQL on 2026-09-22**, over D1, for the reason they left
+   Cloudflare in the first place: the vendor that serves the application is not the vendor that
+   holds the data. **This choice rests on an unverified premise** — that libSQL runs on Workers is
+   recalled, not checked. Verify it against live documentation before the decision is written; if
+   it does not hold, the choice goes back to the owner rather than quietly becoming D1.
+   `node:sqlite` is not available on Workers. This is the open technical question
    and the one with consequences: D1 is SQLite and Cloudflare's, Turso/libSQL is SQLite and is
    not. **The owner's stated reason for leaving Cloudflare on 2026-09-02 was not wanting to depend
    entirely on one vendor**; D1 returns them to exactly that position. Put both options to the
