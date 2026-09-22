@@ -34,3 +34,5 @@
 2026-09-22 | T-031 | blocked | backup preflight found one closed action never carried to steps; no drop applied | 4 files | baseline unit 55/55, isolation, harness lint, typecheck, build, integration 26/26; backup integrity ok | -
 2026-09-22 | T-031 | review | owner authorized discarding test actions; 0005 verified on fresh DB, backup copy and local DB | 9 files | unit 55/55, isolation, typecheck, build, integration 26/26; preservation and idempotency verified | D-028
 2026-09-22 | T-031 | done | the retired next action leaves the schema, with the owner's word on the rows | 9 files | unit 55/55, isolation, typecheck, build, integration 26/26 | D-028
+2026-09-22 | T-037 | review | complete SQLite download from settings with consistent snapshot and temporary-file cleanup | 8 files | unit 55/55, isolation, typecheck, build, integration 30/30, compiled HTTP download verified | -
+2026-09-22 | T-037 | done | the owner holds a complete copy of their own record, one click away | 8 files | unit 55/55, isolation, typecheck, build, integration 30/30 | D-029

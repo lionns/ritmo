@@ -51,6 +51,11 @@ implements: [NFR-2, NFR-3]
 
 - [ ] No route and no page serves owned data without a valid session — enumerated one by one, not
       asserted in general
+- [ ] **`GET /api/export` refuses without a valid session**, named separately because it returns
+      the entire database in one request and a general clause is where one route goes missing
+      (T-037's review)
+- [ ] The export carries the `credentials` table into a plain unencrypted file. Decide
+      deliberately whether the password fallback's hash belongs in it, and record the answer
 - [ ] `getOnlyOwner()` no longer decides who is asking anywhere in `src/`
 - [ ] A passkey can be registered on a second device without touching the first
 - [ ] Deleting a `credentials` row revokes that device, and the product says so somewhere the

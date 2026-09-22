@@ -21,8 +21,11 @@ its own.
 | Release Engineer | Claude Code | `claude-opus-5` | `wrangler` deploys and migrations |
 | UX/Motion Designer | Claude Code | `claude-opus-5` | Once `design-handoff.md` exists |
 
-**Validator: the owner, on every task, without exception.** In `team` this is an explicit gate with
-a named validator, not an implicit one.
+**Validator: the Reviewer, per `D-029`.** Claude Code names itself in `## Validation` and closes the
+task. The owner validates nothing routinely, still decides product direction and any number with no
+evidence behind it, and receives a non-blocking "you'll want to look at this" list for anything
+visible — because every UX defect this project has had was found by the owner looking at a screen,
+never by a gate. `D-010`'s split stands: whoever writes the code does not judge it.
 
 ---
 

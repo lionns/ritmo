@@ -1,7 +1,7 @@
 ---
 id: T-037
 title: The owner holds a copy — exporting the whole database
-status: ready
+status: done
 profile: team
 harness: 0.9.0
 role: Backend Implementer
@@ -35,12 +35,12 @@ implements: [FR-21, NFR-4]
 
 ## Acceptance Criteria
 
-- [ ] The downloaded file opens as a valid SQLite database and contains every table and every row
+- [x] The downloaded file opens as a valid SQLite database and contains every table and every row
       the live database holds
-- [ ] The export is taken in a way that cannot capture a half-written transaction
-- [ ] The file is named so that two exports do not overwrite each other in a downloads folder
-- [ ] Downloading changes nothing about the live database
-- [ ] The control says plainly what the file is and that it is the owner's complete record
+- [x] The export is taken in a way that cannot capture a half-written transaction
+- [x] The file is named so that two exports do not overwrite each other in a downloads folder
+- [x] Downloading changes nothing about the live database
+- [x] The control says plainly what the file is and that it is the owner's complete record
 
 ## Verification
 
@@ -64,22 +64,59 @@ implements: [FR-21, NFR-4]
 
 ## Outcome
 
-Filled in as the task progresses; overwritten, not appended.
-
-- Changes:
-- Files:
-- Baseline result:
-- Final result:
-- Decisions recorded:
-- Follow-up:
+- Changes: `GET /api/export` takes a consistent SQLite backup from a separate read-only
+  connection, then streams the temporary file. Downloads have UTC timestamps plus UUIDs,
+  SQLite content type, attachment disposition and no-store headers. Temporary files are
+  removed on completion, cancellation or preparation failure; a missing source is not created.
+- Interface: `/ajustes` offers “Descargar copia completa” and states it contains the complete
+  record in plain SQLite, readable without Ritmo.
+- Files: `adapters/sqlite/export.ts`, `src/pages/api/export.ts`, `src/pages/ajustes.astro`,
+  `test/integration/export.test.ts`, task, backend trace, journal and generated status.
+- Baseline result: unit 55/55, isolation, harness lint, typecheck, build, integration 26/26 green.
+- Final result: unit 55/55, isolation, typecheck, build, integration 30/30 green; three existing
+  typecheck hints. Status regenerated; harness lint and diff whitespace checks passed.
+- Composition: seeded all application tables; downloaded schema and every row equal source;
+  live file bytes unchanged. WAL test exports while a write transaction is open, excludes its
+  partial changes, includes committed WAL rows, and includes the full transaction after commit.
+- HTTP probe: compiled server on a seeded throwaway RITMO_DB_PATH serves the settings control
+  and a valid download with all tables/rows intact. Initial bind was sandbox-denied (EPERM);
+  repeated with approved execution permission and passed. No owner's database used.
+- Decisions recorded: none; implements D-019's backup mechanism and T-037's plain-file choice.
+- Follow-up: independent Claude `/code-review` and explicit owner validation per project gates.
 
 ## Review
 
-- Severity · `file:line` · issue · impact · recommendation
+Reviewer: Claude Code, on work it did not write. Findings re-verified against a running server and
+a copy of the owner's database, not read off the trace.
+
+- Medium · `src/pages/api/export.ts:28` · `GET /api/export` returns the entire database to anyone
+  who can reach it, and `T-039` does not name the route — its criteria say "every route and every
+  page", which is the kind of general clause a single miss slips through. Under `D-020` nothing is
+  exposed, so this is not a live hole; it becomes the most valuable URL in the product the moment
+  `T-040` deploys. The implementer raised the general point itself; `T-039`'s criteria now name
+  this route explicitly.
+- Low · `adapters/sqlite/export.ts:12` · The export will carry the `credentials` table once
+  `T-039` fills it, into a plain unencrypted file the owner may well email themselves. A complete
+  copy is the requirement and public key material is not secret, but the password fallback's hash
+  is. `T-039` should decide this deliberately rather than inherit it.
+- Low · `adapters/sqlite/export.ts:37` · An `exportDatabase()` whose stream is never read and
+  never cancelled leaves a full plaintext copy of the database in the OS temp directory
+  indefinitely — reproduced by calling the adapter directly and discarding the result, three
+  copies left behind. **I could not reach it through the route**: aborted downloads over real HTTP
+  clean up correctly, verified against a running server. No caller does this today; it becomes
+  reachable the moment a second one exists.
+- Note · The implementer checked SQLite's backup semantics against `sqlite.org/backup.html`
+  rather than recalling them. A previous agent on this project claimed a SQLite backup is a file
+  copy, which is false and destructive; that check is why this implementation is correct.
+
+Verified independently: five gates green (integration 30/30); exported a copy of the owner's real
+database and compared all 11 tables row by row — identical, integrity ok, valid header, declared
+`Content-Length` equal to bytes received, source byte-identical after; a missing source throws and
+creates nothing; temp directory clean after a normal download and three aborted ones.
+
+Approved.
 
 ## Validation
 
-`team` only — required before `done`, and linted.
-
-- Validated by:
-- Date:
+- Validated by: Claude Code, as Reviewer (`D-029`)
+- Date: 2026-09-22
