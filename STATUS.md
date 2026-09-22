@@ -8,6 +8,16 @@ Harness `0.9.0` · profile `team`
 
 | Task | State | Goal |
 |---|---|---|
+| [T-031](docs/tasks/T-031-the-schema-drops-what-nothing-reads.md) | `ready` | Remove `next_actions` from the schema, so the database describes the product that exists |
+| [T-032](docs/tasks/T-032-the-week-in-the-spec.md) | `ready` | Settle the five things the week's requirements leave open — where a week begins, what a |
+| [T-033](docs/tasks/T-033-the-week-in-the-model.md) | `ready` | Give the week rules, ports and tests of its own — a commitment with a target and a reserve, |
+| [T-034](docs/tasks/T-034-the-week-through-the-contract.md) | `ready` | Put the week behind contracts and API routes, including the one piece the model deliberately |
+| [T-035](docs/tasks/T-035-the-week-screen.md) | `ready` | Build the one screen the week has been missing since the product began — the close, the |
+| [T-036](docs/tasks/T-036-where-the-deploy-returns-to.md) | `ready` | Settle where Ritmo runs now that the owner needs it from anywhere, what holds the data once |
+| [T-037](docs/tasks/T-037-the-owner-holds-a-copy.md) | `ready` | Let the owner download their entire database as a SQLite file on demand, so that the only |
+| [T-038](docs/tasks/T-038-the-second-store-behind-the-port.md) | `ready` | Build the store T-036 chose as a second adapter behind the existing port, so the core and |
+| [T-039](docs/tasks/T-039-d004-built-at-last.md) | `ready` | Build `D-004` as specified — a passkey per device, a password fallback, a stateless signed |
+| [T-040](docs/tasks/T-040-deploy-and-carry-the-data-across.md) | `ready` | Put Ritmo where the owner can reach it from a phone, move weeks of real use onto the new |
 | [T-001](docs/tasks/T-001-skeleton-and-next-action.md) | `done` | Stand up the three-layer tree with every quality-gate command real and green, and prove it by |
 | [T-003](docs/tasks/T-003-loose-ends.md) | `done` | Close the six low-severity findings the T-001 review left open, so the schema states the |
 | [T-005](docs/tasks/T-005-first-loop-back.md) | `done` | Give the front two endpoints and the contracts behind them, so a real portfolio can be read |
@@ -39,7 +49,7 @@ Harness `0.9.0` · profile `team`
 
 ## Next
 
-Nothing open. Plan the next task before implementing anything.
+**T-031** (`ready`) — Remove `next_actions` from the schema, so the database describes the product that exists
 
 ## Open decisions
 

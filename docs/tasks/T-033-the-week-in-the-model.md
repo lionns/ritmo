@@ -1,0 +1,99 @@
+---
+id: T-033
+title: The week in the model — commitments, the reserve as an event, and no debt
+status: ready
+profile: team
+harness: 0.9.0
+role: Backend Implementer
+goal: Give the week rules, ports and tests of its own — a commitment with a target and a reserve,
+  a reserve spent as a recorded event rather than a decremented counter, and a close that carries
+  nothing forward — against the tables that have sat empty in the schema since the first migration.
+decisions: []
+implements: [FR-7, FR-8, FR-9, FR-19]
+---
+
+## Sources
+
+- **T-032's accepted decision.** This task cannot start before it. The week boundary, what a
+  commitment attaches to, and what happens to an unclosed week are all settled there, and every
+  one of them changes the shape of the code below.
+- `migrations/0001_initial_schema.sql` — `weeks` and `commitments` as declared. Read them before
+  writing a new migration; the columns may already be right, or may not match T-032's answers.
+- `core/rules/step.ts` — `calendarDateOf`, and the shape the rules in this repository take
+- `core/rules/project.ts` — `countCappedActiveProjects`, which `FR-14`'s Monday rule will meet
+- `core/ports/store.ts` — every query the core is allowed to ask for
+
+## Scope
+
+- `core/rules/week.ts` — opening a week, closing one, and reading the current one
+- `core/rules/commitment.ts` — writing a commitment as target plus reserve, where the reserve is
+  `ceil(0.30 x target)` with a minimum of 1 (`FR-7`), and spending a reserve as an event (`FR-8`)
+- The port methods each needs, added to `core/ports/store.ts` and implemented in
+  `adapters/sqlite/store.ts`
+- A migration if and only if T-032's answers do not fit the tables as declared
+- Unit tests in `test/core/`, integration tests in `test/integration/sqlite-store.test.ts`
+
+## Out of Scope
+
+- Contracts and API routes — T-034
+- Any screen — T-035
+- `FR-10`'s derivation of next week's targets. It is the hardest part and it belongs with the
+  close, in T-034, once the model can say what a week actually held.
+- Turning on `FR-14`'s Monday restriction. `hasClosedWeek` starts returning true as a consequence
+  of this task, which is why T-035 must land close behind it.
+
+## Acceptance Criteria
+
+- [ ] A commitment stores its target and its reserve, and refuses a target expressed as a clock
+      slot (`FR-7` — "never a recurring clock slot")
+- [ ] Spending a reserve writes a row that can be read back, with no counter anywhere in the
+      model that is silently decremented (`FR-8`)
+- [ ] Closing a week accepts the capacity label as the authoritative correction, applied
+      retroactively, and never blocks on the inferred value (`FR-9`)
+- [ ] Nothing a closed week held appears in the week after it — no carried target, no shortfall,
+      no counter (`FR-19`). There is a test that closes a week with work missing and asserts the
+      next week opens empty.
+- [ ] `npm run check:core` stays clean: no `Date.now()`, no platform global, no SQL in `core/`
+
+## Verification
+
+- Baseline: `npm test && npm run check:core && npm run typecheck && npm run build && npm run test:integration`
+- Final: the same five, all green
+- Task-specific: run every probe against a throwaway `RITMO_DB_PATH`. The owner's
+  `data/ritmo.sqlite` holds weeks of real use and the product still has no export (`FR-21`).
+- Task-specific: after this lands, `hasClosedWeek` can return true for the first time. Confirm by
+  hand what `/` and `/p/:id` do once it does, **before** T-035 exists — if the Monday restriction
+  starts refusing state changes on a screen that offers no way to see the week, say so.
+
+## Assumptions
+
+- The `weeks` and `commitments` tables as declared in `0001` are a reasonable starting shape. They
+  were written before the week was thought through and may not survive contact with T-032.
+
+## Risks
+
+- This task switches on a restriction (`FR-14`'s Monday) that has been dormant since the product
+  began, from the model layer, with no screen able to explain it. The gap between this task and
+  T-035 is the window where the owner can be refused an action for a reason nothing tells them.
+
+## Outcome
+
+Filled in as the task progresses; overwritten, not appended.
+
+- Changes:
+- Files:
+- Baseline result:
+- Final result:
+- Decisions recorded:
+- Follow-up:
+
+## Review
+
+- Severity · `file:line` · issue · impact · recommendation
+
+## Validation
+
+`team` only — required before `done`, and linted.
+
+- Validated by:
+- Date:
