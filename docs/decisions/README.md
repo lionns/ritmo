@@ -33,4 +33,4 @@ rather than editing. Template in `../sdd/TEMPLATES.md`.
 | [D-026](D-026-a-finished-project-leaves-the-landing.md) | 2026-09-21 | A finished project leaves the landing at once | `accepted` | D-025 (its first consequence only; everything else in it stands) |
 | [D-027](D-027-effort-is-attributed-when-it-is-written.md) | 2026-09-21 | Effort is attributed to a step when it is written, not derived later | `accepted` | none — it replaces the derivation in `brief.md` (settled 2026-08-29) and |
 | [D-028](D-028-drop-retired-next-actions.md) | 2026-09-22 | Drop the retired next-action test data | `accepted` | none — replaces the retention note in data-model.md § Retired: NextAction |
-| [D-029](D-029-the-reviewer-validates.md) | 2026-09-22 | The Reviewer validates, and what a finding may become | `accepted` | none — replaces `D-010`'s validation clause, which stands otherwise |
+| [D-029](D-029-the-reviewer-validates.md) | 2026-09-22 | The Reviewer validates, and what a finding may become | `accepted` | none — replaces `D-010`'s validation clause; the rest of `D-010` stands |
