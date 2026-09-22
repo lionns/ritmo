@@ -251,12 +251,12 @@ Never stored, always computed, so they cannot drift from the log.
 
 ### Retired: NextAction
 
-*The table `next_actions` survives with **no reader anywhere in the code** (`T-021`). `D-024`
-replaced it with `Step`, and the rows were not dropped: the five triggers the owner wrote are the
-record of why the product changed — four of the five hang off finishing a day's work, which is the
-evidence the decision rests on. A guard test in `test/core/page-layout.test.ts` fails if any file
-under `core/`, `contracts/`, `adapters/`, `src/` or `scripts/` names it again. Dropping it would
-destroy the owner's own words and needs its own decision.*
+*`D-024` replaced NextAction with `Step`; `T-021` removed its last reader. Migration
+`0005_drop_next_actions.sql` removes the retired table, indexes and constraints (`T-031`,
+`D-028`). The owner confirmed the retained rows were disposable test data, including the
+closed action that migration 0002 did not carry across. Historical migrations remain intact
+for ordered upgrades. A guard test in `test/core/page-layout.test.ts` keeps application code
+from reading or writing next actions again.*
 
 ## Data lifecycle
 

@@ -358,7 +358,13 @@ describe("SqliteStore with the step rules", () => {
       { name: "0002_steps.sql" },
       { name: "0003_project_finished_at.sql" },
       { name: "0004_entry_step.sql" },
+      { name: "0005_drop_next_actions.sql" },
     ]);
+    expect(database.prepare(
+      "SELECT name FROM sqlite_master WHERE tbl_name = 'next_actions'",
+    ).all()).toEqual([]);
+    expect(database.prepare("SELECT name FROM sqlite_master WHERE name = 'tags'").get())
+      .toEqual({ name: "tags" });
   });
 
   it("wires API handlers through runtimeStore and RITMO_DB_PATH", async () => {
@@ -969,6 +975,7 @@ describe("attributing effort to a step as it is written", () => {
 describe("the 0002 carry-across, against a database written before it", () => {
   let upgradeDirectory: string;
   let legacyMigrations: string;
+  let beforeDropMigrations: string;
 
   beforeAll(() => {
     upgradeDirectory = mkdtempSync(join(tmpdir(), "ritmo-upgrade-"));
@@ -978,11 +985,17 @@ describe("the 0002 carry-across, against a database written before it", () => {
       join(process.cwd(), "migrations", "0001_initial_schema.sql"),
       join(legacyMigrations, "0001_initial_schema.sql"),
     );
+    beforeDropMigrations = join(upgradeDirectory, "before-drop");
+    mkdirSync(beforeDropMigrations);
+    for (const name of ["0001_initial_schema.sql", "0002_steps.sql",
+      "0003_project_finished_at.sql", "0004_entry_step.sql"]) {
+      copyFileSync(join(process.cwd(), "migrations", name), join(beforeDropMigrations, name));
+    }
   });
 
   afterAll(() => rmSync(upgradeDirectory, { recursive: true }));
 
-  it("carries every open action across, leaves the closed ones, and touches nothing else", async () => {
+  it("carries open actions across, then drops the retired table without changing surviving rows", async () => {
     // A database exactly as the owner's was before D-024: 0001 only, real next actions in it.
     // Written in SQL because T-021 deleted the rules that used to write them — the migration is
     // SQL, the fixture it upgrades is SQL, and nothing in the product can produce one any more.
@@ -1011,8 +1024,8 @@ describe("the 0002 carry-across, against a database written before it", () => {
     expect(legacy.prepare("SELECT COUNT(*) AS count FROM next_actions").get())
       .toEqual({ count: 2 });
 
-    // Opening the app again is what applies 0002 — there is no separate command.
-    applyMigrations(legacy);
+    // First reach the schema immediately before T-031, retaining 0002's carry-across proof.
+    applyMigrations(legacy, beforeDropMigrations);
 
     const steps = legacy.prepare("SELECT * FROM steps ORDER BY id").all();
     expect(steps).toHaveLength(1);
@@ -1027,14 +1040,45 @@ describe("the 0002 carry-across, against a database written before it", () => {
       doneAt: null,
     } satisfies Step);
 
-    // The closed one stays where it is, and so does the table: T-021 removed every reader of
-    // `next_actions`, not the rows. Nothing the product can do will touch them again.
+    // Both old rows still exist before 0005; D-028 authorizes discarding them.
     expect(legacy.prepare("SELECT COUNT(*) AS count FROM next_actions").get())
       .toEqual({ count: 2 });
 
-    // And the ledger makes a second open a no-op rather than a second copy.
+    legacy.exec(`
+      INSERT INTO objectives (id, owner_id, area_id, title, type, why)
+        VALUES ('objective', '${owner.id}', '${area.id}', 'Learn', 'learning', 'Practice');
+      UPDATE projects SET objective_id = 'objective' WHERE id = '${project.id}';
+      INSERT INTO tags (id, owner_id, label) VALUES ('tag', '${owner.id}', 'Travel');
+      INSERT INTO weeks (id, owner_id, starts_on, tag_id)
+        VALUES ('week', '${owner.id}', '2026-09-21', 'tag');
+      INSERT INTO commitments (id, owner_id, project_id, week_id, target, reserve)
+        VALUES ('commitment', '${owner.id}', '${project.id}', 'week', 2, 1);
+      INSERT INTO entries (id, owner_id, kind, project_id, occurred_at, what,
+        credits_objective_id, step_id, effort_minutes)
+        VALUES ('entry', '${owner.id}', 'progress', '${project.id}',
+          '2026-09-22T10:00:00.000Z', 'Drafted', 'objective', 'action-2', 20);
+    `);
+    const survivingTables = ["owners", "credentials", "areas", "objectives", "projects",
+      "steps", "entries", "tags", "weeks", "commitments"];
+    const rows = () => survivingTables.map((table) =>
+      legacy.prepare(`SELECT * FROM ${table} ORDER BY id`).all());
+    const before = rows();
+    const tagSchema = legacy.prepare("SELECT * FROM sqlite_master WHERE tbl_name = 'tags'").all();
+
     applyMigrations(legacy);
-    expect(legacy.prepare("SELECT COUNT(*) AS count FROM steps").get()).toEqual({ count: 1 });
+    expect(rows()).toEqual(before);
+    expect(legacy.prepare("SELECT * FROM sqlite_master WHERE tbl_name = 'tags'").all())
+      .toEqual(tagSchema);
+    expect(legacy.prepare("SELECT name FROM sqlite_master WHERE tbl_name = 'next_actions'").all())
+      .toEqual([]);
+    expect(legacy.prepare("PRAGMA foreign_key_check").all()).toEqual([]);
+    const ledger = legacy.prepare("SELECT * FROM _ritmo_migrations ORDER BY name").all();
+    expect(ledger.filter((row) => row.name === "0005_drop_next_actions.sql")).toHaveLength(1);
+
+    // A second apply changes neither rows nor migration timestamps.
+    applyMigrations(legacy);
+    expect(rows()).toEqual(before);
+    expect(legacy.prepare("SELECT * FROM _ritmo_migrations ORDER BY name").all()).toEqual(ledger);
 
     legacy.close();
   });
@@ -1075,4 +1119,3 @@ const project: Project = {
   deadlineSource: null,
   finishedAt: null,
 };
-

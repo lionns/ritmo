@@ -31,3 +31,6 @@
 2026-09-22 | T-028 | done | FR-14 gets the control it never had: archive and activate | 5 files | unit 51/51, isolation, typecheck, build, integration 26/26 | -
 2026-09-22 | T-029 | done | the calibration signal, where the estimate is written | 12 files | unit 55/55, isolation, typecheck, build, integration 26/26 | -
 2026-09-22 | T-030 | done | archiving and finishing behind one menu, and a history that keeps up | 7 files | unit 55/55, isolation, typecheck, build, integration 26/26 | -
+2026-09-22 | T-031 | blocked | backup preflight found one closed action never carried to steps; no drop applied | 4 files | baseline unit 55/55, isolation, harness lint, typecheck, build, integration 26/26; backup integrity ok | -
+2026-09-22 | T-031 | review | owner authorized discarding test actions; 0005 verified on fresh DB, backup copy and local DB | 9 files | unit 55/55, isolation, typecheck, build, integration 26/26; preservation and idempotency verified | D-028
+2026-09-22 | T-031 | done | the retired next action leaves the schema, with the owner's word on the rows | 9 files | unit 55/55, isolation, typecheck, build, integration 26/26 | D-028

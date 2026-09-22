@@ -8,7 +8,6 @@ Harness `0.9.0` · profile `team`
 
 | Task | State | Goal |
 |---|---|---|
-| [T-031](docs/tasks/T-031-the-schema-drops-what-nothing-reads.md) | `ready` | Remove `next_actions` from the schema, so the database describes the product that exists |
 | [T-032](docs/tasks/T-032-the-week-in-the-spec.md) | `ready` | Settle the five things the week's requirements leave open — where a week begins, what a |
 | [T-033](docs/tasks/T-033-the-week-in-the-model.md) | `ready` | Give the week rules, ports and tests of its own — a commitment with a target and a reserve, |
 | [T-034](docs/tasks/T-034-the-week-through-the-contract.md) | `ready` | Put the week behind contracts and API routes, including the one piece the model deliberately |
@@ -45,11 +44,12 @@ Harness `0.9.0` · profile `team`
 | [T-028](docs/tasks/T-028-archiving-and-activating.md) | `done` | Put the archive/activate control on the project screen, so "what is active is changeable |
 | [T-029](docs/tasks/T-029-the-calibration-signal.md) | `done` | Finish `FR-20` — say how the owner's estimates have actually gone, under the field where the |
 | [T-030](docs/tasks/T-030-the-project-screen-after-use.md) | `done` | Put archiving and finishing behind one "más acciones" disclosure instead of two buttons that |
+| [T-031](docs/tasks/T-031-the-schema-drops-what-nothing-reads.md) | `done` | Remove `next_actions` from the schema, so the database describes the product that exists |
 | [T-010](docs/tasks/T-010-passkey-and-the-signed-cookie.md) | `superseded` | Build `D-004` as specified — a passkey registered per device, verified with Web Crypto and no |
 
 ## Next
 
-**T-031** (`ready`) — Remove `next_actions` from the schema, so the database describes the product that exists
+**T-032** (`ready`) — Settle the five things the week's requirements leave open — where a week begins, what a
 
 ## Open decisions
 
@@ -57,10 +57,10 @@ None. All decisions are accepted or superseded.
 
 ## Journal — last 5
 
+- 2026-09-22 | T-031 | done | the retired next action leaves the schema, with the owner's word on the rows | 9 files | unit 55/55, isolation, typecheck, build, integration 26/26 | D-028
+- 2026-09-22 | T-031 | review | owner authorized discarding test actions; 0005 verified on fresh DB, backup copy and local DB | 9 files | unit 55/55, isolation, typecheck, build, integration 26/26; preservation and idempotency verified | D-028
+- 2026-09-22 | T-031 | blocked | backup preflight found one closed action never carried to steps; no drop applied | 4 files | baseline unit 55/55, isolation, harness lint, typecheck, build, integration 26/26; backup integrity ok | -
 - 2026-09-22 | T-030 | done | archiving and finishing behind one menu, and a history that keeps up | 7 files | unit 55/55, isolation, typecheck, build, integration 26/26 | -
 - 2026-09-22 | T-029 | done | the calibration signal, where the estimate is written | 12 files | unit 55/55, isolation, typecheck, build, integration 26/26 | -
-- 2026-09-22 | T-028 | done | FR-14 gets the control it never had: archive and activate | 5 files | unit 51/51, isolation, typecheck, build, integration 26/26 | -
-- 2026-09-22 | T-027 | done | a closed step stays in the project's history, with what it took when that is known | 12 files | unit 51/51, isolation, typecheck, build, integration 25/25 | -
-- 2026-09-21 | T-026 | done | effort attributed to a step as it is written, not derived from a broken window | 12 files | unit 51/51, isolation, typecheck, build, integration 23/23 | D-027
 
 Full history: [`JOURNAL.md`](JOURNAL.md) · decisions: [`docs/decisions/`](docs/decisions/README.md)

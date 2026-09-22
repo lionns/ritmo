@@ -57,6 +57,12 @@ implements: [NFR-1, NFR-4]
 - Final: the five gates green, plus the deployed application exercised by hand
 - Task-specific: **before moving anything, take an export and keep it off the machine.** The
   source database is the owner's only complete record of months of use.
+- Task-specific: **stop every running instance before the move, and keep it stopped until the
+  counts are compared.** Migrations apply on `openDatabase()`, so any process that serves a
+  request migrates the live database underneath the move. T-031's review found this control
+  failing in practice: the running app applied a migration to `data/ritmo.sqlite` before the
+  rehearsal on a copy could happen. Nothing in the code prevents it — the procedure is the only
+  thing that does.
 - Task-specific: after the move, compare per-table row counts and spot-check the oldest and newest
   entry, step and project by id. Equal counts with corrupted contents is the failure mode a count
   alone cannot see.
@@ -72,6 +78,9 @@ implements: [NFR-1, NFR-4]
 
 - This is the first time the owner's real data leaves the machine it was written on. Every
   safeguard in Verification exists for that one sentence.
+- The rehearse-on-a-copy safeguard is defeated by the app's own migration-on-open behaviour
+  (T-031's review). Consider making the runner refusable by environment variable as part of this
+  task, so the control stops depending on remembering it.
 - Deploying before T-039 is validated would publish an open write endpoint carrying months of
   private records. `D-020` forbids it in writing; this task inherits that prohibition.
 - `NFR-1` may still fail after deploying, for reasons that are the design's and not the host's. If

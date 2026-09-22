@@ -1,14 +1,14 @@
 ---
 id: T-031
 title: The schema drops the next action it already replaced
-status: ready
+status: done
 profile: team
 harness: 0.9.0
 role: Backend Implementer
 goal: Remove `next_actions` from the schema, so the database describes the product that exists
   rather than the one `D-024` replaced, and so the next person reading `0001_initial_schema.sql`
   is not misled about what Ritmo stores.
-decisions: []
+decisions: [D-028]
 implements: [NFR-3]
 ---
 
@@ -40,13 +40,16 @@ implements: [NFR-3]
 
 ## Acceptance Criteria
 
-- [ ] A fresh database built from `migrations/` contains no `next_actions` table
-- [ ] An existing database migrates without error and keeps every row in `steps`, `entries`,
+- [x] A fresh database built from `migrations/` contains no `next_actions` table
+- [x] An existing database migrates without error and keeps every row in `steps`, `entries`,
       `projects`, `areas` and `objectives`
-- [ ] `_ritmo_migrations` records the new migration exactly once, and re-running is a no-op
-- [ ] `grep -r next_actions migrations/ core/ adapters/ src/ contracts/` returns only the new
-      migration's own `DROP` statement and historical commentary
-- [ ] `tags` is still present and unchanged
+- [x] `_ritmo_migrations` records the new migration exactly once, and re-running is a no-op
+- [x] No reader outside `migrations/` names `next_actions` — enforced by the guard test at
+      `test/core/page-layout.test.ts:334`. (Amended 2026-09-22: as first written this criterion
+      asked `grep` to find only commentary, which no ordered upgrade can satisfy — 0001's
+      `CREATE TABLE` and 0002's `SELECT` are executable SQL that must stay. The Planner wrote it
+      wrong; the implementer was right to leave it unchecked rather than rewrite history.)
+- [x] `tags` is still present and unchanged
 
 ## Verification
 
@@ -62,8 +65,8 @@ implements: [NFR-3]
 
 ## Assumptions
 
-- The carry-across in `0002_steps.sql` moved everything that mattered out of `next_actions`. This
-  is an assumption until the row count above confirms it.
+- The carry-across left one closed action unmatched. The owner confirmed on 2026-09-22 that
+  these are disposable test data; D-028 resolves the stop condition and retention requirement.
 
 ## Risks
 
@@ -72,22 +75,61 @@ implements: [NFR-3]
 
 ## Outcome
 
-Filled in as the task progresses; overwritten, not appended.
-
-- Changes:
-- Files:
-- Baseline result:
-- Final result:
-- Decisions recorded:
-- Follow-up:
+- Changes: migration 0005 drops the retired table and its indexes/constraints; schema tests
+  verify fresh creation, upgrade preservation and idempotency; data model records D-028.
+- Files: migration, integration test, data model, D-028, task, backend trace, journal,
+  generated status and decision index (9 files).
+- Backup: `data/ritmo-T-031-before-20260922T141909.sqlite`; SQLite backup API, integrity `ok`.
+- Evidence: before drop, 5 actions (1 unmatched closed). Afterward all surviving rows equal
+  the original backup: 8 steps, 6 entries, 4 projects, 4 areas, 0 objectives, 0 tags, 1 owner.
+  Credentials, commitments and weeks also unchanged. Synthetic upgrade includes nonempty
+  objectives, tags, weeks and commitments and an entry pointing at the carried step.
+- Verification: fresh `RITMO_DB_PATH`, original-backup copy and local DB pass integrity,
+  foreign-key, full-row preservation, ledger-once and repeat-apply checks.
+- Operational deviation: the local DB already recorded 0005 at 19:23:12.983Z UTC before the
+  planned copy probe; likely the running app applied it automatically. A probe failed with
+  `no such table: next_actions` on the newer snapshot. Repeated with the original pre-drop
+  backup successfully; the local DB's surviving rows exactly match that original backup.
+- Baseline and final: unit 55/55, isolation, typecheck, build, integration 26/26 green;
+  3 pre-existing typecheck hints. Regenerated records; harness lint and diff whitespace pass.
+- Decisions recorded: D-028, owner's authorization to discard the legacy test rows.
+- Follow-up: independent Claude `/code-review` and owner validation remain required.
 
 ## Review
 
-- Severity · `file:line` · issue · impact · recommendation
+Reviewer: Claude Code, on work it did not write. Findings re-verified against the databases and
+the gates, not read off the trace.
+
+- Medium · `adapters/sqlite/store.ts` · Migrations apply on `openDatabase()`, so this task's
+  "run it against a copy first" control cannot hold while the app is running: the live database
+  recorded 0005 at 19:23:12.983Z before the copy probe. No harm here — a pre-drop backup existed
+  and the live database matches it row for row — but the safeguard was illusory, and **T-040
+  carries months of records to another vendor under the same procedure**. T-040 and T-033 need an
+  explicit stop-the-app step, or a runner that can be held off by environment variable.
+- Low · `migrations/0005_drop_next_actions.sql:3` · `DROP TABLE` without `IF EXISTS`. The ledger
+  normally prevents a second apply and I could not construct a path that reaches the statement
+  with the table already gone, so this is hardening, not a defect.
+- Low · `docs/project/data-model.md` § Retired: NextAction · The rewrite silently corrects a false
+  claim: the old note called the five rows "the evidence the decision rests on", and the owner
+  says they were test data. `D-024` rests on the owner's report after weeks of use, not on those
+  rows. The old sentence was the Planner's overclaim; worth one line so nobody re-derives it from
+  `git log`.
+- Low · `data/` · Three 176k working backups left behind, gitignored and uncommitted. Keep
+  `ritmo-T-031-before-20260922T141909.sqlite` until the owner validates; the other two are scratch.
+- **Not a defect · the fourth acceptance criterion is unsatisfiable as written**, and the Planner
+  wrote it. 0001's `CREATE TABLE` and 0002's `SELECT ... FROM next_actions` are executable SQL that
+  ordered upgrades require. Leaving the box unchecked and saying why was correct; rewriting history
+  to make it tick would not have been. Amend it to "no reader outside `migrations/`", which
+  `test/core/page-layout.test.ts:334` already enforces.
+
+Verified independently: five gates green; all ten surviving tables byte-identical between
+`data/ritmo.sqlite` and the pre-drop backup, `PRAGMA foreign_key_check` empty, ledger records 0005
+once; the blocker was real — 5 actions, the 4 open ones each with a matching step, 1 closed with
+none; `tags` present and unchanged.
+
+Approved. The Medium finding is a change to T-040 and T-033, not to this work.
 
 ## Validation
 
-`team` only — required before `done`, and linted.
-
-- Validated by:
-- Date:
+- Validated by: Juan Sebastián León Velásquez
+- Date: 2026-09-22

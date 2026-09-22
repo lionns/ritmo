@@ -61,6 +61,10 @@ implements: [FR-7, FR-8, FR-9, FR-19]
 - Final: the same five, all green
 - Task-specific: run every probe against a throwaway `RITMO_DB_PATH`. The owner's
   `data/ritmo.sqlite` holds weeks of real use and the product still has no export (`FR-21`).
+- Task-specific: **stop the application before touching a real database.** Migrations apply on
+  `openDatabase()`, with no separate command, so a running app migrates the live file the moment
+  it serves a request. In T-031 this fired before the planned copy verification and defeated it.
+  Confirm nothing is running, then migrate the copy, then the real file.
 - Task-specific: after this lands, `hasClosedWeek` can return true for the first time. Confirm by
   hand what `/` and `/p/:id` do once it does, **before** T-035 exists — if the Monday restriction
   starts refusing state changes on a screen that offers no way to see the week, say so.
@@ -72,6 +76,9 @@ implements: [FR-7, FR-8, FR-9, FR-19]
 
 ## Risks
 
+- A migration cannot be rehearsed on a copy while the app is running, because opening the database
+  is what applies it. Found in T-031's review. If this task adds a migration, that is the control
+  that protects the owner's data, and it is procedural — nothing in the code enforces it.
 - This task switches on a restriction (`FR-14`'s Monday) that has been dormant since the product
   began, from the model layer, with no screen able to explain it. The gap between this task and
   T-035 is the window where the owner can be refused an action for a reason nothing tells them.
