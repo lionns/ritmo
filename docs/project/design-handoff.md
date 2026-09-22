@@ -196,6 +196,8 @@ page `page-ux`) but never written down until now, so the first implementation co
 - **The full step list never renders here.** Only what is marked for today. The list lives inside
   the project, and no count of unmarked or undone steps appears on `/`, ever — the third guardrail
   of `D-024`, shaped after the week-attribution ones in `brief.md` § Constraints.
+- **A finished project is not drawn here at all** (`D-026`). It belongs to neither group: one
+  claims it will move again, the other that it will come back. `/p/:id` and `/archivo` hold it.
 - **How the list can sit on `/` without being on the landing surface.** The disclosure holds it in
   the document, and a collapsed `<details>` renders nothing: the owner sees the list only after
   choosing to open it, which is the opposite of a landing view. Two rules keep that true, and T-020
@@ -217,18 +219,26 @@ page `page-ux`) but never written down until now, so the first implementation co
   rows, and **`8px` between the marks, the title and the sentence**. Those three 8px gaps are the
   hierarchy of the row; compact height mode takes its space from the outer padding (down to `12px`)
   and never from them.
-- **The visual row is the link** to `/registrar?project=<id>`, which preserves the prefilled project
-  for the fast log (`NFR-1`). One control sits immediately after the row, inside the same project
-  item: a native disclosure with its own 58/56px target, not nested in the log link. It opens the
-  project's step list, where each step can be marked for today and new steps written. The control
-  reads “Elegir lo de hoy”, or “Escribir los próximos pasos” when the list is empty.
+- **The whole row is the link**, to `/p/<id>` — the project's own screen, which the route table
+  always said a tap opens. It carries **no control of its own**: `T-024` took the disclosure out of
+  every row, and the four elements above are all that is left. The row that linked to
+  `/registrar?project=<id>` and the disclosure beside it both existed only because `/p/:id` did
+  not; the log form now sits inline on that screen, first, so `NFR-1` keeps its two taps.
 
-**The step form is one field.** “Paso” is the only required input; “Minutos estimados · opcional”
-follows, and nothing else. `D-024` removed “Disparador” and “Acción” as a pair and removed
-“Obstáculo” with them — all three rested on research §6, which that decision overrides. The example
-makes the register concrete (“Escribir el primer párrafo”) without pre-filling an answer. Marking a
-step for today reloads the portfolio so the sentence appearing in the row is the confirmation, in
-the shape § Interaction States already uses: the screen changes, and nothing congratulates.
+**An open step shows its estimate** under the title, in mono, and nothing where it has none — the
+field is optional and a row reading "sin estimar" would be a reproach. **A closed step stays in the
+history**, merged with the entries by time and marked by a filled `accent` circle, the same "filled
+means done" the row's marks use; an entry carries no circle. It reads "estimaste N", adds
+"· registraste M" only when M is above zero, and says neither when it has neither: `D-027` made the
+actual exact, and where it is unknown the screen is silent rather than printing a zero.
+
+**The project screen holds everything a project can be done to**, in this order: the log form, the
+step list, the history, and finishing. Order is the requirement, not a preference — a log form
+below the history passes every test and breaks `NFR-1`. **The step form is one field**: “Paso” is
+the only required input and “Minutos estimados · opcional” follows. `D-024` removed “Disparador”
+and “Acción” as a pair and “Obstáculo” with them — all three rested on research §6, which that
+decision overrides. Marking a step for today reloads the screen; the confirmation is that the
+sentence appears on the portfolio row next time, and nothing congratulates.
 
 ## The Log Form
 
@@ -356,9 +366,9 @@ Six routes, three levels deep. Settled with the owner on 2026-08-30 after drawin
 | Route | What it is | How you reach it |
 |---|---|---|
 | `/` | **Portfolio.** What moved, before what is outstanding (US-3). Carries today's steps and where they are marked (FR-22) — a state of this route, not a seventh one, settled with the owner 2026-09-21. The landing. | The wordmark, from anywhere. |
-| `/p/:id` | **Project.** History, the full step list, dormant state, log form inline. | Tapping a project. |
+| `/p/:id` | **Project.** The log form inline and first (`NFR-1`), the full step list, the history, and finishing with its undo. Dormant state joins it when objectives exist. | Tapping a project — the whole row. |
 | `/semana` | **The ritual.** One route, two states: proposal when the week opens (FR-10), close when it ends (US-7, US-8). | A strip below the header on `/`, shown only when the week is due. |
-| `/archivo` | **Shelved, dormant, closed.** The backlog that may never be the landing. | A footer link at the end of the portfolio list. |
+| `/archivo` | **Finished and shelved.** The backlog that may never be the landing, and the only place a project finished before this week can be reopened (`D-025`). Dormant objectives join it when objectives exist; the row stopped claiming them in `T-023` rather than describing an empty group. | A footer link at the end of the portfolio list. |
 | `/ajustes` | Capacity cap (US-1), areas, projects, tags, **export** (FR-21), passkey. | A footer link beside the archive. |
 | `/entrar` | Passkey sign-in (D-004). | Only without a session. |
 

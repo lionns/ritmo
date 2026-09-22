@@ -155,7 +155,11 @@ describe("the first-loop page composition", () => {
     assert.match(card, /latestEntry\.what/);
     // The visual row carries the prefilled link (NFR-1), at a real target height.
     assert.match(card, /<a\n\s+class="project-card[^"]*min-h-\[58px\][^"]*md:min-h-14/);
-    assert.match(card, /href=\{logHref\}/);
+    // T-024: the whole row links to the project's own screen, not straight to the log form.
+    assert.match(card, /href=\{projectHref\}/);
+    assert.match(card, /\/p\/\$\{encodeURIComponent\(project\.id\)\}/);
+    // And it carries no controls of its own any more.
+    assert.doesNotMatch(card, /<details|data-step-form|data-finish|data-unfinish/);
   });
 
   it("caps the filled marks and reads a step as language", () => {
@@ -233,10 +237,11 @@ describe("the first-loop page composition", () => {
   it("shows disclosure state and normalises number chrome", () => {
     const styles = source("src/styles/global.css");
     const settings = source("src/components/organisms/SettingsPanel.astro");
-    const cycle = source("src/components/organisms/StepList.astro");
+    const cycle = source("src/components/organisms/ProjectPanel.astro");
 
     assert.match(settings, /data-disclosure-marker[^>]*>\+<\/span>/);
-    assert.match(cycle, /data-disclosure-marker[^>]*>\+<\/span>/);
+    // The disclosure marker now only lives where a disclosure still does.
+    assert.match(settings, /data-disclosure-marker[^>]*>\+<\/span>/);
     assert.match(styles, /details\[open\] > summary \[data-disclosure-marker\][^{]*\{[^}]*rotate\(45deg\)/);
     assert.match(styles, /\[data-disclosure-marker\][^{]*\{[^}]*transition: transform 120ms/);
     assert.match(styles, /prefers-reduced-motion: reduce[\s\S]*\[data-disclosure-marker\][^{]*\{[^}]*transition: none/);
@@ -250,7 +255,7 @@ describe("the first-loop page composition", () => {
       source("src/components/organisms/EntryForm.astro"),
       source("src/components/organisms/SettingsPanel.astro"),
       source("src/components/organisms/ProjectCapture.astro"),
-      source("src/components/organisms/StepList.astro"),
+      source("src/components/organisms/ProjectPanel.astro"),
     ];
     const allSource = forms.join("\n");
     const listbox = source("src/components/molecules/ListboxField.astro");
@@ -290,7 +295,7 @@ describe("the first-loop page composition", () => {
   it("keeps the first step and every later one on one field shape", () => {
     const fields = source("src/components/molecules/StepFields.astro");
     const capture = source("src/components/organisms/ProjectCapture.astro");
-    const list = source("src/components/organisms/StepList.astro");
+    const list = source("src/components/organisms/ProjectPanel.astro");
     const card = source("src/components/molecules/ProjectCard.astro");
     const inputFor = (name: string) =>
       [...fields.matchAll(/<input[\s\S]*?\/>/g)]
@@ -298,13 +303,13 @@ describe("the first-loop page composition", () => {
         .find((input) => input.includes(name)) ?? "";
 
     assert.match(capture, /<StepFields idPrefix="project-step" fieldName="step" paired \/>/);
-    assert.match(list, /<StepFields idPrefix=\{formPrefix\} \/>/);
+    assert.match(list, /<StepFields idPrefix=\{formPrefix\} paired \/>/);
     assert.match(inputFor("name={fieldName}"), /\brequired\b/);
     assert.doesNotMatch(inputFor('name="estimateMinutes"'), /\brequired\b/);
     // D-024: the pair and the obstacle went with the trigger.
     assert.doesNotMatch(fields, /name="trigger"|name="act"|name="obstacle"/);
-    assert.match(list, /Elegir lo de hoy/);
-    assert.match(list, /fetch\("\/api\/steps"/);
+    assert.match(list, /Terminar proyecto/);
+    assert.match(list, /\/api\/steps/);
 
     // The row reads steps as language. A checkbox on the landing surface is a debt symbol.
     assert.doesNotMatch(card, /type="checkbox"/);

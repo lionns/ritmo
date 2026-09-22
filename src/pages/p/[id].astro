@@ -1,0 +1,136 @@
+---
+import type {
+  ProjectDetailErrorResponse,
+  ProjectDetailResponse,
+} from "../../../contracts/project.ts";
+import ProjectPanel from "../../components/organisms/ProjectPanel.astro";
+import EntryForm from "../../components/organisms/EntryForm.astro";
+import PageStage from "../../components/organisms/PageStage.astro";
+import AppShell from "../../layouts/AppShell.astro";
+import { countProgressMarks } from "../../lib/project-row.ts";
+import type { PortfolioProject } from "../../../contracts/portfolio.ts";
+
+/** The log form speaks the portfolio's shape; this screen reads a narrower one. */
+const asPortfolioProject = (value: ProjectDetailResponse): PortfolioProject => ({
+  id: value.id,
+  title: value.title,
+  state: value.state,
+  finishedAt: value.finishedAt,
+  area: { id: "", name: value.areaName, countsAgainstCap: false },
+  recentEntries: value.recentEntries,
+  openSteps: value.openSteps,
+  progressSincePlan: value.progressSincePlan,
+});
+
+Astro.response.headers.set("Cache-Control", "no-store");
+
+const id = Astro.params.id ?? "";
+let detail: ProjectDetailResponse | null = null;
+let loadError: string | null = null;
+let notFound = false;
+try {
+  const response = await fetch(new URL(`/api/project/${encodeURIComponent(id)}`, Astro.url), {
+    headers: { Accept: "application/json" },
+  });
+  const body = await response.json() as ProjectDetailResponse | ProjectDetailErrorResponse;
+  if (response.status === 404) notFound = true;
+  else if (!response.ok || "error" in body) loadError = "No se pudo leer el proyecto. Recarga para intentarlo otra vez.";
+  else detail = body;
+} catch {
+  loadError = "No se pudo leer el proyecto. Revisa la conexión y recarga.";
+}
+
+// An id that names nothing is a 404, not an empty screen (T-024 § Acceptance Criteria).
+if (notFound) return new Response("Proyecto no encontrado", { status: 404 });
+
+const finished = detail?.finishedAt != null;
+const marks = detail === null || finished ? 0 : countProgressMarks(detail.progressSincePlan);
+const hasOpenStep = (detail?.openSteps.length ?? 0) > 0;
+---
+
+<AppShell title={`${detail?.title ?? "Proyecto"} · Ritmo`} description="Un proyecto, sus pasos y su historial." context="Proyecto">
+  <div class="pointer-events-none fixed inset-0 -z-10 bg-[color-mix(in_srgb,var(--page-bg)_80%,transparent)]" aria-hidden="true"></div>
+  <PageStage chartVeiled>
+    {
+      detail === null ? (
+        <section class="glass-panel self-center p-6" aria-live="polite">
+          <p class="text-sm leading-normal text-dim">{loadError}</p>
+          <a
+            class="inline-flex min-h-[58px] items-center text-sm font-medium text-dim underline-offset-[5px] transition-colors duration-[120ms] hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent motion-reduce:transition-none md:min-h-14"
+            href="/">Volver al portfolio</a
+          >
+        </section>
+      ) : (
+        <section class="project-aside self-center" aria-labelledby="page-title">
+          {/*
+            The area rides with the marks as a mono eyebrow, the register § The Project Row already
+            uses for headings. It frees the line below for the way back, which every other page
+            gives its own line — inline beside the area it read as one more fact about the project
+            rather than the way out.
+          */}
+          <div class="flex items-center gap-4">
+            <span class="flex items-center gap-2.5" aria-hidden="true">
+              {Array.from({ length: marks }, (_unused, index) => (
+                <span class="block size-[11px] rounded-full bg-accent md:size-3" data-mark-index={index} />
+              ))}
+              {!finished && hasOpenStep && (
+                <span class="block size-[11px] rounded-full border-[1.5px] border-faint md:size-3" />
+              )}
+              <span class="ml-[5px] block size-2 rotate-45 bg-faint md:size-[9px]" />
+            </span>
+            <span class="font-mono text-[8px] leading-[1.4] font-normal tracking-[0.22em] text-dim uppercase md:text-[9px]">
+              {detail.areaName}{finished ? " · Terminado" : ""}
+            </span>
+          </div>
+          <h1 id="page-title" class="mt-3 max-w-[13ch] font-display text-[clamp(34px,8.4vw,48px)] leading-[0.9] font-semibold tracking-[-0.04em] md:text-[clamp(48px,5vw,66px)]">{detail.title}</h1>
+          <a
+            class="inline-flex min-h-[58px] w-fit items-center text-sm font-medium text-dim underline-offset-[5px] transition-colors duration-[120ms] hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent motion-reduce:transition-none md:min-h-14"
+            href="/">Volver al portfolio</a
+          >
+          {/*
+            NFR-1: the log form comes before the steps and the history, in the column the eye
+            reaches first and in document order. Two taps from opening the app to a saved entry
+            is what this placement protects, and the approved canvas draws it here.
+          */}
+          {!finished && (
+            <div class="mt-1">
+              <EntryForm
+                projects={[asPortfolioProject(detail)]}
+                selectedProject={asPortfolioProject(detail)}
+                today={detail.today}
+                showContext={false}
+                compact
+              />
+            </div>
+          )}
+        </section>
+      )
+    }
+    {detail !== null && <ProjectPanel project={detail} />}
+  </PageStage>
+</AppShell>
+
+<style>
+  /*
+    The stage bounds its own direct panel children; this column holds a title above one, so it
+    takes the same treatment itself — the form scrolls inside the column instead of pushing the
+    footer out from under the page.
+  */
+  @media (min-width: 75rem) {
+    .project-aside {
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      max-height: 100%;
+      align-self: center;
+    }
+
+    .project-aside > div:last-child {
+      min-height: 0;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      scrollbar-color: color-mix(in srgb, var(--page-dim) 72%, transparent) transparent;
+      scrollbar-width: thin;
+    }
+  }
+</style>

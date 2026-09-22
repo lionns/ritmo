@@ -111,6 +111,7 @@ const projectBase: Project = {
   state: "active",
   externalDeadline: null,
   deadlineSource: null,
+  finishedAt: null,
 };
 const activeProject: Project = { ...projectBase, id: "project-active", title: "Active" };
 const quietProject: Project = { ...projectBase, id: "project-quiet", title: "Quiet" };
@@ -145,6 +146,7 @@ const entry: Entry = {
   what: "Moved it",
   effortMinutes: null,
   note: null,
+  stepId: null,
 };
 const actionlessEntry: Entry = {
   ...entry,
@@ -208,6 +210,12 @@ class MemoryStore implements Store {
       (value) => value.ownerId === ownerId && value.state === "active",
     );
   }
+  async setProjectFinishedAt(id: string, ownerId: string, finishedAt: string | null) {
+    const value = this.projects.get(id);
+    if (value === undefined || value.ownerId !== ownerId) return false;
+    this.projects.set(id, { ...value, finishedAt });
+    return true;
+  }
   async setProjectState(id: string, ownerId: string, state: Project["state"]) {
     const value = this.projects.get(id);
     if (value !== undefined && value.ownerId === ownerId) {
@@ -241,6 +249,18 @@ class MemoryStore implements Store {
   async markStepFor(_id: string, _ownerId: string, _date: string | null) { return false; }
   async setStepDone(_id: string, _ownerId: string, _doneAt: string) { return false; }
   async createEntry(value: Entry) { this.entries.set(value.id, value); }
+  async readProjectEntries(projectId: string, limit: number) {
+    return [...this.entries.values()]
+      .filter((value) => value.projectId === projectId)
+      .sort((left, right) => right.occurredAt.localeCompare(left.occurredAt))
+      .slice(0, limit);
+  }
+  async readDoneSteps(_projectId: string, _limit: number) { return []; }
+  async readEffortForStep(stepId: string) {
+    return [...this.entries.values()]
+      .filter((value) => value.stepId === stepId && value.kind === "progress")
+      .reduce((total, value) => total + (value.effortMinutes ?? 0), 0);
+  }
   async readRecentEntries(projectIds: string[], occurredSince: string) {
     return [...this.entries.values()]
       .filter(

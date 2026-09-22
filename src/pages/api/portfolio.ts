@@ -44,6 +44,9 @@ export async function handleGetPortfolio(injectedStore?: Store): Promise<Respons
       readPortfolio(store, clock, owner.id),
       store.listAreas(owner.id),
     ]);
+    // No finished project reaches either group any more (`D-026`), so the cap is decided in one
+    // place — `core/rules/project.ts` — and a second filter here would be a guard nothing can
+    // reach, which is a guard nothing can test.
     const allActive = [...portfolio.progress, ...portfolio.outstanding];
     const response: PortfolioResponse = {
       setupRequired: false,
@@ -78,6 +81,7 @@ function toContractProject(value: CorePortfolioProject): PortfolioProject {
     id: value.project.id,
     title: value.project.title,
     state: value.project.state,
+    finishedAt: value.project.finishedAt,
     area: {
       id: value.area.id,
       name: value.area.name,

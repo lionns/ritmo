@@ -5,6 +5,7 @@ import type { Store } from "../ports/store.ts";
 export const RECENT_PROGRESS_DAYS = 28;
 const DAY_MILLISECONDS = 24 * 60 * 60 * 1_000;
 
+
 export interface PortfolioProject {
   project: Project;
   area: Area;
@@ -65,14 +66,18 @@ export async function readPortfolio(
     ),
   );
 
-  const active = assembled.filter(({ project }) => project.state === "active");
+  // A finished project enters no group (`D-026`). "En movimiento" claims it will move again and
+  // "para cuando vuelvas" claims it will come back; neither is true of it, so the landing drops
+  // it and `/p/:id` and `/archivo` are where it stays reachable.
+  const live = assembled.filter(({ project }) => project.finishedAt === null);
+  const active = live.filter(({ project }) => project.state === "active");
   const progress = active
     .filter(({ recentEntries }) => recentEntries.length > 0)
     .sort((left, right) =>
       right.recentEntries[0].occurredAt.localeCompare(left.recentEntries[0].occurredAt),
     );
   const outstanding = active.filter(({ recentEntries }) => recentEntries.length === 0);
-  const shelved = assembled
+  const shelved = live
     .filter(({ project }) => project.state === "shelved")
     .sort((left, right) => left.project.id.localeCompare(right.project.id));
   return { progress, outstanding, shelved };

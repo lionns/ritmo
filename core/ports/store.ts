@@ -26,6 +26,7 @@ export interface Store {
   listProjects(ownerId: string): Promise<Project[]>;
   listActiveProjects(ownerId: string): Promise<Project[]>;
   setProjectState(id: string, ownerId: string, state: Project["state"]): Promise<void>;
+  setProjectFinishedAt(id: string, ownerId: string, finishedAt: string | null): Promise<boolean>;
   hasClosedWeek(ownerId: string): Promise<boolean>;
   createStep(step: Step): Promise<void>;
   getStep(id: string): Promise<Step | null>;
@@ -36,4 +37,7 @@ export interface Store {
   setStepDone(id: string, ownerId: string, doneAt: string): Promise<boolean>;
   createEntry(entry: Entry): Promise<void>;
   readRecentEntries(projectIds: string[], occurredSince: string): Promise<Entry[]>;
+  readProjectEntries(projectId: string, limit: number): Promise<Entry[]>;
+  readEffortForStep(stepId: string): Promise<number>;
+  readDoneSteps(projectId: string, limit: number): Promise<Step[]>;
 }

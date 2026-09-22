@@ -18,6 +18,8 @@ import type {
 } from "../../contracts/capture.ts";
 import type { CreateEntryErrorResponse, CreateEntryResponse } from "../../contracts/entries.ts";
 import type { StepErrorResponse, StepResponse } from "../../contracts/steps.ts";
+import type { ArchiveResponse } from "../../contracts/archive.ts";
+import type { ProjectDetailResponse } from "../../contracts/project.ts";
 import type { PortfolioResponse } from "../../contracts/portfolio.ts";
 import { handlePostEntry } from "../../src/pages/api/entries.ts";
 import { handleGetPortfolio } from "../../src/pages/api/portfolio.ts";
@@ -293,6 +295,7 @@ describe("SqliteStore with the step rules", () => {
       what: "Progress after the plan opened",
       effortMinutes: null,
       note: null,
+      stepId: null,
     };
     const reserveSpend: Entry = {
       ...oldProgress,
@@ -353,6 +356,8 @@ describe("SqliteStore with the step rules", () => {
     expect(database.prepare("SELECT name FROM _ritmo_migrations ORDER BY name").all()).toEqual([
       { name: "0001_initial_schema.sql" },
       { name: "0002_steps.sql" },
+      { name: "0003_project_finished_at.sql" },
+      { name: "0004_entry_step.sql" },
     ]);
   });
 
@@ -575,6 +580,364 @@ describe("the steps routes and today's list in the portfolio", () => {
 
 });
 
+describe("finishing a project through the API", () => {
+  let finishDirectory: string;
+  let finishDatabase: DatabaseSync;
+  let finishStore: SqliteStore;
+  let finishFetch: ReturnType<typeof testApplication>;
+  let finishSequence = 0;
+
+  beforeAll(() => {
+    finishDirectory = mkdtempSync(join(tmpdir(), "ritmo-finish-"));
+  });
+
+  beforeEach(async () => {
+    finishDatabase = openDatabase(join(finishDirectory, `${finishSequence++}.sqlite`));
+    finishStore = new SqliteStore(finishDatabase);
+    finishFetch = testApplication(finishStore);
+    await finishStore.createOwner({ ...owner, activeCap: 1 });
+    await finishStore.createArea(area);
+    await finishStore.createProject(project);
+  });
+
+  afterEach(() => finishDatabase.close());
+  afterAll(() => rmSync(finishDirectory, { recursive: true }));
+
+  function patch(body: unknown): Promise<Response> {
+    return finishFetch(new Request("http://example.test/api/projects", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    }));
+  }
+
+  async function portfolio(): Promise<PortfolioResponse> {
+    return (await (await finishFetch(
+      new Request("http://example.test/api/portfolio"),
+    )).json()) as PortfolioResponse;
+  }
+
+  it("frees the cap slot the same day and reports a lower activeCount", async () => {
+    const before = await portfolio();
+    expect(before.setupRequired).toBe(false);
+    if (before.setupRequired) return;
+    expect(before.activeCount).toBe(1);
+
+    const response = await patch({ id: project.id, finished: true });
+    expect(response.status).toBe(200);
+
+    const after = await portfolio();
+    if (after.setupRequired) return;
+    expect(after.activeCount).toBe(0);
+    // D-026: it leaves the landing at once. Neither group there was ever true of it.
+    expect(after.progress).toEqual([]);
+    expect(after.outstanding).toEqual([]);
+    expect(after.shelved).toEqual([]);
+    // And it is still there, reachable, which is what makes dropping it honest.
+    expect((await finishStore.getProject(project.id))?.finishedAt).not.toBeNull();
+    const archive = (await (await finishFetch(
+      new Request("http://example.test/api/archive"),
+    )).json()) as ArchiveResponse;
+    expect(archive.finished.map(({ id }) => id)).toEqual([project.id]);
+  });
+
+  it("drops out of the portfolio once its week has passed", async () => {
+    await patch({ id: project.id, finished: true });
+    // Reach past the rules to age the row: no product flow can move a finish into the past.
+    finishDatabase
+      .prepare("UPDATE projects SET finished_at = ? WHERE id = ?")
+      .run("2026-01-05T10:00:00.000Z", project.id);
+
+    const seen = await portfolio();
+    if (seen.setupRequired) return;
+    expect(seen.progress).toEqual([]);
+    expect(seen.outstanding).toEqual([]);
+    expect(seen.shelved).toEqual([]);
+    expect(await finishStore.getProject(project.id)).not.toBeNull();
+  });
+
+  it("keeps a finished project reachable in the archive after its week, and undoes from there", async () => {
+    await patch({ id: project.id, finished: true });
+    finishDatabase
+      .prepare("UPDATE projects SET finished_at = ? WHERE id = ?")
+      .run("2026-01-05T10:00:00.000Z", project.id);
+
+    // Gone from the landing, still reachable — the whole reason this route exists.
+    const landing = await portfolio();
+    if (landing.setupRequired) return;
+    expect(landing.progress).toEqual([]);
+
+    const archive = (await (await finishFetch(
+      new Request("http://example.test/api/archive"),
+    )).json()) as ArchiveResponse;
+    expect(archive.finished.map(({ id }) => id)).toEqual([project.id]);
+    expect(archive.shelved).toEqual([]);
+
+    await patch({ id: project.id, finished: false });
+    const reopened = (await (await finishFetch(
+      new Request("http://example.test/api/archive"),
+    )).json()) as ArchiveResponse;
+    expect(reopened.finished).toEqual([]);
+    // Undo leaves it shelved, so it moves to the other group and back onto `/` (FR-17).
+    expect(reopened.shelved.map(({ id }) => id)).toEqual([project.id]);
+    const back = await portfolio();
+    if (back.setupRequired) return;
+    expect(back.shelved.map(({ id }) => id)).toEqual([project.id]);
+  });
+
+  it("serves one project with its steps, its history and today, and 404s an unknown id", async () => {
+    await finishStore.createStep({
+      id: "step-detail",
+      ownerId: owner.id,
+      projectId: project.id,
+      title: "Escribir el primer párrafo",
+      estimateMinutes: 25,
+      markedFor: null,
+      createdAt: "2026-09-01T10:00:00.000Z",
+      doneAt: null,
+    });
+    await finishStore.createEntry({
+      id: "entry-detail",
+      ownerId: owner.id,
+      kind: "progress",
+      projectId: project.id,
+      creditsObjectiveId: null,
+      occurredAt: "2026-09-02T10:00:00.000Z",
+      what: "Moví el primer tramo",
+      effortMinutes: 30,
+      note: null,
+      stepId: null,
+    });
+
+    const response = await finishFetch(
+      new Request(`http://example.test/api/project/${project.id}`),
+    );
+    expect(response.status).toBe(200);
+    const detail = (await response.json()) as ProjectDetailResponse;
+    expect(detail.title).toBe(project.title);
+    expect(detail.openSteps.map(({ id }) => id)).toEqual(["step-detail"]);
+    expect(detail.recentEntries.map(({ id }) => id)).toEqual(["entry-detail"]);
+    expect(detail.progressSincePlan).toBe(1);
+    expect(detail.today).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+
+    const missing = await finishFetch(
+      new Request("http://example.test/api/project/no-such-project"),
+    );
+    expect(missing.status).toBe(404);
+  });
+
+  it("keeps a closed step in the history, with what it took when that is known", async () => {
+    const today = calendarDateOf(new Date());
+    await finishStore.createStep({
+      id: "step-closing",
+      ownerId: owner.id,
+      projectId: project.id,
+      title: "Verificar la réplica",
+      estimateMinutes: 25,
+      markedFor: today,
+      createdAt: "2026-09-01T10:00:00.000Z",
+      doneAt: null,
+    });
+    // Logged while it alone was marked, so D-027 attributes the effort to it.
+    await finishFetch(new Request("http://example.test/api/entries", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ projectId: project.id, what: "Moví la réplica", effortMinutes: 40 }),
+    }));
+    await finishFetch(new Request("http://example.test/api/steps", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: "step-closing", done: true }),
+    }));
+
+    const detail = (await (await finishFetch(
+      new Request(`http://example.test/api/project/${project.id}`),
+    )).json()) as ProjectDetailResponse;
+
+    // Closed, so it left the open list — and did NOT leave the product.
+    expect(detail.openSteps).toEqual([]);
+    const closed = detail.history.find((item) => item.kind === "step");
+    expect(closed).toEqual(expect.objectContaining({
+      id: "step-closing",
+      title: "Verificar la réplica",
+      estimateMinutes: 25,
+      effortMinutes: 40,
+    }));
+    // The entry of the same day is there too, and both are ordered by when they happened.
+    expect(detail.history.map(({ kind }) => kind)).toEqual(["step", "entry"]);
+  });
+
+  it("shows a closed step with no attributed effort as zero, for the screen to keep quiet about", async () => {
+    await finishStore.createStep({
+      id: "step-unknown",
+      ownerId: owner.id,
+      projectId: project.id,
+      title: "Montar el entorno",
+      estimateMinutes: 60,
+      markedFor: null,
+      createdAt: "2026-09-01T10:00:00.000Z",
+      doneAt: null,
+    });
+    await finishFetch(new Request("http://example.test/api/steps", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: "step-unknown", done: true }),
+    }));
+
+    const detail = (await (await finishFetch(
+      new Request(`http://example.test/api/project/${project.id}`),
+    )).json()) as ProjectDetailResponse;
+    expect(detail.history).toEqual([expect.objectContaining({
+      kind: "step",
+      estimateMinutes: 60,
+      effortMinutes: 0,
+    })]);
+  });
+
+  it("marks a step from the project screen and the portfolio row shows it", async () => {
+    await finishStore.createStep({
+      id: "step-today",
+      ownerId: owner.id,
+      projectId: project.id,
+      title: "Cerrar el tramo",
+      estimateMinutes: null,
+      markedFor: null,
+      createdAt: "2026-09-01T10:00:00.000Z",
+      doneAt: null,
+    });
+    const detail = (await (await finishFetch(
+      new Request(`http://example.test/api/project/${project.id}`),
+    )).json()) as ProjectDetailResponse;
+
+    const marked = await finishFetch(new Request("http://example.test/api/steps", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: "step-today", markedFor: detail.today }),
+    }));
+    expect(marked.status).toBe(200);
+
+    // The screen and the landing must agree about the day (T-024 § Acceptance Criteria).
+    const landing = await portfolio();
+    if (landing.setupRequired) return;
+    const row = [...landing.progress, ...landing.outstanding].find(({ id }) => id === project.id);
+    expect(row?.openSteps.filter(({ markedFor }) => markedFor === landing.today))
+      .toEqual([expect.objectContaining({ id: "step-today" })]);
+  });
+
+  it("undoes to shelved, and refuses a request carrying both state and finished", async () => {
+    await patch({ id: project.id, finished: true });
+    const undone = await patch({ id: project.id, finished: false });
+    expect(undone.status).toBe(200);
+    expect((await finishStore.getProject(project.id))?.state).toBe("shelved");
+    expect((await finishStore.getProject(project.id))?.finishedAt).toBeNull();
+
+    const both = await patch({ id: project.id, state: "active", finished: true });
+    expect(both.status).toBe(400);
+    expect((await finishStore.getProject(project.id))?.finishedAt).toBeNull();
+  });
+});
+
+describe("attributing effort to a step as it is written", () => {
+  let attrDirectory: string;
+  let attrDatabase: DatabaseSync;
+  let attrStore: SqliteStore;
+  let attrFetch: ReturnType<typeof testApplication>;
+  let attrSequence = 0;
+
+  beforeAll(() => {
+    attrDirectory = mkdtempSync(join(tmpdir(), "ritmo-attr-"));
+  });
+
+  beforeEach(async () => {
+    attrDatabase = openDatabase(join(attrDirectory, `${attrSequence++}.sqlite`));
+    attrStore = new SqliteStore(attrDatabase);
+    attrFetch = testApplication(attrStore);
+    await attrStore.createOwner(owner);
+    await attrStore.createArea(area);
+    await attrStore.createProject(project);
+  });
+
+  afterEach(() => attrDatabase.close());
+  afterAll(() => rmSync(attrDirectory, { recursive: true }));
+
+  const today = () => calendarDateOf(new Date());
+
+  async function step(id: string, projectId = project.id, markedFor: string | null = null) {
+    await attrStore.createStep({
+      id,
+      ownerId: owner.id,
+      projectId,
+      title: `Paso ${id}`,
+      estimateMinutes: 25,
+      markedFor,
+      createdAt: "2026-09-01T10:00:00.000Z",
+      doneAt: null,
+    });
+  }
+
+  async function log(effortMinutes: number | null = 20) {
+    const response = await attrFetch(new Request("http://example.test/api/entries", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ projectId: project.id, what: "Moví algo", effortMinutes }),
+    }));
+    expect(response.status).toBe(201);
+    return ((await response.json()) as CreateEntryResponse).id;
+  }
+
+  function stepIdOf(entryId: string): string | null {
+    const row = attrDatabase.prepare("SELECT step_id FROM entries WHERE id = ?").get(entryId);
+    return (row as unknown as { step_id: string | null }).step_id;
+  }
+
+  it("records the step when exactly one of this project's is marked today", async () => {
+    await step("step-one", project.id, today());
+    const entryId = await log(20);
+
+    expect(stepIdOf(entryId)).toBe("step-one");
+    expect(await attrStore.readEffortForStep("step-one")).toBe(20);
+  });
+
+  it("records nothing when two are marked, and never splits the minutes", async () => {
+    await step("step-a", project.id, today());
+    await step("step-b", project.id, today());
+    const entryId = await log(30);
+
+    expect(stepIdOf(entryId)).toBeNull();
+    expect(await attrStore.readEffortForStep("step-a")).toBe(0);
+    expect(await attrStore.readEffortForStep("step-b")).toBe(0);
+  });
+
+  it("records nothing when none is marked, and the entry still counts as progress", async () => {
+    await step("step-unmarked");
+    const entryId = await log(45);
+    expect(stepIdOf(entryId)).toBeNull();
+
+    // The landing must not notice: attribution serves calibration, not the log (D-027).
+    const portfolio = (await (await attrFetch(
+      new Request("http://example.test/api/portfolio"),
+    )).json()) as PortfolioResponse;
+    if (portfolio.setupRequired) return;
+    const row = portfolio.progress.find(({ id }) => id === project.id);
+    expect(row?.recentEntries.map(({ id }) => id)).toEqual([entryId]);
+  });
+
+  it("ignores a step of another project marked the same day", async () => {
+    const other: Project = { ...project, id: "project-other", title: "Otro" };
+    await attrStore.createProject(other);
+    await step("step-elsewhere", other.id, today());
+    const entryId = await log(15);
+
+    expect(stepIdOf(entryId)).toBeNull();
+    expect(await attrStore.readEffortForStep("step-elsewhere")).toBe(0);
+  });
+
+  it("reads zero for a step nothing points at", async () => {
+    await step("step-lonely");
+    expect(await attrStore.readEffortForStep("step-lonely")).toBe(0);
+  });
+});
+
 describe("the 0002 carry-across, against a database written before it", () => {
   let upgradeDirectory: string;
   let legacyMigrations: string;
@@ -596,10 +959,18 @@ describe("the 0002 carry-across, against a database written before it", () => {
     // Written in SQL because T-021 deleted the rules that used to write them — the migration is
     // SQL, the fixture it upgrades is SQL, and nothing in the product can produce one any more.
     const legacy = openDatabase(join(upgradeDirectory, "owner.sqlite"), legacyMigrations);
-    const legacyStore = new SqliteStore(legacy);
-    await legacyStore.createOwner(owner);
-    await legacyStore.createArea(area);
-    await legacyStore.createProject(project);
+    // Owner, area and project go in as SQL too: the adapter writes today's columns, and this
+    // database is deliberately yesterday's — it has neither `steps` nor `finished_at` yet.
+    legacy.exec(
+      `INSERT INTO owners (id, active_cap, cap_raises)
+         VALUES ('${owner.id}', ${owner.activeCap}, '[]');
+       INSERT INTO areas (id, owner_id, name, counts_against_cap)
+         VALUES ('${area.id}', '${owner.id}', '${area.name}', 1);
+       INSERT INTO projects
+         (id, owner_id, area_id, objective_id, title, state, external_deadline, deadline_source)
+         VALUES ('${project.id}', '${owner.id}', '${area.id}', NULL, '${project.title}',
+                 'active', NULL, NULL);`,
+    );
     const insertAction = legacy.prepare(
       `INSERT INTO next_actions
         (id, owner_id, project_id, trigger, act, obstacle, estimate_minutes, created_at, closed_at)
@@ -674,5 +1045,6 @@ const project: Project = {
   state: "active",
   externalDeadline: null,
   deadlineSource: null,
+  finishedAt: null,
 };
 

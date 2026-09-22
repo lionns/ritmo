@@ -16,6 +16,7 @@ export interface CaptureArea {
 }
 
 export interface CaptureProject {
+  finishedAt?: string | null;
   id: string;
   areaId: string;
   title: string;
@@ -50,9 +51,14 @@ export interface CreateProjectRequest {
   estimateMinutes?: number;
 }
 
+/**
+ * Exactly one of `state` and `finished` per request. They answer different questions — the
+ * commitment and the outcome — and a request carrying both would not say which it meant.
+ */
 export interface UpdateProjectStateRequest {
   id: string;
-  state: "active" | "shelved";
+  state?: "active" | "shelved";
+  finished?: boolean;
 }
 
 export interface ProjectMutationResponse {

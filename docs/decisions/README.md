@@ -29,4 +29,6 @@ rather than editing. Template in `../sdd/TEMPLATES.md`.
 | [D-022](D-022-tests-four-dev-dependencies.md) | 2026-09-02 | Four dev dependencies after the platform test harness leaves | `accepted` | D-014 |
 | [D-023](D-023-boundary-check-drops-the-vendor-clause.md) | 2026-09-02 | The boundary check stops naming a vendor the project left | `accepted` | none |
 | [D-024](D-024-steps-and-the-day-list.md) | 2026-09-21 | Steps and a day list replace the if–then trigger | `accepted` | none |
-| [D-025](D-025-finishing-a-project.md) | 2026-09-21 | Finishing a project is a state the product does not have | `proposed` | none |
+| [D-025](D-025-finishing-a-project.md) | 2026-09-21 | Finishing a project, as a timestamp rather than a state | `accepted` | none |
+| [D-026](D-026-a-finished-project-leaves-the-landing.md) | 2026-09-21 | A finished project leaves the landing at once | `accepted` | D-025 (its first consequence only; everything else in it stands) |
+| [D-027](D-027-effort-is-attributed-when-it-is-written.md) | 2026-09-21 | Effort is attributed to a step when it is written, not derived later | `accepted` | none — it replaces the derivation in `brief.md` (settled 2026-08-29) and |

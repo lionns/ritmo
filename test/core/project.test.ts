@@ -5,6 +5,8 @@ import type { Area, Entry, Owner, Project, Step } from "../../core/model/entitie
 import type { Store } from "../../core/ports/store.ts";
 import {
   changeProjectState,
+  finishProject,
+  unfinishProject,
   createProjectWithinCap,
   updateActiveCap,
 } from "../../core/rules/project.ts";
@@ -122,6 +124,7 @@ function project(id: string, areaId: string, state: Project["state"]): Project {
     state,
     externalDeadline: null,
     deadlineSource: null,
+    finishedAt: null,
   };
 }
 
@@ -178,6 +181,12 @@ class MemoryStore implements Store {
       (value) => value.ownerId === ownerId && value.state === "active",
     );
   }
+  async setProjectFinishedAt(id: string, ownerId: string, finishedAt: string | null) {
+    const value = this.projects.get(id);
+    if (value === undefined || value.ownerId !== ownerId) return false;
+    this.projects.set(id, { ...value, finishedAt });
+    return true;
+  }
   async setProjectState(id: string, ownerId: string, state: Project["state"]) {
     const value = this.projects.get(id);
     if (value !== undefined && value.ownerId === ownerId) {
@@ -193,5 +202,59 @@ class MemoryStore implements Store {
   async markStepFor(_id: string, _ownerId: string, _date: string | null) { return false; }
   async setStepDone(_id: string, _ownerId: string, _doneAt: string) { return false; }
   async createEntry(_value: Entry) { throw new Error("not used"); }
+  async readProjectEntries(_projectId: string, _limit: number) { return []; }
+  async readDoneSteps(_projectId: string, _limit: number) { return []; }
+  async readEffortForStep(_stepId: string) { return 0; }
   async readRecentEntries(_projectIds: string[], _occurredSince: string) { return []; }
 }
+
+describe("finishing a project", () => {
+  const clock = { now: () => new Date("2026-09-23T10:00:00.000Z") };
+  let sequence = 0;
+  const ids = { next: () => `project-${++sequence}` };
+
+  it("finishes on any day and frees the slot at once", async () => {
+    const store = populatedStore();
+    store.closedWeek = true; // a mid-week state change would be refused; finishing is not one
+    const first = await createProjectWithinCap(store, clock, ids, newProject(cappedArea.id, "A"));
+    await createProjectWithinCap(store, clock, ids, newProject(cappedArea.id, "B"));
+    const full = await createProjectWithinCap(store, clock, ids, newProject(cappedArea.id, "C"));
+    assert.equal(full.project.state, "shelved", "the cap was full before anything was finished");
+
+    const finished = await finishProject(store, clock, owner.id, first.project.id);
+
+    assert.equal(finished.project.finishedAt, "2026-09-23T10:00:00.000Z");
+    assert.equal(finished.project.state, "active", "state records the commitment, not the outcome");
+    assert.equal(finished.activeCount, 1, "the slot is free the same day");
+
+    const afterwards = await createProjectWithinCap(store, clock, ids, newProject(cappedArea.id, "D"));
+    assert.equal(afterwards.project.state, "active", "which is the whole point of freeing it");
+  });
+
+  it("undoes to shelved, never straight to active, and refuses twice", async () => {
+    const store = populatedStore();
+    const created = await createProjectWithinCap(store, clock, ids, newProject(cappedArea.id, "A"));
+    await finishProject(store, clock, owner.id, created.project.id);
+
+    await assert.rejects(
+      finishProject(store, clock, owner.id, created.project.id),
+      /already finished/,
+    );
+
+    const reopened = await unfinishProject(store, owner.id, created.project.id);
+    assert.equal(reopened.project.finishedAt, null);
+    assert.equal(reopened.project.state, "shelved", "Monday is when it can be active again");
+    await assert.rejects(unfinishProject(store, owner.id, created.project.id), /not finished/);
+  });
+
+  it("refuses a state change on a finished project", async () => {
+    const store = populatedStore();
+    const created = await createProjectWithinCap(store, clock, ids, newProject(cappedArea.id, "A"));
+    await finishProject(store, clock, owner.id, created.project.id);
+
+    await assert.rejects(
+      changeProjectState(store, owner.id, created.project.id, "shelved"),
+      /is finished/,
+    );
+  });
+});

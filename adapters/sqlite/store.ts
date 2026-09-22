@@ -32,6 +32,7 @@ interface ProjectRow {
   state: "active" | "shelved";
   external_deadline: string | null;
   deadline_source: string | null;
+  finished_at: string | null;
 }
 
 
@@ -45,6 +46,7 @@ interface EntryRow {
   what: string;
   effort_minutes: number | null;
   note: string | null;
+  step_id: string | null;
 }
 
 interface StepRow {
@@ -137,8 +139,9 @@ export class SqliteStore implements Store {
     this.#database
       .prepare(
         `INSERT INTO projects
-          (id, owner_id, area_id, objective_id, title, state, external_deadline, deadline_source)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+          (id, owner_id, area_id, objective_id, title, state, external_deadline, deadline_source,
+           finished_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       )
       .run(
         project.id,
@@ -149,6 +152,7 @@ export class SqliteStore implements Store {
         project.state,
         project.externalDeadline,
         project.deadlineSource,
+        project.finishedAt,
       );
   }
 
@@ -185,6 +189,21 @@ export class SqliteStore implements Store {
       .prepare("SELECT * FROM projects WHERE owner_id = ? AND state = 'active' ORDER BY id")
       .all(ownerId);
     return (rows as unknown as ProjectRow[]).map(toProject);
+  }
+
+  /**
+   * `finished_at` and `state` are independent: this never touches the state, because a finished
+   * project keeps whichever commitment it had when it ended (`D-025`).
+   */
+  async setProjectFinishedAt(
+    id: string,
+    ownerId: string,
+    finishedAt: string | null,
+  ): Promise<boolean> {
+    const result = this.#database
+      .prepare("UPDATE projects SET finished_at = ? WHERE id = ? AND owner_id = ?")
+      .run(finishedAt, id, ownerId);
+    return result.changes === 1;
   }
 
   async setProjectState(
@@ -308,8 +327,8 @@ export class SqliteStore implements Store {
       .prepare(
         `INSERT INTO entries
           (id, owner_id, kind, project_id, credits_objective_id, occurred_at, what,
-           effort_minutes, note)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+           effort_minutes, note, step_id)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       )
       .run(
         entry.id,
@@ -321,7 +340,48 @@ export class SqliteStore implements Store {
         entry.what,
         entry.effortMinutes,
         entry.note,
+        entry.stepId,
       );
+  }
+
+  /** Closed steps, newest first — the history they join is bounded the same way. */
+  async readDoneSteps(projectId: string, limit: number): Promise<Step[]> {
+    const rows = this.#database
+      .prepare(
+        `SELECT * FROM steps
+          WHERE project_id = ? AND done_at IS NOT NULL
+          ORDER BY done_at DESC, id DESC
+          LIMIT ?`,
+      )
+      .all(projectId, limit);
+    return (rows as unknown as StepRow[]).map(toStep);
+  }
+
+  /**
+   * The effort a step actually took: the entries that point at it, and nothing else (`D-027`).
+   * A step nothing points at reads zero — which is the truth, not a gap to fill in.
+   */
+  async readEffortForStep(stepId: string): Promise<number> {
+    const row = this.#database
+      .prepare(
+        `SELECT COALESCE(SUM(effort_minutes), 0) AS minutes FROM entries
+          WHERE step_id = ? AND kind = 'progress'`,
+      )
+      .get(stepId);
+    return (row as unknown as { minutes: number } | undefined)?.minutes ?? 0;
+  }
+
+  /** The project screen reads further back than the portfolio's 28 days, but not forever. */
+  async readProjectEntries(projectId: string, limit: number): Promise<Entry[]> {
+    const rows = this.#database
+      .prepare(
+        `SELECT * FROM entries
+          WHERE project_id = ?
+          ORDER BY occurred_at DESC, id DESC
+          LIMIT ?`,
+      )
+      .all(projectId, limit);
+    return (rows as unknown as EntryRow[]).map(toEntry);
   }
 
   async readRecentEntries(projectIds: string[], occurredSince: string): Promise<Entry[]> {
@@ -384,6 +444,7 @@ function toProject(row: ProjectRow): Project {
     state: row.state,
     externalDeadline: row.external_deadline,
     deadlineSource: row.deadline_source,
+    finishedAt: row.finished_at,
   };
 }
 
@@ -411,5 +472,6 @@ function toEntry(row: EntryRow): Entry {
     what: row.what,
     effortMinutes: row.effort_minutes,
     note: row.note,
+    stepId: row.step_id,
   };
 }

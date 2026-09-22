@@ -94,27 +94,66 @@ minutos sube al piso mínimo; un día con minutos crece proporcional.
 
 ![Registrar: el proyecto como contexto, una línea y los minutos opcionales](docs/images/03-registrar.jpg)
 
-Tocas un proyecto y llegas al registro con **ese proyecto ya puesto** y sus pasos de hoy a la vista
-— para que actúes en vez de decidir. Escribes **una línea** sobre lo que moviste. Los minutos son
+Tocas un proyecto y llegas a **su pantalla**, con el formulario de registro arriba y el proyecto ya
+puesto — para que actúes en vez de decidir. Escribes **una línea** sobre lo que moviste. Los minutos son
 cuatro botones, `15 / 30 / 60 / 120`, y son **opcionales**: si tocas el que ya estaba puesto, se
 suelta.
 
 La confirmación es que la marca de hoy crece en el gráfico. No hay mensaje de felicitación.
 
-### Elegir lo de hoy
+### La pantalla del proyecto
 
-En cada proyecto abres su lista de pasos y marcas los que harás hoy. **Sin hora, sin duración, sin
-condición y sin tope** — el único límite sigue siendo cuántos proyectos tienes activos esta semana,
-que es el número que respondiste en el primer arranque.
+![La pantalla de un proyecto: registrar arriba, los pasos y el historial al lado](docs/images/05-proyecto.jpg)
 
-La marca **caduca al acabar el día**. Un paso que marcaste y no hiciste vuelve a la lista sin dejar
-rastro: no hay contador, no se acumula, nunca sale en rojo. Es la misma regla que ya tenía la semana
-— la que termina no le pasa deuda a la siguiente —, a escala de un día.
+Tocas cualquier proyecto del portafolio y llegas a **su pantalla**. Todo lo que se le puede hacer
+está aquí, y en este orden:
 
-La lista completa de pasos vive **dentro del proyecto**. En la pantalla de inicio sólo aparece lo
-que marcaste para hoy, para que abrir Ritmo no sea nunca ver pendientes.
+1. **Registrar** — arriba del todo, con el proyecto ya puesto. Escribes una línea, tocas los
+   minutos si quieres, guardas. Sigue siendo lo más rápido de la app.
+2. **Pasos** — la lista del tramo siguiente. Cada uno con **«Hoy»**, para marcarlo, y **«Hecho»**,
+   para cerrarlo, y debajo los minutos que estimaste si los pusiste. Después, el campo para
+   escribir otro.
+3. **Historial** — los avances que registraste **y los pasos que cerraste**, mezclados por fecha,
+   de lo más reciente hacia atrás. Un punto lleno marca un paso cerrado; un avance escrito no
+   lleva punto. Nada de casillas.
+4. **Terminar proyecto** — al final, discreto. Y si estaba terminado, **«Deshacer»** en su lugar.
 
----
+Marcar un paso con «Hoy» es lo que hace que aparezca en el portafolio a la mañana siguiente. Y es
+también lo que permite saber cuánto costó: si ese día **sólo** ese paso estaba marcado, los minutos
+que registres se le apuntan. Así un paso cerrado puede decir *«estimaste 25 · registraste 40»*.
+
+Cuando no se pudo saber — marcaste dos pasos el mismo día, o ninguno — **dice sólo lo que
+estimaste y se calla el resto**. No pone un cero ni un guion: no lo sabe, y no lo inventa.
+
+**Sin hora, sin duración, sin condición y sin tope** — el único límite sigue siendo cuántos
+proyectos tienes activos esta semana, que es el número que respondiste en el primer arranque.
+La marca **caduca al acabar el día**: un paso que marcaste y no hiciste vuelve a la lista sin dejar
+rastro. No hay contador, no se acumula, nunca sale en rojo. Es la misma regla que ya tenía la
+semana — la que termina no le pasa deuda a la siguiente —, a escala de un día.
+
+**Terminar no es archivar.** Archivar es una pausa; terminar es un final. Puedes terminar cualquier
+día, sin esperar al lunes, y el cupo se libera al instante: ese mismo día puedes activar otro
+proyecto en su lugar.
+
+**Y sale del portafolio en el momento.** Ni «en movimiento», porque no se va a mover más, ni «para
+cuando vuelvas», porque no va a volver. Lo encuentras en **el archivo** y en su propia pantalla,
+con su historial entero. Dice «Terminado» y ya: no hay confeti aquí.
+
+
+### El archivo
+
+`Archivo`, en el pie de cualquier pantalla. Dos listas y nada más:
+
+- **Terminados**, del más reciente al más viejo, con su área y el día en que acabaron. Cada uno
+  con su **«Deshacer»** — y como un proyecto terminado sale del portafolio al pasar su semana,
+  **este es el único sitio donde puedes reabrirlo**.
+- **Archivados**, por nombre. Sólo para verlos juntos: siguen apareciendo en el portafolio, que es
+  lo que `FR-17` promete.
+
+Sin conteos, sin rojo, sin nada que reclame. Se llega por un toque deliberado, nunca al abrir.
+
+> Volver a activar un proyecto archivado todavía no se puede desde ninguna pantalla. Es una
+> decisión de lunes y vive con `/semana`, que no está construido.
 
 ## Lo que Ritmo no hace, a propósito
 
@@ -153,13 +192,11 @@ Ritmo está en construcción y estas piezas están especificadas pero sin constr
 | | |
 |---|---|
 | `/semana` | el ritual semanal: propuesta al abrir la semana, cierre al terminarla |
-| `/p/:id` | detalle de un proyecto con su historial |
-| `/archivo` | el respaldo de lo archivado y lo latente |
 | Objetivos | el nivel sobre los proyectos, y su estado latente |
 | Compromisos | lo que te propones por semana, con reserva |
 | Calibración | comparar lo estimado contra lo registrado |
 | Autenticación | diseñada (`D-004`), sin construir — por eso corre solo en local |
-| Terminar un proyecto | **no existe todavía en ninguna parte.** Hoy un proyecto sólo puede estar activo o archivado, y archivar es una pausa, no un final. Propuesto en `D-025`, sin aceptar |
+
 
 ---
 

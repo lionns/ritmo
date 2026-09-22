@@ -21,7 +21,10 @@ const projects = [
 ];
 // D-024: steps, not if-then actions. Two are marked for today so the portfolio row has
 // something to draw; the rest sit in their project's list, which is where a step lives.
-const today = new Date().toISOString().slice(0, 10);
+// The owner's local calendar, the definition `calendarDateOf` uses — never UTC. Seeding in the
+// evening west of Greenwich would otherwise mark steps for tomorrow and show none for today.
+const seededDay = new Date();
+const today = `${seededDay.getFullYear()}-${`${seededDay.getMonth() + 1}`.padStart(2, "0")}-${`${seededDay.getDate()}`.padStart(2, "0")}`;
 const steps = [
   {
     id: seedId(9),

@@ -9,9 +9,20 @@ interface Props {
   projects: PortfolioProject[];
   selectedProject?: PortfolioProject;
   today: string;
+  /**
+   * `/p/:id` already names the project in its headline and lists its steps below, so the form's
+   * context block would say everything twice. Off there, on everywhere else.
+   */
+  showContext?: boolean;
+  /**
+   * On `/p/:id` the form shares its column with the project's title, and the copy asks for **one
+   * line** anyway. A shorter box keeps "Guardar entrada" on screen, which is what `NFR-1` is
+   * actually about — a save button you have to scroll to is not two taps.
+   */
+  compact?: boolean;
 }
 
-const { projects, selectedProject, today } = Astro.props;
+const { projects, selectedProject, today, showContext = true, compact = false } = Astro.props;
 const initialProject = selectedProject?.id ?? projects[0]?.id;
 ---
 
@@ -19,11 +30,13 @@ const initialProject = selectedProject?.id ?? projects[0]?.id;
   {
     selectedProject && (
       <div class="mb-[22px]">
-        <h2 class="text-[19px] leading-tight font-semibold tracking-[-0.02em] text-ink md:text-xl">
-          {selectedProject.title}
-        </h2>
+        {showContext && (
+          <h2 class="text-[19px] leading-tight font-semibold tracking-[-0.02em] text-ink md:text-xl">
+            {selectedProject.title}
+          </h2>
+        )}
         <input type="hidden" name="projectId" value={selectedProject.id} />
-        {markedForToday(selectedProject.openSteps, today).length > 0 && (
+        {showContext && markedForToday(selectedProject.openSteps, today).length > 0 && (
           <div class="mt-5">
             <p class="font-mono text-[8px] leading-[1.4] tracking-[0.2em] text-dim uppercase">
               Hoy
@@ -41,13 +54,16 @@ const initialProject = selectedProject?.id ?? projects[0]?.id;
     <textarea
       id="entry-what"
       name="what"
-      rows="3"
+      rows={compact ? 2 : 3}
       required
       autofocus
       aria-describedby="entry-what-error"
       data-field-control="what"
       placeholder="Ej. Dejé lista la estructura del primer capítulo"
-      class="min-h-[132px] w-full resize-y rounded-field border border-glass-border bg-[color-mix(in_srgb,var(--page-bg)_72%,transparent)] p-4 text-base leading-[1.45] text-ink placeholder:text-faint-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent md:min-h-[150px]"
+      class:list={[
+        "w-full resize-y rounded-field border border-glass-border bg-[color-mix(in_srgb,var(--page-bg)_72%,transparent)] p-4 text-base leading-[1.45] text-ink placeholder:text-faint-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent",
+        compact ? "min-h-[96px] md:min-h-[96px]" : "min-h-[132px] md:min-h-[150px]",
+      ]}
     ></textarea>
     <FieldError id="entry-what-error" field="what" />
   </div>

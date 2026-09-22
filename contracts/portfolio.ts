@@ -20,6 +20,8 @@ export interface PortfolioProject {
   id: string;
   title: string;
   state: "active" | "shelved";
+  /** When it was finished, or null. Only a project finished this week reaches the landing. */
+  finishedAt: string | null;
   area: {
     id: string;
     name: string;

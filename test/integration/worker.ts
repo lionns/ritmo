@@ -1,5 +1,7 @@
 import { handlePostEntry } from "../../src/pages/api/entries.ts";
 import { handleGetPortfolio } from "../../src/pages/api/portfolio.ts";
+import { handleGetArchive } from "../../src/pages/api/archive.ts";
+import { handleGetProjectDetail } from "../../src/pages/api/project/[id].ts";
 import { handlePostArea } from "../../src/pages/api/areas.ts";
 import { handlePostProject, handlePatchProject } from "../../src/pages/api/projects.ts";
 import { handleGetSettings, handlePatchSettings } from "../../src/pages/api/settings.ts";
@@ -12,6 +14,12 @@ export function testApplication(store: Store) {
     const { pathname } = new URL(request.url);
     if (pathname === "/api/portfolio" && request.method === "GET") {
       return handleGetPortfolio(store);
+    }
+    if (pathname.startsWith("/api/project/") && request.method === "GET") {
+      return handleGetProjectDetail(decodeURIComponent(pathname.slice("/api/project/".length)), store);
+    }
+    if (pathname === "/api/archive" && request.method === "GET") {
+      return handleGetArchive(store);
     }
     if (pathname === "/api/entries" && request.method === "POST") {
       return handlePostEntry(request, store);

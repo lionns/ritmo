@@ -8,6 +8,8 @@ import { StepRuleError } from "../../../core/rules/step.ts";
 import {
   changeProjectState,
   createProjectWithinCap,
+  finishProject,
+  unfinishProject,
   ProjectRuleError,
   type ProjectCapResult,
 } from "../../../core/rules/project.ts";
@@ -65,10 +67,12 @@ export async function handlePatchProject(request: Request, injectedStore?: Store
     const store = injectedStore ?? runtimeStore();
     const owner = await store.getOnlyOwner();
     if (owner === null) return errorResponse("Complete setup first", 409);
-    return Response.json(
-      toResponse(await changeProjectState(store, owner.id, parsed.id, parsed.state)),
-      { headers: responseHeaders },
-    );
+    const result = parsed.state !== undefined
+      ? await changeProjectState(store, owner.id, parsed.id, parsed.state)
+      : parsed.finished === true
+        ? await finishProject(store, clock, owner.id, parsed.id)
+        : await unfinishProject(store, owner.id, parsed.id);
+    return Response.json(toResponse(result), { headers: responseHeaders });
   } catch (error) {
     return projectError(error, "Project state could not be saved");
   }
@@ -110,7 +114,15 @@ async function parseStateRequest(request: Request): Promise<UpdateProjectStateRe
   if (body instanceof Response) return body;
   const id = "id" in body ? body.id : undefined;
   const state = "state" in body ? body.state : undefined;
+  const finished = "finished" in body ? body.finished : undefined;
   if (typeof id !== "string" || id.trim() === "") return errorResponse("id must be a non-empty string", 400);
+  if ((state === undefined) === (finished === undefined)) {
+    return errorResponse("send exactly one of state and finished", 400);
+  }
+  if (finished !== undefined) {
+    if (typeof finished !== "boolean") return errorResponse("finished must be a boolean", 400);
+    return { id: id.trim(), finished };
+  }
   if (state !== "active" && state !== "shelved") return errorResponse("state must be active or shelved", 400);
   return { id: id.trim(), state };
 }
@@ -132,6 +144,7 @@ function toResponse(result: ProjectCapResult): ProjectMutationResponse {
       areaId: result.project.areaId,
       title: result.project.title,
       state: result.project.state,
+      finishedAt: result.project.finishedAt,
     },
     activeCount: result.activeCount,
     activeCap: result.activeCap,

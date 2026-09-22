@@ -86,9 +86,11 @@ accumulated progress rather than accumulated debt, and therefore keeps opening i
   is the condition the privacy reversal rests on: the data lives on Cloudflare, but the owner always
   holds a complete copy, so losing account access never means losing the record. (`D-005`, FR-21)
 - **Estimate calibration.** An estimate is captured on each step — which is exactly the "next
-  stretch" §10 says to decompose, so no subtask tree is needed. The actual is *derived* from the
-  effort logged on that project while the action was open, rather than typed a second time, and the
-  ratio comes back as a personal calibration signal, never as a failure. (§10)
+  stretch" §10 says to decompose, so no subtask tree is needed. The actual is the effort on the entries
+  **attributed to that step as they were written** — the day it alone was marked — rather than
+  derived from an open window, which `D-024` broke the moment several steps could be open at once
+  (`D-027`). Nothing is typed twice, and the ratio comes back as a personal calibration signal,
+  never as a failure. (§10)
 
 ### Out of Scope
 
@@ -179,7 +181,8 @@ Settled by the owner and recorded in Scope and Constraints above rather than in 
 objectives carry no target; capacity is inferred and labelled at close; reserves default to 30% of
 target; the active cap is asked for at setup and audited by stale rate; sharing stays unbuilt but
 must remain addable without a migration (2026-08-28). The estimate lives on the step — moved there
-from the next action by `D-024` (2026-09-21) — and the actual is derived from its open window; the
+from the next action by `D-024` (2026-09-21) — and the actual is attributed as each entry is
+written (`D-027`, same day), the open window having stopped working; the
 proposed
 target is retained beside the accepted one (2026-08-29). An objective is **not** required between
 an area and a project, so

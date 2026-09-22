@@ -107,7 +107,8 @@ Every commitment hangs here, never off an objective.*
 | areaId | string | yes | |
 | objectiveId | string | no | **Nullable** (2026-08-30). A fixed-job project such as a server migration has no objective above it; `areaId` stays required, so the area is the mandatory grouping and the objective is optional. A synthetic "no objective" row was rejected: it is the over-organizing the product exists to avoid, and it would sit permanently `dormant` and pollute the objective view. Independent of FR-5 — a project with no objective can still credit one through `Entry.creditsObjectiveId`. |
 | title | string | yes | |
-| state | enum | yes | `active` \| `shelved` (FR-17). Mutable only on the week boundary (FR-14). |
+| state | enum | yes | `active` \| `shelved` (FR-17). Mutable only on the week boundary (FR-14), and not at all once finished — `state` is the commitment, not the outcome. |
+| finishedAt | timestamp | no | When the owner said it ended (FR-23). Not a third `state`: completion is a timestamp throughout this model, and `ALTER TABLE ADD COLUMN` avoided rebuilding this table against its four foreign keys. Settable any day, reversible to null, and the project returns to `shelved` when it is (`D-025`). |
 | externalDeadline | date | no | Settable **only** when externally imposed (FR-16). Orders priority and protects the slot; generates no hour and no reminder. |
 | deadlineSource | text | conditional | Required when `externalDeadline` is set — names who imposed it, which is what keeps self-imposed dates out. |
 
@@ -168,6 +169,7 @@ The central write path (FR-4). Must cost seconds (NFR-1).
 | occurredAt | timestamp | yes | Also decides which week the entry belongs to — the week is derived from the date, and there is deliberately **no `weekId` column** to drift out of step with it. Requires an index on `(projectId, occurredAt)`. |
 | what | text | yes | |
 | effortMinutes | integer | no | For calibration only, never for billing. |
+| stepId | string | no | The step this effort belongs to, fixed when the entry was written (`D-027`). Null when no single step of the project was marked that day — ambiguity records nothing rather than splitting minutes it cannot divide. Never set afterwards: marking a step later does not reach back, which is what keeps `FR-22`'s expiry intact. |
 | note | text | no | |
 
 ### Week
@@ -208,9 +210,11 @@ Never stored, always computed, so they cannot drift from the log.
 - **Week attribution pattern** — the distribution of `Week.tagId` across roughly eight weeks. No
   duration is ever computed for anything outside a project (NFR-8).
 - **Actual against estimate** — for a done `Step`, the actual is the sum of
-  `Entry.effortMinutes` on its project between `createdAt` and `doneAt`. *Assumption:* effort
-  logged on the project in that window belongs to that step. It is an approximation, taken
-  deliberately so that no extra field has to be filled at logging time (NFR-1). The calibration
+  `Entry.effortMinutes` on the entries whose `stepId` is that step. Exact, not approximated:
+  `D-027` replaced the open-window derivation, which `D-024` broke the moment a project could hold
+  several open steps and their windows overlapped. Attribution happens when the entry is written
+  and nothing is typed twice (NFR-1); a step nothing points at reads zero, which is the truth
+  rather than a gap to fill. The calibration
   factor is actual ÷ estimate across the **last 20 done steps**, not the whole history. Bounded
   for two reasons: the 10 ms CPU ceiling of `D-001` applies to every render, and how you estimated
   two years ago says nothing about how you estimate now. Twenty is a starting value.
@@ -227,6 +231,10 @@ Never stored, always computed, so they cannot drift from the log.
 ## Validation rules
 
 - `externalDeadline` requires `deadlineSource`. A date with no external source is rejected.
+- **A project with `finishedAt` set is not counted against `Owner.activeCap`.** It is not carried,
+  so it does not hold a slot (`D-025`). Every reading of the cap must exclude it; a miss here is
+  invisible, because it widens the cap rather than breaking anything.
+- `Project.state` cannot change while `finishedAt` is set. Reopen it first.
 - `Project.state` transitions only on a week boundary; within a week the active set is immutable.
 - The count of active projects in areas where `countsAgainstCap` is true must not exceed
   `Owner.activeCap` without a recorded cap raise.

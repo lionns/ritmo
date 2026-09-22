@@ -48,6 +48,7 @@ export async function createProjectWithinCap(
   const state: Project["state"] =
     area.countsAgainstCap && currentCount >= owner.activeCap ? "shelved" : "active";
   const project: Project = {
+    finishedAt: null,
     id: ids.next(),
     ownerId: input.ownerId,
     areaId: area.id,
@@ -78,6 +79,75 @@ export async function createProjectWithinCap(
   };
 }
 
+/**
+ * Finishing is allowed on any day. `FR-14` fixes what is *active* within the week so the owner
+ * stops churning their commitments; finishing records what happened, which is not a change of
+ * plan and cannot wait for Monday without losing the moment (`D-025`).
+ */
+export async function finishProject(
+  store: Store,
+  clock: Clock,
+  ownerId: string,
+  id: string,
+): Promise<ProjectCapResult> {
+  const project = await readOwnedProject(store, ownerId, id);
+  if (project.finishedAt !== null) {
+    throw new ProjectRuleError(`Project ${id} is already finished`);
+  }
+  const finishedAt = clock.now().toISOString();
+  if (!(await store.setProjectFinishedAt(id, ownerId, finishedAt))) {
+    throw new ProjectRuleError(`Project ${id} could not be finished`);
+  }
+  return recount(store, ownerId, { ...project, finishedAt });
+}
+
+/**
+ * Undoing returns the project to `shelved`, never straight to `active`: reopening the week's
+ * fixed set is exactly what `FR-14` forbids. Monday is when it can become active again.
+ */
+export async function unfinishProject(
+  store: Store,
+  ownerId: string,
+  id: string,
+): Promise<ProjectCapResult> {
+  const project = await readOwnedProject(store, ownerId, id);
+  if (project.finishedAt === null) {
+    throw new ProjectRuleError(`Project ${id} is not finished`);
+  }
+  if (!(await store.setProjectFinishedAt(id, ownerId, null))) {
+    throw new ProjectRuleError(`Project ${id} could not be reopened`);
+  }
+  if (project.state !== "shelved") {
+    await store.setProjectState(id, ownerId, "shelved");
+  }
+  return recount(store, ownerId, { ...project, finishedAt: null, state: "shelved" });
+}
+
+async function readOwnedProject(store: Store, ownerId: string, id: string): Promise<Project> {
+  const project = await store.getProject(id);
+  if (project === null || project.ownerId !== ownerId) {
+    throw new ProjectRuleError(`Project ${id} does not exist`);
+  }
+  return project;
+}
+
+async function recount(
+  store: Store,
+  ownerId: string,
+  project: Project,
+): Promise<ProjectCapResult> {
+  const [owner, area, projects, areas] = await Promise.all([
+    store.getOwner(ownerId),
+    store.getArea(project.areaId),
+    store.listProjects(ownerId),
+    store.listAreas(ownerId),
+  ]);
+  if (owner === null) throw new ProjectRuleError(`Owner ${ownerId} does not exist`);
+  if (area === null) throw new ProjectRuleError(`Area ${project.areaId} does not exist`);
+  const fresh = projects.map((value) => (value.id === project.id ? project : value));
+  return capResult(project, area, owner, countCappedActiveProjects(fresh, areas));
+}
+
 export async function changeProjectState(
   store: Store,
   ownerId: string,
@@ -96,6 +166,10 @@ export async function changeProjectState(
   }
   const area = areas.find(({ id }) => id === project.areaId);
   if (area === undefined) throw new ProjectRuleError(`Area ${project.areaId} does not exist`);
+  // A finished project's commitment is not the question any more: reopen it first (`D-025`).
+  if (project.finishedAt !== null) {
+    throw new ProjectRuleError(`Project ${projectId} is finished`);
+  }
   const currentCount = countCappedActiveProjects(projects, areas);
   if (project.state === state) return capResult(project, area, owner, currentCount);
   if (await store.hasClosedWeek(ownerId)) {
@@ -141,9 +215,17 @@ export async function updateActiveCap(
   return updated;
 }
 
+/**
+ * A finished project is not carried, so it is not counted (`D-025`). The cap exists because too
+ * many live goals are a resource problem (§11, §12); something that ended is not one of them.
+ * Every reading of the cap goes through here, which is why the exclusion lives in one place.
+ */
 function countCappedActiveProjects(projects: Project[], areas: Area[]): number {
   const cappedAreaIds = new Set(areas.filter(({ countsAgainstCap }) => countsAgainstCap).map(({ id }) => id));
-  return projects.filter(({ areaId, state }) => state === "active" && cappedAreaIds.has(areaId)).length;
+  return projects.filter(
+    ({ areaId, state, finishedAt }) =>
+      state === "active" && finishedAt === null && cappedAreaIds.has(areaId),
+  ).length;
 }
 
 function capResult(

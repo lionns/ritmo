@@ -26,6 +26,12 @@ Harness `0.9.0` · profile `team`
 | [T-019](docs/tasks/T-019-steps-through-the-contract.md) | `done` | Put steps and the day list behind contracts and API routes, and have the portfolio endpoint |
 | [T-020](docs/tasks/T-020-the-screens-move-to-steps.md) | `done` | Make every screen read and write steps instead of the if–then next action — today's steps on |
 | [T-021](docs/tasks/T-021-the-next-action-leaves-the-code.md) | `done` | Delete every line that still reads or writes a next action — contract, route, rules, model, |
+| [T-022](docs/tasks/T-022-finishing-a-project.md) | `done` | Give a project a `finishedAt` timestamp it can be set to and taken back from, free its cap |
+| [T-023](docs/tasks/T-023-the-archive.md) | `done` | Build `/archivo` — every finished and every shelved project, with undo on the finished ones — |
+| [T-024](docs/tasks/T-024-the-project-screen.md) | `done` | Build `/p/:id` — one project, its steps, its history, its ending and a log form inline — and |
+| [T-025](docs/tasks/T-025-finished-leaves-the-landing.md) | `done` | Take finished projects out of every group on `/` the moment they are finished, and remove the |
+| [T-026](docs/tasks/T-026-effort-attributed-at-write-time.md) | `done` | Give `Entry` a `stepId` the log route fills from the day's marks, and replace the overlapping |
+| [T-027](docs/tasks/T-027-the-history-of-a-project.md) | `done` | Show what a step was estimated at while it is open, and keep it in the project's history once |
 | [T-010](docs/tasks/T-010-passkey-and-the-signed-cookie.md) | `superseded` | Build `D-004` as specified — a passkey registered per device, verified with Web Crypto and no |
 
 ## Next
@@ -34,14 +40,14 @@ Nothing open. Plan the next task before implementing anything.
 
 ## Open decisions
 
-- D-025 — Finishing a project is a state the product does not have — `proposed`, needs human approval
+None. All decisions are accepted or superseded.
 
 ## Journal — last 5
 
-- 2026-09-21 | T-021 | done | the next action leaves the code, the table stays, the manual catches up | 18 files | unit 48/48, isolation, typecheck, build, integration 12/12 | D-024
-- 2026-09-21 | T-020 | done | the screens move to steps and the day list; the trigger leaves the product | 21 files | unit 53/53, isolation, typecheck, build, integration 14/14, probed in the built app | D-024
-- 2026-09-21 | T-019 | done | steps reach the contract and the endpoints, beside the untouched next action | 7 files | unit 53/53, isolation, typecheck, build, integration 14/14 | D-024
-- 2026-09-21 | T-018 | done | steps get a table, rules and the carry-across, beside the untouched next action | 12 files | unit 53/53, isolation, typecheck, build, integration 9/9 | D-024
-- 2026-09-21 | T-017 | done | the trigger leaves the specification: steps, and a list for the day | 13 files | unit 45/45, isolation, typecheck, build, integration 7/7, no code touched | D-024
+- 2026-09-22 | T-027 | done | a closed step stays in the project's history, with what it took when that is known | 12 files | unit 51/51, isolation, typecheck, build, integration 25/25 | -
+- 2026-09-21 | T-026 | done | effort attributed to a step as it is written, not derived from a broken window | 12 files | unit 51/51, isolation, typecheck, build, integration 23/23 | D-027
+- 2026-09-21 | T-025 | done | a finished project leaves the landing at once | 6 files | unit 51/51, isolation, typecheck, build, integration 18/18 | D-026
+- 2026-09-21 | T-024 | done | one project, one screen, and a landing that reads again | 17 files | unit 51/51, isolation, typecheck, build, integration 18/18, probed against the approved canvas | -
+- 2026-09-21 | T-023 | done | the archive, and a footer link that stops answering 404 | 8 files | unit 51/51, isolation, typecheck, build, integration 16/16, probed in the built app | -
 
 Full history: [`JOURNAL.md`](JOURNAL.md) · decisions: [`docs/decisions/`](docs/decisions/README.md)

@@ -22,3 +22,9 @@
 2026-09-21 | T-019 | done | steps reach the contract and the endpoints, beside the untouched next action | 7 files | unit 53/53, isolation, typecheck, build, integration 14/14 | D-024
 2026-09-21 | T-020 | done | the screens move to steps and the day list; the trigger leaves the product | 21 files | unit 53/53, isolation, typecheck, build, integration 14/14, probed in the built app | D-024
 2026-09-21 | T-021 | done | the next action leaves the code, the table stays, the manual catches up | 18 files | unit 48/48, isolation, typecheck, build, integration 12/12 | D-024
+2026-09-21 | T-022 | done | a project can end instead of pretending it was paused | 19 files | unit 51/51, isolation, typecheck, build, integration 15/15, probed in the built app | D-025
+2026-09-21 | T-023 | done | the archive, and a footer link that stops answering 404 | 8 files | unit 51/51, isolation, typecheck, build, integration 16/16, probed in the built app | -
+2026-09-21 | T-024 | done | one project, one screen, and a landing that reads again | 17 files | unit 51/51, isolation, typecheck, build, integration 18/18, probed against the approved canvas | -
+2026-09-21 | T-025 | done | a finished project leaves the landing at once | 6 files | unit 51/51, isolation, typecheck, build, integration 18/18 | D-026
+2026-09-21 | T-026 | done | effort attributed to a step as it is written, not derived from a broken window | 12 files | unit 51/51, isolation, typecheck, build, integration 23/23 | D-027
+2026-09-22 | T-027 | done | a closed step stays in the project's history, with what it took when that is known | 12 files | unit 51/51, isolation, typecheck, build, integration 25/25 | -

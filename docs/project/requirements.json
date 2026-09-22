@@ -117,8 +117,8 @@
     {
       "id": "FR-20",
       "title": "Estimate calibration",
-      "statement": "The system shall capture an estimate on each step and compare it against the effort actually logged while that step was open, feeding the ratio back as a personal calibration signal rather than as a failure.",
-      "source": "research.md §10 · D-024"
+      "statement": "The system shall capture an estimate on each step and compare it against the effort on the entries attributed to that step, attribution being fixed when each entry is written and left null when no single step of the project was marked that day, feeding the ratio back as a personal calibration signal rather than as a failure.",
+      "source": "research.md §10 · D-024 · D-027"
     },
     {
       "id": "FR-21",
@@ -131,6 +131,12 @@
       "title": "The day list",
       "statement": "The system shall let the owner mark, at any point in the day, which steps they will do that day, drawn from projects active in the current week; the mark shall carry no hour, no duration and no condition, shall be subject to no daily cap beyond FR-13's weekly one, and shall expire at the end of the day leaving no record of what went unmarked or undone.",
       "source": "research.md §1, §12 · D-024"
+    },
+    {
+      "id": "FR-23",
+      "title": "Finishing a project",
+      "statement": "A project shall be markable as finished on any day, carrying the moment it was finished rather than a third state; finishing shall free its slot against the active cap at once, shall be reversible by returning the project to shelved, and shall be rendered without congratulation or any reward language.",
+      "source": "research.md §4, §11, §12, §14 · brief.md § Success Measures · D-025"
     }
   ],
   "nonFunctional": [

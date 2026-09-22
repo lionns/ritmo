@@ -47,6 +47,11 @@ export interface Project {
   objectiveId: string | null;
   title: string;
   state: "active" | "shelved";
+  /**
+   * When the owner said it was finished, or null. Not a third `state`: `state` records the
+   * commitment, this records the outcome, and a finished project keeps whichever it had (`D-025`).
+   */
+  finishedAt: Timestamp | null;
   externalDeadline: CalendarDate | null;
   deadlineSource: string | null;
 }
@@ -82,6 +87,12 @@ export interface Entry {
   what: string;
   effortMinutes: number | null;
   note: string | null;
+  /**
+   * The step this effort belongs to, decided when the entry was written and never revisited
+   * (`D-027`). Null when no single step of the project was marked for that day — ambiguity
+   * records nothing rather than splitting minutes it cannot divide honestly.
+   */
+  stepId: string | null;
 }
 
 export interface Week {

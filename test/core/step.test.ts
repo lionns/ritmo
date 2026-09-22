@@ -145,6 +145,7 @@ const project: Project = {
   state: "active",
   externalDeadline: null,
   deadlineSource: null,
+  finishedAt: null,
 };
 
 const step: Step = {
@@ -181,6 +182,12 @@ class MemoryStore implements Store {
   async listProjects(_ownerId: string) { return [...this.projects.values()]; }
   async listActiveProjects(_ownerId: string) {
     return [...this.projects.values()].filter((value) => value.state === "active");
+  }
+  async setProjectFinishedAt(id: string, ownerId: string, finishedAt: string | null) {
+    const value = this.projects.get(id);
+    if (value === undefined || value.ownerId !== ownerId) return false;
+    this.projects.set(id, { ...value, finishedAt });
+    return true;
   }
   async setProjectState(_id: string, _ownerId: string, _state: Project["state"]) {
     throw new Error("not used");
@@ -219,5 +226,13 @@ class MemoryStore implements Store {
     return true;
   }
   async createEntry(_value: Entry) { throw new Error("not used"); }
+  async readProjectEntries(_projectId: string, _limit: number) { return []; }
+  async readDoneSteps(projectId: string, limit: number) {
+    return [...this.steps.values()]
+      .filter((value) => value.projectId === projectId && value.doneAt !== null)
+      .sort((left, right) => (right.doneAt ?? "").localeCompare(left.doneAt ?? ""))
+      .slice(0, limit);
+  }
+  async readEffortForStep(_stepId: string) { return 0; }
   async readRecentEntries(_projectIds: string[], _occurredSince: string) { return []; }
 }
