@@ -37,3 +37,4 @@
 2026-09-22 | T-037 | review | complete SQLite download from settings with consistent snapshot and temporary-file cleanup | 8 files | unit 55/55, isolation, typecheck, build, integration 30/30, compiled HTTP download verified | -
 2026-09-22 | T-037 | done | the owner holds a complete copy of their own record, one click away | 8 files | unit 55/55, isolation, typecheck, build, integration 30/30 | D-029
 2026-09-22 | T-032 | done | the week's boundary, its proposal, and the one it never closes | 10 files | no code; harness lint clean, gates unchanged | D-030
+2026-09-22 | T-036 | done | hosting returns to Workers, the data goes to Turso, and four foundations move | 14 files | no code; harness lint clean, gates unchanged | D-031, D-032, D-033, D-034

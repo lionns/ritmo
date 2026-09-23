@@ -22,10 +22,10 @@ rather than editing. Template in `../sdd/TEMPLATES.md`.
 | [D-013](D-013-version-pinning.md) | 2026-08-31 | Exact pins, a committed lockfile, and upgrades as their own task | `accepted` | none |
 | [D-014](D-014-types-node-dev-dependency.md) | 2026-08-31 | `@types/node`, the sixth dev dependency | `superseded` | D-012 |
 | [D-017](D-017-boundaries-src-lib-is-front.md) | 2026-09-01 | `src/lib/` is front, and the check has to be able to say so | `accepted` | D-009 |
-| [D-018](D-018-runtime-node-local.md) | 2026-09-02 | Node on the owner's machine, not V8 isolates on someone else's | `accepted` | D-001 |
-| [D-019](D-019-data-local-sqlite.md) | 2026-09-02 | SQLite in the process, and the durability that comes back with it | `accepted` | D-002 |
-| [D-020](D-020-deploy-local-on-demand.md) | 2026-09-02 | No deploy: the owner starts it to use it | `accepted` | D-005 |
-| [D-021](D-021-interface-astro-node-adapter.md) | 2026-09-02 | The same Astro, on the Node adapter | `accepted` | D-008 |
+| [D-018](D-018-runtime-node-local.md) | 2026-09-02 | Node on the owner's machine, not V8 isolates on someone else's | `superseded` | D-001 |
+| [D-019](D-019-data-local-sqlite.md) | 2026-09-02 | SQLite in the process, and the durability that comes back with it | `superseded` | D-002 |
+| [D-020](D-020-deploy-local-on-demand.md) | 2026-09-02 | No deploy: the owner starts it to use it | `superseded` | D-005 |
+| [D-021](D-021-interface-astro-node-adapter.md) | 2026-09-02 | The same Astro, on the Node adapter | `superseded` | D-008 |
 | [D-022](D-022-tests-four-dev-dependencies.md) | 2026-09-02 | Four dev dependencies after the platform test harness leaves | `accepted` | D-014 |
 | [D-023](D-023-boundary-check-drops-the-vendor-clause.md) | 2026-09-02 | The boundary check stops naming a vendor the project left | `accepted` | none |
 | [D-024](D-024-steps-and-the-day-list.md) | 2026-09-21 | Steps and a day list replace the if–then trigger | `accepted` | none |
@@ -35,3 +35,7 @@ rather than editing. Template in `../sdd/TEMPLATES.md`.
 | [D-028](D-028-drop-retired-next-actions.md) | 2026-09-22 | Drop the retired next-action test data | `accepted` | none — replaces the retention note in data-model.md § Retired: NextAction |
 | [D-029](D-029-the-reviewer-validates.md) | 2026-09-22 | The Reviewer validates, and what a finding may become | `accepted` | none — replaces `D-010`'s validation clause; the rest of `D-010` stands |
 | [D-030](D-030-the-week-the-owner-answered.md) | 2026-09-22 | The week: its boundary, its proposal, and the one it never closes | `accepted` | none |
+| [D-031](D-031-deploy-cloudflare-workers-again.md) | 2026-09-22 | Hosting returns, to Cloudflare Workers | `accepted` | D-020 |
+| [D-032](D-032-data-turso-libsql.md) | 2026-09-22 | The data moves to Turso, which is still SQLite | `accepted` | D-019 |
+| [D-033](D-033-runtime-workers.md) | 2026-09-22 | The runtime is the Workers runtime | `accepted` | D-018 |
+| [D-034](D-034-interface-astro-cloudflare-adapter.md) | 2026-09-22 | Astro keeps the interface, on the Cloudflare adapter | `accepted` | D-021 |

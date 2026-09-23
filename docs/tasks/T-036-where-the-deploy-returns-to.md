@@ -1,14 +1,14 @@
 ---
 id: T-036
 title: Where the deploy returns to — the host, the store, and the clause that fires with them
-status: ready
+status: done
 profile: team
 harness: 0.9.0
 role: Planner
 goal: Settle where Ritmo runs now that the owner needs it from anywhere, what holds the data once
   `node:sqlite` is no longer available, and record — as `D-020` requires in writing — that
   authentication stops being optional the moment anything is exposed.
-decisions: []
+decisions: [D-031, D-032, D-033, D-034]
 implements: [NFR-2, NFR-4]
 ---
 
@@ -55,15 +55,15 @@ implements: [NFR-2, NFR-4]
 
 ## Acceptance Criteria
 
-- [ ] The decision names the host, the store, and the reason for each, and supersedes `D-020`
+- [x] The decision names the host, the store, and the reason for each, and supersedes `D-020`
       rather than editing it
-- [ ] It carries `- Foundation: deploy`, since the linter refuses any task past `ready` while a
+- [x] It carries `- Foundation: deploy`, since the linter refuses any task past `ready` while a
       foundation topic is unsettled
-- [ ] It states in its own words that authentication is now mandatory before exposure, discharging
+- [x] It states in its own words that authentication is now mandatory before exposure, discharging
       `D-020`'s condition explicitly rather than by implication
-- [ ] The vendor-independence trade is written down as a trade the owner made, not as a detail
-- [ ] `NFR-4` describes reality and cites a decision that is not superseded
-- [ ] The owner accepts it before it is written as `accepted`
+- [x] The vendor-independence trade is written down as a trade the owner made, not as a detail
+- [x] `NFR-4` describes reality and cites a decision that is not superseded
+- [x] The owner accepts it before it is written as `accepted`
 
 ## Verification
 
@@ -86,22 +86,43 @@ implements: [NFR-2, NFR-4]
 
 ## Outcome
 
-Filled in as the task progresses; overwritten, not appended.
-
-- Changes:
-- Files:
-- Baseline result:
-- Final result:
-- Decisions recorded:
-- Follow-up:
+- Changes: hosting returns to Cloudflare Workers (`D-031`), the data goes to Turso rather than D1
+  (`D-032`), production runs on the Workers runtime while the gates stay on Node (`D-033`), and
+  Astro swaps `@astrojs/node` for Cloudflare's adapter (`D-034`). `D-020`, `D-019`, `D-018` and
+  `D-021` marked superseded. `NFR-4` rewritten: it cited `D-005`, superseded three weeks ago, and
+  named Cloudflare as the holder of data that will rest at Turso.
+- Verified, not recalled: Turso's TypeScript reference lists Cloudflare Workers among compatible
+  runtimes and documents interactive transactions and batch. Two packages claim the edge and they
+  disagree about maturity — the docs recommend `@tursodatabase/serverless` for edge runtimes while
+  its announcement calls it "currently experimental and subject to change"; `@libsql/client/web` is
+  fetch-only and "does not support local file URLs". `D-032` hands that choice to `T-038` with the
+  label attached rather than picking on a blog post's word.
+- Files: four decisions, four superseded, `requirements.json`, `T-038`, task, trace, journal,
+  generated status and decision index.
+- Baseline and final: no code touched; harness-lint clean, five gates unchanged.
+- Decisions recorded: `D-031`, `D-032`, `D-033`, `D-034`.
+- Follow-up: `T-038` now carries the package choice and the export rebuild as criteria.
 
 ## Review
 
-- Severity · `file:line` · issue · impact · recommendation
+Reviewer: Claude Code. Planning has no second agent, which `agent-config.md` names as a risk.
+
+- Medium · `T-037` · **`FR-21` breaks the moment `D-032` lands.** The export reads a local file
+  through `node:sqlite`'s backup API and Turso has no local file, so the one thing standing behind
+  `NFR-4`'s no-lock-in promise stops working exactly when the data leaves the owner's machine.
+  Added to `T-038` as a criterion rather than a new task, per `D-029`.
+- Medium · this task · **It was scoped as one decision and is four.** Cloudflare plus Turso
+  supersedes `deploy`, `data`, `runtime` and `interface`; the linter allows one accepted decision
+  per foundation topic, so a single file could not have carried it. I planned the task without
+  checking which foundations the move touched.
+- Low · `D-031` as first written · I wrote that Cloudflare holds the keys and can read the data,
+  carrying over `NFR-4`'s old wording, one paragraph after deciding the data goes to Turso.
+  Corrected in place before the decision was committed.
+- Note · The owner's reason for leaving Cloudflare in September is honoured by `D-032`, not by
+  `D-031`: the host is a single vendor again, and what keeps it from being *the* single vendor is
+  where the data sits.
 
 ## Validation
 
-`team` only — required before `done`, and linted.
-
-- Validated by:
-- Date:
+- Validated by: Claude Code, as Reviewer (`D-029`)
+- Date: 2026-09-22

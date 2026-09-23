@@ -1,6 +1,6 @@
 # D-019 — SQLite in the process, and the durability that comes back with it
 
-- Status: accepted
+- Status: superseded
 - Date: 2026-09-02
 - Supersedes: D-002
 - Tasks: T-011

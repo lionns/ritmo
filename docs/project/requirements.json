@@ -161,7 +161,7 @@
     {
       "id": "NFR-4",
       "title": "Managed hosting, with an exit",
-      "statement": "The data lives on Cloudflare's managed infrastructure rather than on infrastructure the owner controls — a deliberate reversal recorded in D-005, taken for zero cost and zero maintenance. Cloudflare holds the encryption keys and can technically read the data. The owner shall never be locked in: FR-21 guarantees a full local copy. No third-party analytics or telemetry.",
+      "statement": "The data lives on Turso's managed infrastructure, reached from Cloudflare Workers, rather than on infrastructure the owner controls — a deliberate reversal recorded in D-031 and D-032, taken so the product is reachable from a phone at all (NFR-1). Turso can technically read the data at rest and Cloudflare handles it in transit; the vendor serving the application is deliberately not the vendor holding the data. The owner shall never be locked in: FR-21 guarantees a full local copy, and any change of store must carry that export across with it. No third-party analytics or telemetry.",
       "source": "brief.md § Constraints · D-005"
     },
     {

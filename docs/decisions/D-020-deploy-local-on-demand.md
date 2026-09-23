@@ -1,6 +1,6 @@
 # D-020 — No deploy: the owner starts it to use it
 
-- Status: accepted
+- Status: superseded
 - Date: 2026-09-02
 - Supersedes: D-005
 - Tasks: T-011

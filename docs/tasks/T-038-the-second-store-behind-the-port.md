@@ -14,7 +14,8 @@ implements: [NFR-3, NFR-4]
 
 ## Sources
 
-- **T-036's accepted decision**, which names the store. This task cannot start before it.
+- **`D-032`** — Turso (libSQL) holds the data, the local SQLite adapter stays. `D-033` (the Workers
+  runtime) and `D-034` (the Cloudflare adapter) come with it.
 - `core/ports/store.ts` — the port, and the reason this task is possible without touching `core/`
 - `adapters/sqlite/store.ts` — the adapter to mirror, including how migrations are applied by name
   order through the `_ritmo_migrations` ledger
@@ -24,6 +25,15 @@ implements: [NFR-3, NFR-4]
 ## Scope
 
 - A second adapter under `adapters/`, implementing every method on the port
+- **Choosing between `@tursodatabase/serverless` and `@libsql/client/web`, and recording which and
+  why.** `D-032` verified on 2026-09-22 that the docs recommend the first for edge runtimes while
+  its own announcement calls it "currently experimental and subject to change", and that the second
+  is fetch-only and "does not support local file URLs". Check both against live documentation
+  again — this moves.
+- **Re-implementing `FR-21`'s export against the new store.** `T-037` built it on `node:sqlite`'s
+  backup API reading a local file, which Turso does not have. Until this is done, `NFR-4`'s promise
+  that the owner is never locked in has nothing behind it, and by then they have months of records.
+- Swapping the Astro adapter per `D-034`, keeping the Node adapter for local development
 - Whatever `astro.config.mjs` and the build need in order to target the chosen host
 - Migrations applied on the new store, by the same ledger and the same name order
 - The integration suite run against **both** adapters, so the port is proven twice and not
@@ -40,6 +50,10 @@ implements: [NFR-3, NFR-4]
 ## Acceptance Criteria
 
 - [ ] Every port method is implemented, and the integration suite passes against both adapters
+- [ ] **The export works against the new store** and returns a file that opens, with every table
+      and row — `FR-21` survives the move rather than lapsing with it
+- [ ] The chosen client package is named in the task's Outcome with the reason, including what its
+      documentation said about maturity on the day it was checked
 - [ ] `npm run check:core` stays clean — no vendor SDK, no platform global, no SQL in `core/`
 - [ ] Migrations run on a fresh store in the same order and record the same ledger
 - [ ] Nothing in `core/`, `contracts/` or `src/` names the vendor

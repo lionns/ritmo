@@ -1,6 +1,6 @@
 # D-021 — The same Astro, on the Node adapter
 
-- Status: accepted
+- Status: superseded
 - Date: 2026-09-02
 - Supersedes: D-008
 - Tasks: T-011

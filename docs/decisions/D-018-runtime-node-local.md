@@ -1,6 +1,6 @@
 # D-018 — Node on the owner's machine, not V8 isolates on someone else's
 
-- Status: accepted
+- Status: superseded
 - Date: 2026-09-02
 - Supersedes: D-001
 - Tasks: T-011
