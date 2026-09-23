@@ -31,7 +31,7 @@ let loadError: string | null = null;
 let notFound = false;
 try {
   const response = await fetch(new URL(`/api/project/${encodeURIComponent(id)}`, Astro.url), {
-    headers: { Accept: "application/json" },
+    redirect: "manual", headers: { Accept: "application/json", Cookie: Astro.request.headers.get("cookie") ?? "" },
   });
   const body = await response.json() as ProjectDetailResponse | ProjectDetailErrorResponse;
   if (response.status === 404) notFound = true;

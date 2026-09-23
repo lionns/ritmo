@@ -1,3 +1,4 @@
+import { currentOwnerId } from "../../../adapters/http/session.ts";
 import type { APIRoute } from "astro";
 
 import { runtimeStore } from "../../../adapters/runtime.ts";
@@ -22,7 +23,7 @@ const responseHeaders = { "Cache-Control": "no-store" };
 export async function handleGetPortfolio(injectedStore?: Store): Promise<Response> {
   try {
     const store = injectedStore ?? await runtimeStore();
-    const owner = await store.getOnlyOwner();
+    const owner = await store.getOwner(currentOwnerId());
     if (owner === null) {
       return Response.json(
         {

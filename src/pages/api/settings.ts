@@ -1,3 +1,4 @@
+import { currentOwnerId } from "../../../adapters/http/session.ts";
 import type { APIRoute } from "astro";
 
 import { runtimeStore } from "../../../adapters/runtime.ts";
@@ -16,7 +17,7 @@ const clock: Clock = { now: () => new Date() };
 export async function handleGetSettings(injectedStore?: Store): Promise<Response> {
   try {
     const store = injectedStore ?? await runtimeStore();
-    const owner = await store.getOnlyOwner();
+    const owner = await store.getOwner(currentOwnerId());
     if (owner === null) return errorResponse("Complete setup first", 409);
     return Response.json(await settingsResponse(store, owner), { headers: responseHeaders });
   } catch (error) {
@@ -33,7 +34,7 @@ export async function handlePatchSettings(request: Request, injectedStore?: Stor
   if (parsed instanceof Response) return parsed;
   try {
     const store = injectedStore ?? await runtimeStore();
-    const owner = await store.getOnlyOwner();
+    const owner = await store.getOwner(currentOwnerId());
     if (owner === null) return errorResponse("Complete setup first", 409);
     const updated = await updateActiveCap(store, clock, owner.id, parsed.activeCap);
     return Response.json(await settingsResponse(store, updated), { headers: responseHeaders });

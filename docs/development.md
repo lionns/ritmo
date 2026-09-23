@@ -4,6 +4,8 @@ T-038 adds a second Store implementation without changing the core or its contra
 SQLite adapter remains the default for Node development. No deployment or live data import is part
 of this task; T-039 supplies authentication before T-040 deploys.
 
+Authentication is now mandatory on both runtimes; see [authentication setup](authentication.md).
+
 ## Run and build
 
 - `npm ci` installs the exact dependency lockfile.
@@ -28,11 +30,11 @@ local file. The Workers build rejects imports from `adapters/sqlite/`.
 
 ## Integration tests
 
-Without `sqld` on PATH, `npm run test:integration` passes the 37 local tests and explicitly
-reports 39 skipped remote tests. It prints which coverage is missing: the remote Store/API,
+Without `sqld` on PATH, `npm run test:integration` passes the 59 local tests and explicitly
+reports 61 skipped remote tests. It prints which coverage is missing: the remote Store/API,
 migrations, constraints and export. This is not full remote validation. A configured but missing,
 broken or non-executable `RITMO_SQLD_BINARY` fails the gate rather than skipping; server startup
-and test failures also remain failures. Full T-038 verification requires all 76 tests to pass.
+and test failures also remain failures. Full T-038 verification requires all 120 tests to pass.
 
 Install the official [libSQL server release](https://github.com/tursodatabase/libsql/releases/tag/libsql-server-v0.24.32)
 for your OS, verifying its supplied SHA-256. Tests use `sqld` from PATH, or an explicit path:

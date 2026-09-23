@@ -1,3 +1,4 @@
+import { currentOwnerId } from "../../../adapters/http/session.ts";
 import type { APIRoute } from "astro";
 
 import { runtimeStore } from "../../../adapters/runtime.ts";
@@ -17,7 +18,7 @@ export async function handlePostArea(request: Request, injectedStore?: Store): P
 
   try {
     const store = injectedStore ?? await runtimeStore();
-    const owner = await store.getOnlyOwner();
+    const owner = await store.getOwner(currentOwnerId());
     if (owner === null) return errorResponse("Complete setup before creating an area", 409);
     const area = {
       id: new UlidGenerator().next(),

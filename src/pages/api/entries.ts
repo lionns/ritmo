@@ -1,3 +1,4 @@
+import { currentOwnerId } from "../../../adapters/http/session.ts";
 import type { APIRoute } from "astro";
 
 import { runtimeStore } from "../../../adapters/runtime.ts";
@@ -19,7 +20,7 @@ export async function handlePostEntry(request: Request, injectedStore?: Store): 
 
   try {
     const store = injectedStore ?? await runtimeStore();
-    const owner = await store.getOnlyOwner();
+    const owner = await store.getOwner(currentOwnerId());
     if (owner === null) {
       return errorResponse("Complete setup before recording progress", 409);
     }

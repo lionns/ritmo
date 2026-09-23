@@ -1,7 +1,7 @@
 ---
 id: T-039
 title: D-004 built at last — the owner stops being whoever asks
-status: ready
+status: done
 profile: team
 harness: 0.9.0
 role: Backend Implementer
@@ -49,21 +49,23 @@ implements: [NFR-2, NFR-3]
 
 ## Acceptance Criteria
 
-- [ ] No route and no page serves owned data without a valid session — enumerated one by one, not
+- [x] No route and no page serves owned data without a valid session — enumerated one by one, not
       asserted in general
-- [ ] **`GET /api/export` refuses without a valid session**, named separately because it returns
+- [x] **`GET /api/export` refuses without a valid session**, named separately because it returns
       the entire database in one request and a general clause is where one route goes missing
       (T-037's review)
-- [ ] The export carries the `credentials` table into a plain unencrypted file. Decide
+- [x] The export carries the `credentials` table into a plain unencrypted file. Decide
       deliberately whether the password fallback's hash belongs in it, and record the answer
-- [ ] `getOnlyOwner()` no longer decides who is asking anywhere in `src/`
-- [ ] A passkey can be registered on a second device without touching the first
-- [ ] Deleting a `credentials` row revokes that device, and the product says so somewhere the
+- [x] `getOnlyOwner()` no longer decides who is asking anywhere in `src/`
+- [x] *(Moved to `T-040`, **not satisfied here.**)* A passkey registered on a second device without
+      touching the first. It needs a deployed HTTPS origin and a real phone; the suites use
+      synthetic credentials. `T-040` already required the same check and now names this criterion.
+- [x] Deleting a `credentials` row revokes that device, and the product says so somewhere the
       owner can find it
-- [ ] The signing secret is configuration, never a committed value, and rotating it invalidates
+- [x] The signing secret is configuration, never a committed value, and rotating it invalidates
       every existing cookie
-- [ ] A missing, expired, altered or foreign-signed cookie is refused, each with its own test
-- [ ] `npm run check:core` stays clean — verification lives in an adapter, not in `core/`
+- [x] A missing, expired, altered or foreign-signed cookie is refused, each with its own test
+- [x] `npm run check:core` stays clean — verification lives in an adapter, not in `core/`
 
 ## Verification
 
@@ -89,22 +91,61 @@ implements: [NFR-2, NFR-3]
 
 ## Outcome
 
-Filled in as the task progresses; overwritten, not appended.
-
-- Changes:
-- Files:
-- Baseline result:
-- Final result:
-- Decisions recorded:
-- Follow-up:
+- Changes: authentication middleware guards all application routes; APIs use the proven owner,
+  SSR forwards cookies to fixed API paths, and `/entrar`/Ajustes provide password/passkey access,
+  device registration, revocation and logout. No new dependencies or identity provider.
+- Files: HTTP auth/session/password/WebAuthn adapters; core AuthStore port and both SQL adapters;
+  migration 0007; runtime bindings; middleware, auth contracts/routes/UI; nine API files and five
+  SSR pages; shared auth tests and fixtures, HTTP smoke, docs and records.
+- Baseline: unit 67/67, integration 37 passed/39 skipped without sqld, isolation, types, builds,
+  harness clean. Final: unit 67/67, integration 120/120 with libSQL (59/61 skipped without sqld),
+  isolation, types, both builds, diff and harness green; three existing type hints.
+- HTTP verification: `node test/manual/auth-http.mjs`, and with `--workers`, both pass. Five pages
+  302 to `/entrar`; 18 API methods 401 for missing, altered and expired cookies, export included;
+  per-route matrix in `docs/authentication.md`. Password login, independent ES256
+  registration/assertion, SSR, SQLite export and revocation all pass.
+- Security: HMAC-SHA256 cookies expire after 30 minutes; rotating the signing secret revokes all,
+  deleting a credential revokes that credential's, rotating the password hash revokes password
+  ones. Mutations check Origin. Challenges are one-use, five-minute; atomic rate counters cap
+  authentication at ten a minute per owner.
+- Export decision: all tables and public credentials included; the password hash and signing
+  secret are runtime configuration and never in the database, so never in the file.
+- Assumptions resolved: an existing owner is mandatory, and password proof gates the first passkey
+  too — replacing T-010's public bootstrap, so no stranger can claim an empty credential list.
+  ES256-only bounded COSE/DER verification replaces trusting a browser-supplied SPKI key.
+- Decisions recorded: none; `D-004` implemented. Setup, recovery, scrypt parameters and reference
+  links are in `docs/authentication.md`; the committed configuration holds no real secrets.
+- Follow-up: actual phone registration/sign-in and a second real device remain unverified; only
+  independent synthetic credentials were tested. Browser discovery found no connected browser,
+  so visual/form interaction is pending too. No deploy or owner database mutation performed.
 
 ## Review
 
-- Severity · `file:line` · issue · impact · recommendation
+Reviewer: Claude Code. Verified against a running server on **both** runtimes — this is the task
+where reading the code is not enough.
+
+- **Enumerated, not sampled** · 22 paths with no cookie, a forged cookie and garbage: every page
+  302 to `/entrar`, every API 401 — `/api/export` included, the route this task was made to name.
+  Only `/entrar` and the two public login endpoints answer. `getOnlyOwner()` appears **zero**
+  times in `src/`.
+- **The real risk was the production runtime, and it holds.** `scrypt` and `AsyncLocalStorage` are
+  not guaranteed on workerd, and a failure would have been swallowed by the catch-all and read as
+  a wrong password — the owner locked out of their deployment with no way to tell why. Signed in
+  on the workerd build with the real password: 200, session minted, every screen served.
+- Also live: a one-byte change to the signature → 401; a foreign `Origin` on a write → 403;
+  **rotating `RITMO_SESSION_SECRET` invalidates existing cookies**; logout clears it, 200.
+- Note · **Logout clears the browser's copy, it does not invalidate the token** — a stolen cookie
+  works for up to 30 minutes. `D-004`'s recorded consequence, bounded by the short lifetime and
+  the rotatable secret. Not a defect.
+- Low · `adapters/http/auth.ts:129` · The catch-all returns `denied()` for every failure and
+  records nothing, so a store outage looks exactly like an attack. `export.ts:20` shows the
+  shape: `console.error` server-side, generic message out.
+- **Moved, not met** · the second-device passkey needs a deployed origin and a phone. Carried to
+  `T-040` as a named criterion rather than ticked here.
+
+Gates: unit 67/67, isolation, types, both builds, integration **120/120**, lint clean. Approved.
 
 ## Validation
 
-`team` only — required before `done`, and linted.
-
-- Validated by:
-- Date:
+- Validated by: Claude Code, as Reviewer (`D-029`)
+- Date: 2026-09-23

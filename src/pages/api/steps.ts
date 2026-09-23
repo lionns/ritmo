@@ -1,3 +1,4 @@
+import { currentOwnerId } from "../../../adapters/http/session.ts";
 import type { APIRoute } from "astro";
 
 import { runtimeStore } from "../../../adapters/runtime.ts";
@@ -27,7 +28,7 @@ export async function handlePostStep(request: Request, injectedStore?: Store): P
   if (parsed instanceof Response) return parsed;
   try {
     const store = injectedStore ?? await runtimeStore();
-    const owner = await store.getOnlyOwner();
+    const owner = await store.getOwner(currentOwnerId());
     if (owner === null) return errorResponse("Complete setup before writing a step", 409);
     const step = await writeStep(store, clock, new UlidGenerator(), {
       ownerId: owner.id,
@@ -46,7 +47,7 @@ export async function handlePatchStep(request: Request, injectedStore?: Store): 
   if (parsed instanceof Response) return parsed;
   try {
     const store = injectedStore ?? await runtimeStore();
-    const owner = await store.getOnlyOwner();
+    const owner = await store.getOwner(currentOwnerId());
     if (owner === null) return errorResponse("Complete setup before marking a step", 409);
 
     if (parsed.done === true) {

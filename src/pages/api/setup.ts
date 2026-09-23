@@ -1,7 +1,7 @@
+import { currentOwnerId } from "../../../adapters/http/session.ts";
 import type { APIRoute } from "astro";
 
 import { runtimeStore } from "../../../adapters/runtime.ts";
-import { UlidGenerator } from "../../../adapters/ulid.ts";
 import type { Store } from "../../../core/ports/store.ts";
 import type {
   CaptureErrorResponse,
@@ -17,8 +17,8 @@ export async function handlePostSetup(request: Request, injectedStore?: Store): 
 
   try {
     const store = injectedStore ?? await runtimeStore();
-    if (await store.getOnlyOwner() !== null) return errorResponse("Setup already exists", 409);
-    const owner = { id: new UlidGenerator().next(), activeCap: parsed.activeCap, capRaises: [] };
+    if (await store.getOwner(currentOwnerId()) !== null) return errorResponse("Setup already exists", 409);
+    const owner = { id: currentOwnerId(), activeCap: parsed.activeCap, capRaises: [] };
     await store.createOwner(owner);
     return Response.json(
       { ownerId: owner.id, activeCap: owner.activeCap } satisfies SetupResponse,

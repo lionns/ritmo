@@ -1,3 +1,4 @@
+import { currentOwnerId } from "../../../adapters/http/session.ts";
 import type { APIRoute } from "astro";
 
 import { runtimeStore } from "../../../adapters/runtime.ts";
@@ -14,7 +15,7 @@ const responseHeaders = { "Cache-Control": "no-store" };
 export async function handleGetArchive(injectedStore?: Store): Promise<Response> {
   try {
     const store = injectedStore ?? await runtimeStore();
-    const owner = await store.getOnlyOwner();
+    const owner = await store.getOwner(currentOwnerId());
     // Before setup there is nothing to archive, and an empty page is truer than an error.
     if (owner === null) {
       return Response.json(

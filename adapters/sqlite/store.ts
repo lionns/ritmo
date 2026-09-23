@@ -1,3 +1,5 @@
+import type { AuthStore } from "../../core/ports/auth-store.ts";
+import type { Credential } from "../../core/model/entities.ts";
 import type { DatabaseSync, SQLInputValue } from "node:sqlite";
 
 import type {
@@ -96,11 +98,53 @@ export function closeRuntimeDatabase(): void {
   runtimeDatabase = undefined;
 }
 
-export class SqliteStore implements Store {
+export class SqliteStore implements Store, AuthStore {
   readonly #database: DatabaseSync;
 
   constructor(database: DatabaseSync) {
     this.#database = database;
+  }
+
+  async createCredential(c: Credential): Promise<void> {
+    this.#database.prepare(`INSERT INTO credentials
+      (id, owner_id, label, credential_id, public_key, sign_count, created_at, last_used_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)`).run(c.id, c.ownerId, c.label, c.credentialId, c.publicKey, c.signCount, c.createdAt, c.lastUsedAt);
+  }
+  async getCredential(credentialId: string): Promise<Credential | null> {
+    const row = this.#database.prepare(`SELECT id, owner_id AS ownerId, label,
+      credential_id AS credentialId, public_key AS publicKey, sign_count AS signCount,
+      created_at AS createdAt, last_used_at AS lastUsedAt FROM credentials WHERE credential_id = ?`).get(credentialId);
+    return row ? { ...row } as unknown as Credential : null;
+  }
+  async listCredentials(ownerId: string): Promise<Credential[]> {
+    const rows = this.#database.prepare(`SELECT id, owner_id AS ownerId, label,
+      credential_id AS credentialId, public_key AS publicKey, sign_count AS signCount,
+      created_at AS createdAt, last_used_at AS lastUsedAt FROM credentials WHERE owner_id = ? ORDER BY created_at, id`).all(ownerId);
+    return rows.map(row => ({ ...row }) as unknown as Credential);
+  }
+  async deleteCredential(id: string, ownerId: string): Promise<void> {
+    this.#database.prepare("DELETE FROM credentials WHERE id = ? AND owner_id = ?").run(id, ownerId);
+  }
+  async advanceCredential(id: string, previousCount: number, count: number, usedAt: string): Promise<boolean> {
+    const result = this.#database.prepare(`UPDATE credentials SET sign_count = ?, last_used_at = ?
+      WHERE id = ? AND sign_count = ?`).run(count, usedAt, id, previousCount);
+    return Number(result.changes) === 1;
+  }
+  async saveChallenge(id: string, ownerId: string, purpose: string, expiresAt: number): Promise<void> {
+    this.#database.prepare("DELETE FROM auth_challenges WHERE expires_at <= ?").run(expiresAt - 300000);
+    this.#database.prepare("INSERT INTO auth_challenges VALUES (?, ?, ?, ?)").run(id, ownerId, purpose, expiresAt);
+  }
+  async consumeChallenge(id: string, ownerId: string, purpose: string, now: number): Promise<boolean> {
+    const result = this.#database.prepare(`DELETE FROM auth_challenges
+      WHERE id = ? AND owner_id = ? AND purpose = ? AND expires_at > ?`).run(id, ownerId, purpose, now);
+    return Number(result.changes) === 1;
+  }
+  async allowAuthAttempt(ownerId: string, window: number): Promise<boolean> {
+    const row = this.#database.prepare(`INSERT INTO auth_attempts (owner_id, window, attempts) VALUES (?, ?, 1)
+      ON CONFLICT(owner_id) DO UPDATE SET window = excluded.window,
+      attempts = CASE WHEN auth_attempts.window = excluded.window THEN auth_attempts.attempts + 1 ELSE 1 END
+      RETURNING attempts`).get(ownerId, window);
+    return Number(row?.attempts) <= 10;
   }
 
   async createOwner(owner: Owner): Promise<void> {

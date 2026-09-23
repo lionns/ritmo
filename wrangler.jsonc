@@ -7,6 +7,6 @@
   "workers_dev": false,
   "preview_urls": false,
   "observability": { "enabled": true, "head_sampling_rate": 1 },
-  "secrets": { "required": ["RITMO_DATABASE_URL", "RITMO_DATABASE_TOKEN"] },
+  "secrets": { "required": ["RITMO_DATABASE_URL", "RITMO_DATABASE_TOKEN", "RITMO_SESSION_SECRET", "RITMO_PASSWORD_HASH", "RITMO_OWNER_ID", "RITMO_AUTH_ORIGIN"] },
   "vars": { "RITMO_STORE": "remote" }
 }

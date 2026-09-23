@@ -1,0 +1,11 @@
+---
+import AuthPanel from "../components/organisms/AuthPanel.astro";
+import AppShell from "../layouts/AppShell.astro";
+Astro.response.headers.set("Cache-Control", "no-store");
+---
+<AppShell title="Entrar · Ritmo" description="Acceso a tu registro privado." context="Entrar" pageScroll>
+  <main class="mx-auto w-full max-w-xl px-5 py-10">
+    <h1 class="mb-8 font-display text-5xl font-semibold text-ink">Tu espacio.</h1>
+    <AuthPanel />
+  </main>
+</AppShell>

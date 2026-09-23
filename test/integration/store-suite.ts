@@ -1,3 +1,9 @@
+import { vi } from "vitest";
+// Business/API suite supplies an authenticated identity; auth transport has its own real tests.
+vi.mock("../../adapters/http/session.ts", async importOriginal => ({
+  ...await importOriginal<typeof import("../../adapters/http/session.ts")>(),
+  currentOwnerId: () => "01K00000000000000000000001",
+}));
 import { copyFileSync, mkdirSync, mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -365,6 +371,7 @@ describe(`${driver.name} with the step rules`, () => {
       { name: "0004_entry_step.sql" },
       { name: "0005_drop_next_actions.sql" },
       { name: "0006_commitment_unit.sql" },
+      { name: "0007_auth_challenges.sql" },
     ]);
     expect(await database.prepare(
       "SELECT name FROM sqlite_master WHERE tbl_name = 'next_actions'",

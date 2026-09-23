@@ -9,7 +9,7 @@ let archive: ArchiveResponse | null = null;
 let loadError: string | null = null;
 try {
   const response = await fetch(new URL("/api/archive", Astro.url), {
-    headers: { Accept: "application/json" },
+    redirect: "manual", headers: { Accept: "application/json", Cookie: Astro.request.headers.get("cookie") ?? "" },
   });
   const body = await response.json() as ArchiveResponse | ArchiveErrorResponse;
   if (!response.ok || "error" in body) loadError = "No se pudo leer el archivo. Recarga para intentarlo otra vez.";

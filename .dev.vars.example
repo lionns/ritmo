@@ -1,2 +1,7 @@
 RITMO_DATABASE_URL=http://127.0.0.1:8098
 RITMO_DATABASE_TOKEN=
+# Required before starting an authenticated local Worker; do not commit real values.
+RITMO_AUTH_ORIGIN=http://localhost:4321
+RITMO_OWNER_ID=
+RITMO_SESSION_SECRET=
+RITMO_PASSWORD_HASH=

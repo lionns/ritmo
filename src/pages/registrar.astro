@@ -14,7 +14,7 @@ let portfolio: PortfolioResponse | null = null;
 let loadError: string | null = null;
 try {
   const response = await fetch(new URL("/api/portfolio", Astro.url), {
-    headers: { Accept: "application/json" },
+    redirect: "manual", headers: { Accept: "application/json", Cookie: Astro.request.headers.get("cookie") ?? "" },
   });
   const body = await response.json() as PortfolioResponse | PortfolioErrorResponse;
   if (!response.ok || "error" in body) loadError = "No se pudieron cargar los proyectos. Recarga para intentarlo otra vez.";

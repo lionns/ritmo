@@ -544,3 +544,14 @@ Also binding:
 - [ ] Re-render the canvas artboards with `faint-text` so artboards and tokens agree.
 - [ ] Measure `backdrop-filter` cost on a real phone against NFR-6 before the interface task closes.
 - [x] Fontshare licence recorded at `public/fonts/LICENSE-ITF-FFL.md`, beside the four faces (T-006).
+
+## The Sign-In Screen (T-039)
+
+`/entrar` contains “Tu espacio.”, a primary passkey action and a labelled password fallback.
+Use the existing glass panel, typography, visible focus and 58px touch targets. Errors stay in a
+live status region; submitting disables the controls until it completes. A cancelled or unsupported
+passkey keeps password entry available. No registration or account creation is offered publicly.
+After password sign-in, `/ajustes` lists named devices with revoke buttons and a name field to add
+another passkey. Explain that revocation ends that key's sessions, synced copies share revocation,
+sessions last 30 minutes, and recovery needs direct configuration/database access. Export copy
+explicitly includes public credentials and excludes the configuration-held password hash.

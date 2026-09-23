@@ -47,6 +47,9 @@ implements: [NFR-1, NFR-4]
       **against the deployed URL**, not only locally)
 - [ ] The owner saves a progress entry from their own phone, over the network, in under twenty
       seconds from opening the application — timed, not estimated (`NFR-1`)
+- [ ] **A passkey registered on the owner's phone, and a second one on another device without
+      touching the first** — moved here from `T-039`, which could not meet it: registration needs
+      a deployed HTTPS origin and a real authenticator, and the suites use synthetic credentials
 - [ ] `FR-21`'s export works against the deployed store and returns a file that opens
 - [ ] The rollback is written down and has been rehearsed, not just described
 - [ ] The local SQLite path still runs `npm run dev` and the whole suite unchanged

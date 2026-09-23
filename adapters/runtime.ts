@@ -1,3 +1,5 @@
+import type { AuthStore } from "../core/ports/auth-store.ts";
+import { readAuthConfig } from "./http/session.ts";
 import type { Store } from "../core/ports/store.ts";
 import { applyMigrations, connect, RemoteDatabase } from "./libsql/database.ts";
 import { LibsqlStore } from "./libsql/store.ts";
@@ -14,7 +16,7 @@ function storeKind() {
   return kind;
 }
 
-export async function runtimeStore(): Promise<Store> {
+export async function runtimeStore(): Promise<Store & AuthStore> {
   if (storeKind() === "sqlite") return (await import("./sqlite/store.ts")).runtimeStore();
   const { readdirSync, readFileSync } = await import("node:fs");
   const { resolve } = await import("node:path");
@@ -32,3 +34,5 @@ export async function exportDatabase() {
   if (storeKind() === "sqlite") return (await import("./sqlite/export.ts")).exportDatabase();
   return (await import("./libsql/export.ts")).exportDatabase(remoteConfig());
 }
+
+export function runtimeAuthConfig() { return readAuthConfig(process.env); }

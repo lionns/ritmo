@@ -1,3 +1,5 @@
+import type { AuthStore } from "../core/ports/auth-store.ts";
+import { readAuthConfig } from "./http/session.ts";
 import { env } from "cloudflare:workers";
 import type { Store } from "../core/ports/store.ts";
 import { applyMigrations, connect, RemoteDatabase } from "./libsql/database.ts";
@@ -14,7 +16,7 @@ function config() {
   return { url, authToken: typeof authToken === "string" ? authToken : undefined };
 }
 
-export async function runtimeStore(): Promise<Store> {
+export async function runtimeStore(): Promise<Store & AuthStore> {
   const client = connect(config());
   try {
     await applyMigrations(client, migrations);
@@ -23,3 +25,5 @@ export async function runtimeStore(): Promise<Store> {
 }
 
 export async function exportDatabase() { return exportRemote(config()); }
+
+export function runtimeAuthConfig() { return readAuthConfig(env); }

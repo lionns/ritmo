@@ -45,3 +45,5 @@
 2026-09-23 | T-038 | review | remote Store and complete SQLite export behind configuration; local adapter retained | 39 files | unit 67/67, integration 76/76, isolation, typecheck, dual builds, workerd API/export smoke | -
 2026-09-23 | T-038 | review | explicit missing-sqld skips; dependency rationale ready for Planner; review findings retained | 8 files | unit 67/67, integration 76/76 with sqld or 37 passed/39 skipped without, types, isolation, dual builds | -
 2026-09-23 | T-038 | done | a second store behind the port, and the export rebuilt for it | 34 files | unit 67/67, isolation, typecheck, dual build, integration 37 passed 39 skipped | D-036
+2026-09-23 | T-039 | review | passkeys and password, signed sessions and guards; real-phone check pending | 46 files | unit 67/67, integration 120/120, isolation, types, dual builds, Node/workerd HTTP matrix | D-004
+2026-09-23 | T-039 | done | the owner stops being whoever asks — D-004 built | 42 files | unit 67/67, isolation, typecheck, dual build, integration 120/120 | -

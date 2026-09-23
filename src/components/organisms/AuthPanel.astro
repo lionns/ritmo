@@ -1,0 +1,100 @@
+---
+interface Props { settings?: boolean }
+const { settings = false } = Astro.props;
+---
+<section class="glass-panel p-[22px] md:p-7 xl:col-span-2" data-auth-panel data-settings={String(settings)} aria-labelledby="auth-title">
+  <h2 id="auth-title" class="text-base font-semibold text-ink">{settings ? "Tus dispositivos" : "Tu acceso"}</h2>
+  {settings ? <>
+    <p class="mt-3 text-sm leading-normal text-dim">Cada llave de acceso tiene su propio nombre. Revocarla impide entrar con ella y cierra sus sesiones. Si la llave está sincronizada, se revoca en todos los dispositivos que la comparten.</p>
+    <ul data-devices class="mt-4 space-y-3" aria-label="Llaves de acceso"></ul>
+    <form data-register class="mt-5 space-y-3">
+      <label class="block text-sm text-ink" for="device-label">Nombre del dispositivo</label>
+      <input id="device-label" name="label" required maxlength="80" autocomplete="off" class="w-full rounded-xl border border-glass-border bg-transparent p-3 text-ink" placeholder="Mi teléfono" />
+      <button class="auth-button" type="submit">Añadir llave de acceso</button>
+    </form>
+    <button class="auth-button mt-3" data-logout type="button">Cerrar sesión</button>
+    <p class="mt-4 text-sm leading-normal text-dim">La sesión dura 30 minutos. Conserva tu contraseña de respaldo. Si pierdes ambas formas de acceso, la recuperación requiere acceso directo a la configuración y a la base de datos.</p>
+  </> : <>
+    <p class="mt-3 text-sm leading-normal text-dim">Entra con tu llave de acceso o con tu contraseña de respaldo. La primera llave se añade desde Ajustes después de entrar con contraseña.</p>
+    <button class="auth-button mt-5" data-signin type="button">Entrar con llave de acceso</button>
+    <form data-password class="mt-6 space-y-3">
+      <label for="password" class="block text-sm text-ink">Contraseña de respaldo</label>
+      <input type="password" name="password" id="password" required maxlength="256" autocomplete="current-password" class="w-full rounded-xl border border-glass-border bg-transparent p-3 text-ink" />
+      <button class="auth-button" type="submit">Entrar con contraseña</button>
+    </form>
+  </>}
+  <p data-auth-message role="status" aria-live="polite" class="mt-4 text-sm leading-normal text-dim"></p>
+</section>
+<style is:global>
+  [data-auth-panel] .auth-button { min-height: 58px; border: 1px solid var(--page-glass-border); border-radius: 29px; padding: 12px 24px; color: var(--page-ink); font-weight: 600; cursor: pointer; }
+  [data-auth-panel] .auth-button:focus-visible { outline: 2px solid var(--page-accent); outline-offset: 3px; }
+  [data-auth-panel] .auth-button:disabled { opacity: .5; cursor: wait; }
+</style>
+<script>
+  import type { DevicesResponse, PasskeyReply } from "../../../contracts/auth.ts";
+  const panel = document.querySelector<HTMLElement>("[data-auth-panel]");
+  if (panel) {
+    const message = panel.querySelector<HTMLElement>("[data-auth-message]")!;
+    const encode = (value: ArrayBuffer) => btoa(String.fromCharCode(...new Uint8Array(value))).replaceAll("+", "-").replaceAll("/", "_").replaceAll("=", "");
+    const decode = (value: string) => Uint8Array.from(atob(value.replaceAll("-", "+").replaceAll("_", "/")), c => c.charCodeAt(0));
+    async function api(path: string, body?: unknown, method = "POST") {
+      const response = await fetch(`/api/auth/${path}`, { method, headers: { "Content-Type": "application/json" },
+        ...(body === undefined ? {} : { body: JSON.stringify(body) }) });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error ?? "No se pudo completar el acceso.");
+      return result;
+    }
+    async function run(action: () => Promise<void>) {
+      message.textContent = "";
+      panel!.querySelectorAll("button").forEach(b => b.disabled = true);
+      try { await action(); }
+      catch (error) { message.textContent = error instanceof DOMException ? "No se completó la llave de acceso. Puedes volver a intentarlo o usar tu contraseña." : error instanceof Error ? error.message : "No se pudo completar el acceso."; }
+      finally { panel!.querySelectorAll("button").forEach(b => b.disabled = false); }
+    }
+    async function ceremony(register: boolean, label?: string) {
+      if (!window.PublicKeyCredential || !navigator.credentials) throw new Error("Este navegador no ofrece llaves de acceso. Usa la contraseña de respaldo.");
+      const kind = register ? "register" : "login";
+      const options = await api(`${kind}/begin`);
+      options.challenge = decode(options.challenge);
+      if (register) { options.user.id = decode(options.user.id); options.excludeCredentials = options.excludeCredentials.map((c: { id: string }) => ({ ...c, id: decode(c.id) })); }
+      else options.allowCredentials = options.allowCredentials.map((c: { id: string }) => ({ ...c, id: decode(c.id) }));
+      const credential = await (register ? navigator.credentials.create({ publicKey: options }) : navigator.credentials.get({ publicKey: options })) as PublicKeyCredential | null;
+      if (!credential) throw new Error("No se recibió una llave de acceso.");
+      const reply: PasskeyReply = { id: encode(credential.rawId), clientDataJSON: encode(credential.response.clientDataJSON), authenticatorData: "", ...(label ? { label } : {}) };
+      if (register) {
+        const response = credential.response as AuthenticatorAttestationResponse;
+        if (typeof response.getAuthenticatorData !== "function") throw new Error("Actualiza el navegador para añadir una llave; puedes entrar con contraseña.");
+        reply.authenticatorData = encode(response.getAuthenticatorData());
+      } else {
+        const response = credential.response as AuthenticatorAssertionResponse;
+        reply.authenticatorData = encode(response.authenticatorData); reply.signature = encode(response.signature);
+        reply.userHandle = response.userHandle ? encode(response.userHandle) : null;
+      }
+      await api(`${kind}/finish`, reply);
+      window.location.assign(register ? "/ajustes" : "/");
+    }
+    panel.querySelector("[data-signin]")?.addEventListener("click", () => void run(() => ceremony(false)));
+    panel.querySelector<HTMLFormElement>("[data-password]")?.addEventListener("submit", event => {
+      event.preventDefault(); const form = event.currentTarget as HTMLFormElement;
+      void run(async () => { const password = String(new FormData(form).get("password")); form.reset(); await api("password", { password }); window.location.assign("/"); });
+    });
+    panel.querySelector<HTMLFormElement>("[data-register]")?.addEventListener("submit", event => {
+      event.preventDefault(); const form = event.currentTarget as HTMLFormElement;
+      void run(() => ceremony(true, String(new FormData(form).get("label"))));
+    });
+    panel.querySelector("[data-logout]")?.addEventListener("click", () => void run(async () => { await api("logout"); window.location.assign("/entrar"); }));
+    if (panel.dataset.settings === "true") void run(async () => {
+      const { credentials } = await api("credentials", undefined, "GET") as DevicesResponse;
+      const list = panel.querySelector("[data-devices]")!;
+      for (const device of credentials) {
+        const item = document.createElement("li"); const name = document.createElement("span");
+        name.textContent = device.label; item.append(name);
+        const button = document.createElement("button"); button.type = "button"; button.className = "auth-button ml-3";
+        button.textContent = "Revocar"; button.setAttribute("aria-label", `Revocar ${device.label}`);
+        button.addEventListener("click", () => void run(async () => { await api("credentials", { id: device.id }, "DELETE"); window.location.reload(); }));
+        item.append(button); list.append(item);
+      }
+      if (!credentials.length) message.textContent = "Todavía no has añadido una llave de acceso.";
+    });
+  }
+</script>

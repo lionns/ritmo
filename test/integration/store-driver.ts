@@ -1,7 +1,8 @@
+import type { AuthStore } from "../../core/ports/auth-store.ts";
 import type { Store } from "../../core/ports/store.ts";
 
 export interface TestDatabase {
-  store: Store;
+  store: Store & AuthStore;
   prepare(sql: string): {
     run(...args: (string | number | null)[]): Promise<unknown>;
     get(...args: (string | number | null)[]): Promise<Record<string, unknown> | undefined>;

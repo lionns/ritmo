@@ -1,3 +1,4 @@
+import { currentOwnerId } from "../../../adapters/http/session.ts";
 import type { APIRoute } from "astro";
 
 import { runtimeStore } from "../../../adapters/runtime.ts";
@@ -29,7 +30,7 @@ export async function handlePostProject(request: Request, injectedStore?: Store)
   if (parsed instanceof Response) return parsed;
   try {
     const store = injectedStore ?? await runtimeStore();
-    const owner = await store.getOnlyOwner();
+    const owner = await store.getOwner(currentOwnerId());
     if (owner === null) return errorResponse("Complete setup before creating a project", 409);
     const result = await createProjectWithinCap(store, clock, new UlidGenerator(), {
       ownerId: owner.id,
@@ -69,7 +70,7 @@ export async function handlePatchProject(
   if (parsed instanceof Response) return parsed;
   try {
     const store = injectedStore ?? await runtimeStore();
-    const owner = await store.getOnlyOwner();
+    const owner = await store.getOwner(currentOwnerId());
     if (owner === null) return errorResponse("Complete setup first", 409);
     const result = parsed.state !== undefined
       ? await changeProjectState(store, injectedClock, owner.id, parsed.id, parsed.state)
