@@ -219,7 +219,11 @@ Never stored, always computed, so they cannot drift from the log.
   factor is actual ÷ estimate across the **last 20 done steps**, not the whole history. Bounded
   for two reasons: the 10 ms CPU ceiling of `D-001` applies to every render, and how you estimated
   two years ago says nothing about how you estimate now. Twenty is a starting value.
-- **Proposed target** — over the **last two closed weeks**: reserve untouched in both proposes
+- **Proposed target** — **in conflict as of 2026-09-22, do not implement either half yet.**
+  `D-030` §2 says the median of what was achieved over the last four closed weeks. The rule below
+  was confirmed by the owner on 2026-08-30 and `D-030` replaced it without citing it, because the
+  Planner wrote `D-030` without reading this section. The owner decides which stands (`D-029`).
+  Over the **last two closed weeks**: reserve untouched in both proposes
   `target + 1`; reserve exhausted in both proposes `target - 1`; anything else proposes the same
   target. Never below 1. *Chosen by the assistant, confirmed by the owner 2026-08-30.* A percentage
   band was rejected because it collapses on small integers: at `target = 3` the reserve is 1, so the

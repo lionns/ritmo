@@ -2,6 +2,8 @@ import type { DatabaseSync, SQLInputValue } from "node:sqlite";
 
 import type {
   Area,
+  Commitment,
+  Week,
   Entry,
   Owner,
   Project,
@@ -60,6 +62,27 @@ interface StepRow {
   done_at: string | null;
 }
 
+
+interface WeekRow {
+  id: string;
+  owner_id: string;
+  starts_on: string;
+  capacity_label: Week["capacityLabel"];
+  tag_id: string | null;
+  reflection: string | null;
+  closed_at: string | null;
+}
+
+interface CommitmentRow {
+  id: string;
+  owner_id: string;
+  project_id: string;
+  week_id: string;
+  target: number;
+  unit: Commitment["unit"];
+  proposed_target: number | null;
+  reserve: number;
+}
 
 let runtimeDatabase: DatabaseSync | undefined;
 
@@ -221,6 +244,83 @@ export class SqliteStore implements Store {
     return this.#database
       .prepare("SELECT 1 FROM weeks WHERE owner_id = ? AND closed_at IS NOT NULL LIMIT 1")
       .get(ownerId) !== undefined;
+  }
+
+  async openWeek(week: Week, closedAt: string): Promise<Week> {
+    // Keep the synchronous transaction free of await so calls sharing a connection cannot interleave.
+    this.#database.exec("BEGIN IMMEDIATE");
+    try {
+      this.#database.prepare(`UPDATE weeks SET closed_at = ?, capacity_label = NULL,
+        tag_id = NULL, reflection = NULL
+        WHERE owner_id = ? AND starts_on < ? AND closed_at IS NULL`)
+        .run(closedAt, week.ownerId, week.startsOn);
+      this.#database.prepare(`INSERT INTO weeks (id, owner_id, starts_on)
+        VALUES (?, ?, ?) ON CONFLICT(owner_id, starts_on) DO NOTHING`)
+        .run(week.id, week.ownerId, week.startsOn);
+      const row = this.#database.prepare("SELECT * FROM weeks WHERE owner_id = ? AND starts_on = ?")
+        .get(week.ownerId, week.startsOn) as unknown as WeekRow;
+      this.#database.exec("COMMIT");
+      return toWeek(row);
+    } catch (error) {
+      this.#database.exec("ROLLBACK");
+      throw error;
+    }
+  }
+
+  async getWeek(id: string, ownerId: string): Promise<Week | null> {
+    const row = this.#database.prepare("SELECT * FROM weeks WHERE id = ? AND owner_id = ?").get(id, ownerId);
+    return row === undefined ? null : toWeek(row as unknown as WeekRow);
+  }
+
+  async getWeekStartingOn(ownerId: string, startsOn: string): Promise<Week | null> {
+    const row = this.#database.prepare("SELECT * FROM weeks WHERE owner_id = ? AND starts_on = ?")
+      .get(ownerId, startsOn);
+    return row === undefined ? null : toWeek(row as unknown as WeekRow);
+  }
+
+  async closeWeek(week: Week): Promise<boolean> {
+    const result = this.#database.prepare(`UPDATE weeks
+      SET capacity_label = ?, tag_id = ?, reflection = ?, closed_at = ?
+      WHERE id = ? AND owner_id = ? AND closed_at IS NULL`)
+      .run(week.capacityLabel, week.tagId, week.reflection, week.closedAt, week.id, week.ownerId);
+    return result.changes === 1;
+  }
+
+  async listCommitments(weekId: string, ownerId: string): Promise<Commitment[]> {
+    const rows = this.#database.prepare(`SELECT * FROM commitments
+      WHERE week_id = ? AND owner_id = ? ORDER BY project_id`).all(weekId, ownerId);
+    return (rows as unknown as CommitmentRow[]).map(toCommitment);
+  }
+
+  async writeCommitment(commitment: Commitment): Promise<boolean> {
+    const result = this.#database.prepare(`INSERT INTO commitments
+      (id, owner_id, project_id, week_id, target, unit, proposed_target, reserve)
+      SELECT ?, ?, ?, ?, ?, ?, ?, ? FROM weeks
+      WHERE id = ? AND owner_id = ? AND closed_at IS NULL
+      ON CONFLICT(project_id, week_id) DO UPDATE SET target = excluded.target,
+        unit = excluded.unit, proposed_target = excluded.proposed_target, reserve = excluded.reserve`)
+      .run(commitment.id, commitment.ownerId, commitment.projectId, commitment.weekId,
+        commitment.target, commitment.unit, commitment.proposedTarget, commitment.reserve,
+        commitment.weekId, commitment.ownerId);
+    return result.changes === 1;
+  }
+
+  async spendReserve(entry: Entry, weekId: string): Promise<boolean> {
+    const result = this.#database.prepare(`INSERT INTO entries
+      (id, owner_id, kind, project_id, credits_objective_id, occurred_at, what, effort_minutes, note, step_id)
+      SELECT ?, ?, 'reserve_spend', ?, NULL, ?, ?, NULL, ?, NULL FROM commitments c
+      JOIN weeks w ON w.id = c.week_id AND w.owner_id = c.owner_id
+      WHERE c.week_id = ? AND c.owner_id = ? AND c.project_id = ? AND w.closed_at IS NULL`)
+      .run(entry.id, entry.ownerId, entry.projectId, entry.occurredAt, entry.what, entry.note,
+        weekId, entry.ownerId, entry.projectId);
+    return result.changes === 1;
+  }
+
+  async readWeekEntries(ownerId: string, startsAt: string, endsAt: string): Promise<Entry[]> {
+    const rows = this.#database.prepare(`SELECT * FROM entries
+      WHERE owner_id = ? AND occurred_at >= ? AND occurred_at < ? ORDER BY occurred_at, id`)
+      .all(ownerId, startsAt, endsAt);
+    return (rows as unknown as EntryRow[]).map(toEntry);
   }
 
   async createStep(step: Step): Promise<void> {
@@ -498,4 +598,14 @@ function toEntry(row: EntryRow): Entry {
     note: row.note,
     stepId: row.step_id,
   };
+}
+
+function toWeek(row: WeekRow): Week {
+  return { id: row.id, ownerId: row.owner_id, startsOn: row.starts_on,
+    capacityLabel: row.capacity_label, tagId: row.tag_id, reflection: row.reflection, closedAt: row.closed_at };
+}
+
+function toCommitment(row: CommitmentRow): Commitment {
+  return { id: row.id, ownerId: row.owner_id, projectId: row.project_id, weekId: row.week_id,
+    target: row.target, unit: row.unit, proposedTarget: row.proposed_target, reserve: row.reserve };
 }

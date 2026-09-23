@@ -165,6 +165,14 @@ const step: Step = {
 };
 
 class MemoryStore implements Store {
+  async openWeek(): Promise<never> { throw new Error("Not used in this suite"); }
+  async getWeek(): Promise<never> { throw new Error("Not used in this suite"); }
+  async getWeekStartingOn(): Promise<never> { throw new Error("Not used in this suite"); }
+  async closeWeek(): Promise<never> { throw new Error("Not used in this suite"); }
+  async listCommitments(): Promise<never> { throw new Error("Not used in this suite"); }
+  async writeCommitment(): Promise<never> { throw new Error("Not used in this suite"); }
+  async spendReserve(): Promise<never> { throw new Error("Not used in this suite"); }
+  async readWeekEntries(): Promise<never> { throw new Error("Not used in this suite"); }
   readonly projects = new Map<string, Project>();
   readonly steps = new Map<string, Step>();
   readonly entries = new Map<string, Entry>();

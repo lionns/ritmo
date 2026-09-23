@@ -1,4 +1,4 @@
-import type { Area, Entry, Owner, Project, Step } from "../model/entities.ts";
+import type { Area, Commitment, Entry, Owner, Project, Step, Week } from "../model/entities.ts";
 
 /**
  * A project's open steps, with the entries logged since the oldest of them was written — which is
@@ -34,6 +34,18 @@ export interface Store {
   setProjectState(id: string, ownerId: string, state: Project["state"]): Promise<void>;
   setProjectFinishedAt(id: string, ownerId: string, finishedAt: string | null): Promise<boolean>;
   hasClosedWeek(ownerId: string): Promise<boolean>;
+  /** Atomically close older open weeks and insert this empty week, or return its existing row. */
+  openWeek(week: Week, closedAt: string): Promise<Week>;
+  getWeek(id: string, ownerId: string): Promise<Week | null>;
+  getWeekStartingOn(ownerId: string, startsOn: string): Promise<Week | null>;
+  /** Compare-and-set: a closed week is immutable. */
+  closeWeek(week: Week): Promise<boolean>;
+  listCommitments(weekId: string, ownerId: string): Promise<Commitment[]>;
+  /** Insert or edit the project's commitment only while its week is open. */
+  writeCommitment(commitment: Commitment): Promise<boolean>;
+  /** Insert the event only if the commitment's week is still open. */
+  spendReserve(entry: Entry, weekId: string): Promise<boolean>;
+  readWeekEntries(ownerId: string, startsAt: string, endsAt: string): Promise<Entry[]>;
   createStep(step: Step): Promise<void>;
   getStep(id: string): Promise<Step | null>;
   listOpenSteps(projectId: string): Promise<Step[]>;

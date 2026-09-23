@@ -53,7 +53,7 @@ describe("downloading the complete SQLite database", () => {
       INSERT INTO tags VALUES ('t', 'o', 'Travel');
       INSERT INTO projects VALUES ('p', 'o', 'a', 'obj', 'Project', 'active', NULL, NULL, NULL);
       INSERT INTO weeks VALUES ('w', 'o', '2026-09-21', 'normal', 't', NULL, NULL);
-      INSERT INTO commitments VALUES ('cm', 'o', 'p', 'w', 2, NULL, 1);
+      INSERT INTO commitments VALUES ('cm', 'o', 'p', 'w', 2, NULL, 1, 'times');
       INSERT INTO steps VALUES ('s', 'o', 'p', 'Paso', 20, NULL, '2026-09-22', NULL);
       INSERT INTO entries VALUES ('e', 'o', 'progress', 'p', 'obj', '2026-09-22', 'Avancé', 20, NULL, 's');
     `);

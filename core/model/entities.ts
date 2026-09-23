@@ -62,6 +62,7 @@ export interface Commitment {
   projectId: string;
   weekId: string;
   target: number;
+  unit: "times" | "minutes";
   proposedTarget: number | null;
   reserve: number;
 }

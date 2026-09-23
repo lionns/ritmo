@@ -8,6 +8,8 @@ import { LOCAL_OWNER_ID } from "../../adapters/local-owner.ts";
 import { applyMigrations, openDatabase } from "../../adapters/sqlite/database.ts";
 import { closeRuntimeDatabase, SqliteStore } from "../../adapters/sqlite/store.ts";
 import type { Area, Entry, Owner, Project, Step } from "../../core/model/entities.ts";
+import { openWeek, closeWeek, readWeekEntries } from "../../core/rules/week.ts";
+import { writeCommitment, spendReserve } from "../../core/rules/commitment.ts";
 import { calendarDateOf } from "../../core/rules/step.ts";
 import type {
   CreateAreaResponse,
@@ -359,6 +361,7 @@ describe("SqliteStore with the step rules", () => {
       { name: "0003_project_finished_at.sql" },
       { name: "0004_entry_step.sql" },
       { name: "0005_drop_next_actions.sql" },
+      { name: "0006_commitment_unit.sql" },
     ]);
     expect(database.prepare(
       "SELECT name FROM sqlite_master WHERE tbl_name = 'next_actions'",
@@ -976,6 +979,7 @@ describe("the 0002 carry-across, against a database written before it", () => {
   let upgradeDirectory: string;
   let legacyMigrations: string;
   let beforeDropMigrations: string;
+  let beforeUnitMigrations: string;
 
   beforeAll(() => {
     upgradeDirectory = mkdtempSync(join(tmpdir(), "ritmo-upgrade-"));
@@ -985,6 +989,12 @@ describe("the 0002 carry-across, against a database written before it", () => {
       join(process.cwd(), "migrations", "0001_initial_schema.sql"),
       join(legacyMigrations, "0001_initial_schema.sql"),
     );
+    beforeUnitMigrations = join(upgradeDirectory, "before-unit");
+    mkdirSync(beforeUnitMigrations);
+    for (const name of ["0001_initial_schema.sql", "0002_steps.sql", "0003_project_finished_at.sql",
+      "0004_entry_step.sql", "0005_drop_next_actions.sql"]) {
+      copyFileSync(join(process.cwd(), "migrations", name), join(beforeUnitMigrations, name));
+    }
     beforeDropMigrations = join(upgradeDirectory, "before-drop");
     mkdirSync(beforeDropMigrations);
     for (const name of ["0001_initial_schema.sql", "0002_steps.sql",
@@ -1065,7 +1075,7 @@ describe("the 0002 carry-across, against a database written before it", () => {
     const before = rows();
     const tagSchema = legacy.prepare("SELECT * FROM sqlite_master WHERE tbl_name = 'tags'").all();
 
-    applyMigrations(legacy);
+    applyMigrations(legacy, beforeUnitMigrations);
     expect(rows()).toEqual(before);
     expect(legacy.prepare("SELECT * FROM sqlite_master WHERE tbl_name = 'tags'").all())
       .toEqual(tagSchema);
@@ -1076,10 +1086,14 @@ describe("the 0002 carry-across, against a database written before it", () => {
     expect(ledger.filter((row) => row.name === "0005_drop_next_actions.sql")).toHaveLength(1);
 
     // A second apply changes neither rows nor migration timestamps.
-    applyMigrations(legacy);
+    applyMigrations(legacy, beforeUnitMigrations);
     expect(rows()).toEqual(before);
     expect(legacy.prepare("SELECT * FROM _ritmo_migrations ORDER BY name").all()).toEqual(ledger);
 
+    // T-033 cannot infer the unit of this synthetic legacy commitment. Failure is atomic.
+    expect(() => applyMigrations(legacy)).toThrow(/NOT NULL/);
+    expect(rows()).toEqual(before);
+    expect(legacy.prepare("SELECT * FROM _ritmo_migrations ORDER BY name").all()).toEqual(ledger);
     legacy.close();
   });
 
@@ -1119,3 +1133,120 @@ const project: Project = {
   deadlineSource: null,
   finishedAt: null,
 };
+
+describe("weeks and commitments in real SQLite", () => {
+  let directory: string;
+  let db: DatabaseSync;
+  let weeks: SqliteStore;
+  let sequence: number;
+  let moment: Date;
+  const clock = { now: () => new Date(moment.getTime()) };
+  const ids = { next: () => `week-test-${++sequence}` };
+  beforeEach(async () => {
+    directory = mkdtempSync(join(tmpdir(), "ritmo-weeks-"));
+    db = openDatabase(join(directory, "test.sqlite"));
+    weeks = new SqliteStore(db);
+    sequence = 0;
+    moment = new Date(2026, 8, 23, 12);
+    await weeks.createOwner(owner);
+    await weeks.createArea(area);
+    await weeks.createProject(project);
+  });
+  afterEach(() => { db.close(); rmSync(directory, { recursive: true }); });
+  const fields = (weekId: string) => ({ ownerId: owner.id, projectId: project.id, weekId,
+    target: 10, unit: "times" as const, proposedTarget: null });
+
+  it("persists a commitment, edits in place, and reads reserve events without changing the reserve", async () => {
+    const week = await openWeek(weeks, clock, ids, owner.id);
+    const original = await writeCommitment(weeks, clock, ids, fields(week.id));
+    const edited = await writeCommitment(weeks, clock, ids, { ...fields(week.id), target: 11, unit: "minutes", proposedTarget: 9 });
+    expect(edited).toEqual({ ...original, target: 11, reserve: 4, unit: "minutes", proposedTarget: 9 });
+    const event = await spendReserve(weeks, clock, ids, { ...fields(week.id), what: "Usé la reserva", note: "Una pausa" });
+    expect(await readWeekEntries(weeks, week)).toEqual([event]);
+    expect(await weeks.listCommitments(week.id, owner.id)).toEqual([edited]);
+    db.close();
+    db = openDatabase(join(directory, "test.sqlite"));
+    weeks = new SqliteStore(db);
+    expect(await weeks.listCommitments(week.id, owner.id)).toEqual([edited]);
+    expect(await readWeekEntries(weeks, week)).toEqual([event]);
+  });
+
+  it("closes missing work and opens an empty next week; concurrent opens preserve the first close", async () => {
+    const old = await openWeek(weeks, clock, ids, owner.id);
+    await writeCommitment(weeks, clock, ids, fields(old.id));
+    moment = new Date(2026, 8, 28, 0, 30);
+    const connection = openDatabase(join(directory, "test.sqlite"));
+    try {
+      const [a, b] = await Promise.all([
+        openWeek(weeks, clock, ids, owner.id), openWeek(new SqliteStore(connection), clock, ids, owner.id),
+      ]);
+      expect(a).toEqual(b);
+      expect(await weeks.listCommitments(a.id, owner.id)).toEqual([]);
+      const closed = await weeks.getWeek(old.id, owner.id);
+      expect(closed).toEqual({ ...old, closedAt: moment.toISOString() });
+      moment = new Date(2026, 8, 29, 12);
+      await openWeek(weeks, clock, ids, owner.id);
+      expect(await weeks.getWeek(old.id, owner.id)).toEqual(closed);
+      expect(await weeks.hasClosedWeek(owner.id)).toBe(true);
+      expect(db.prepare("SELECT COUNT(*) AS n FROM weeks").get()).toEqual({ n: 2 });
+    } finally { connection.close(); }
+  });
+
+  it("rolls back both rollover writes if the new week cannot be inserted", async () => {
+    const old = await openWeek(weeks, clock, ids, owner.id);
+    moment = new Date(2026, 8, 28, 12);
+    await expect(openWeek(weeks, clock, { next: () => old.id }, owner.id)).rejects.toThrow();
+    expect(await weeks.getWeek(old.id, owner.id)).toEqual(old);
+    expect(await weeks.getWeekStartingOn(owner.id, "2026-09-28")).toBeNull();
+  });
+
+  it("freezes a close against later writes, and enforces ownership of weeks, projects and tags", async () => {
+    const week = await openWeek(weeks, clock, ids, owner.id);
+    const c = await writeCommitment(weeks, clock, ids, fields(week.id));
+    await weeks.createOwner({ ...owner, id: "other" });
+    db.prepare("INSERT INTO tags (id, owner_id, label) VALUES ('foreign', 'other', 'Travel')").run();
+    const input = { ownerId: owner.id, weekId: week.id, capacityLabel: "heavy" as const, tagId: null, reflection: "Fue suficiente" };
+    await expect(closeWeek(weeks, clock, { ...input, tagId: "foreign" })).rejects.toThrow();
+    expect((await weeks.getWeek(week.id, owner.id))?.closedAt).toBeNull();
+    await expect(writeCommitment(weeks, clock, ids, { ...fields(week.id), ownerId: "other" })).rejects.toThrow();
+    const otherWeek = await openWeek(weeks, clock, ids, "other");
+    await expect(writeCommitment(weeks, clock, ids, { ...fields(otherWeek.id), ownerId: "other" })).rejects.toThrow();
+    expect(await weeks.getWeek(week.id, "other")).toBeNull();
+    expect(await weeks.listCommitments(week.id, "other")).toEqual([]);
+    const closed = await closeWeek(weeks, clock, input);
+    expect(closed.capacityLabel).toBe("heavy");
+    expect(await weeks.writeCommitment({ ...c, target: 100 })).toBe(false);
+    expect(await weeks.spendReserve({ id: "late-event", ownerId: owner.id, projectId: project.id,
+      kind: "reserve_spend", occurredAt: moment.toISOString(), what: "Reserva", note: null,
+      effortMinutes: null, creditsObjectiveId: null, stepId: null }, week.id)).toBe(false);
+    expect(await closeWeek(weeks, clock, { ...input, capacityLabel: "light" })).toEqual(closed);
+    expect(await weeks.listCommitments(week.id, owner.id)).toEqual([c]);
+    await expect(spendReserve(weeks, clock, ids, { ...fields(week.id), what: "Reserva", note: null })).rejects.toThrow();
+  });
+
+  it("attributes entries at local midnight to the new week, including a Monday 00:30 entry", async () => {
+    const old = await openWeek(weeks, clock, ids, owner.id);
+    for (const [id, date] of [["sunday", new Date(2026, 8, 27, 23, 59)], ["monday", new Date(2026, 8, 28, 0, 0)], ["written-later", new Date(2026, 8, 28, 0, 30)]] as const) {
+      await weeks.createEntry({ id, ownerId: owner.id, projectId: project.id, kind: "progress",
+        occurredAt: date.toISOString(), what: "Avancé", effortMinutes: null, note: null,
+        creditsObjectiveId: null, stepId: null });
+    }
+    moment = new Date(2026, 8, 28, 1);
+    const next = await openWeek(weeks, clock, ids, owner.id);
+    expect((await readWeekEntries(weeks, old)).map(e => e.id)).toEqual(["sunday"]);
+    expect((await readWeekEntries(weeks, next)).map(e => e.id)).toEqual(["monday", "written-later"]);
+  });
+
+  it("exposes the existing project-rotation gap after a real week closes", async () => {
+    const week = await openWeek(weeks, clock, ids, owner.id);
+    await closeWeek(weeks, clock, { ownerId: owner.id, weekId: week.id, capacityLabel: null, tagId: null, reflection: null });
+    const app = testApplication(weeks);
+    expect((await app(new Request("http://example.test/api/portfolio"))).status).toBe(200);
+    expect((await app(new Request(`http://example.test/api/project/${project.id}`))).status).toBe(200);
+    const response = await app(new Request("http://example.test/api/projects", {
+      method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: project.id, state: "shelved" }),
+    }));
+    expect(response.status).toBe(422);
+    expect(await response.text()).toContain("week boundary");
+  });
+});

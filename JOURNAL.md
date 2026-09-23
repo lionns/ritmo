@@ -38,3 +38,5 @@
 2026-09-22 | T-037 | done | the owner holds a complete copy of their own record, one click away | 8 files | unit 55/55, isolation, typecheck, build, integration 30/30 | D-029
 2026-09-22 | T-032 | done | the week's boundary, its proposal, and the one it never closes | 10 files | no code; harness lint clean, gates unchanged | D-030
 2026-09-22 | T-036 | done | hosting returns to Workers, the data goes to Turso, and four foundations move | 14 files | no code; harness lint clean, gates unchanged | D-031, D-032, D-033, D-034
+2026-09-22 | T-033 | review | week rules, atomic rollover, commitments with units and reserve events; migration rehearsed then applied | 16 files | unit 63/63, integration 36/36, isolation, typecheck, build; browser check pending | -
+2026-09-22 | T-033 | done | the week in the model: local Mondays, reserves as events, and no debt | 16 files | unit 63/63, isolation, typecheck, build, integration 36/36 | -
