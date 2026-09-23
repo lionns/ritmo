@@ -112,20 +112,20 @@ Reviewer: Claude Code, on work it did not write. Returned once under `D-029` §1
 answered.
 
 - **Returned · resolved** · The integration gate was red from a clean checkout — 39 failed of 76
-  without `sqld`, so the whole remote adapter and the rebuilt export were unverifiable off the
-  implementer's machine. It now passes at 37 passed / 39 skipped, exit 0, printing exactly which
-  coverage is missing. Re-verified: an explicitly configured but missing `RITMO_SQLD_BINARY` still
-  exits 1, so the skip cannot be used as an escape hatch.
+  without `sqld`. It now exits 0 at 37 passed / 39 skipped, printing which coverage is missing,
+  and a configured-but-missing `RITMO_SQLD_BINARY` still exits 1, so the skip is no escape hatch.
 - **Returned · resolved** · `D-022` was breached with no decision recording it. The implementer
   wrote the rationale into `docs/development.md` and explicitly did not self-approve. `D-036`
   supersedes it: seven runtime, six dev.
 - Medium · `docs/development.md` § Export · **`FR-21` has a 16 MiB ceiling now.** The remote export
   rebuilds a SQLite image in memory and fails explicitly above it — honest, but the one thing
   behind `NFR-4` now has a size at which it stops. 176 KB today; recorded in `D-036`, not a task.
-- **Open · the remote half is verified by the implementer alone.** `sqld` is absent here, so the
-  39 remote cases — the libSQL Store, its migrations and the export `FR-21` depends on — I have
-  not run. Closing on the local gate, the dual build, the bundle measurement and the
-  returned-finding checks. The weakest part of this review, on the store about to hold the data.
+- **Closed 2026-09-23 · the remote half is no longer attested by the implementer alone.** `sqld`
+  0.24.32 installed from the official release, published SHA-256 matched, gate run in full:
+  **76/76**. Beyond their suite, an end-to-end probe — the real app on the remote store, real data
+  written through the real API, then `/api/export` downloaded and opened: 11 tables, integrity ok,
+  foreign keys clean, all six migrations in the ledger. Repeated on **workerd**, the runtime that
+  deploys.
 - Note · `@libsql/client/web` over the still-experimental `@tursodatabase/serverless`, checked
   against live sources; `@astrojs/cloudflare` 14.3.3 tested and rejected against the Astro pin,
   with the reason recorded. Both are what `D-032` asked for.

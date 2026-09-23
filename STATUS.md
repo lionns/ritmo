@@ -10,8 +10,8 @@ Harness `0.9.0` · profile `team`
 |---|---|---|
 | [T-034](docs/tasks/T-034-the-week-through-the-contract.md) | `ready` | Put the week behind contracts and API routes, including the one piece the model deliberately |
 | [T-035](docs/tasks/T-035-the-week-screen.md) | `ready` | Build the one screen the week has been missing since the product began — the close, the |
-| [T-039](docs/tasks/T-039-d004-built-at-last.md) | `ready` | Build `D-004` as specified — a passkey per device, a password fallback, a stateless signed |
 | [T-040](docs/tasks/T-040-deploy-and-carry-the-data-across.md) | `ready` | Put Ritmo where the owner can reach it from a phone, move weeks of real use onto the new |
+| [T-039](docs/tasks/T-039-d004-built-at-last.md) | `doing` | Build `D-004` as specified — a passkey per device, a password fallback, a stateless signed |
 | [T-038](docs/tasks/T-038-the-second-store-behind-the-port.md) | `review` | Build the store T-036 chose as a second adapter behind the existing port, so the core and |
 | [T-001](docs/tasks/T-001-skeleton-and-next-action.md) | `done` | Stand up the three-layer tree with every quality-gate command real and green, and prove it by |
 | [T-003](docs/tasks/T-003-loose-ends.md) | `done` | Close the six low-severity findings the T-001 review left open, so the schema states the |
@@ -50,7 +50,7 @@ Harness `0.9.0` · profile `team`
 
 ## Next
 
-**T-038** (`review`) — Build the store T-036 chose as a second adapter behind the existing port, so the core and
+**T-039** (`doing`) — Build `D-004` as specified — a passkey per device, a password fallback, a stateless signed
 
 ## Open decisions
 
