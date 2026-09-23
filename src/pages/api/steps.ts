@@ -1,6 +1,6 @@
 import type { APIRoute } from "astro";
 
-import { runtimeStore } from "../../../adapters/sqlite/store.ts";
+import { runtimeStore } from "../../../adapters/runtime.ts";
 import { UlidGenerator } from "../../../adapters/ulid.ts";
 import type { Clock } from "../../../core/ports/clock.ts";
 import type { Store } from "../../../core/ports/store.ts";
@@ -26,7 +26,7 @@ export async function handlePostStep(request: Request, injectedStore?: Store): P
   const parsed = await parseWriteRequest(request);
   if (parsed instanceof Response) return parsed;
   try {
-    const store = injectedStore ?? runtimeStore();
+    const store = injectedStore ?? await runtimeStore();
     const owner = await store.getOnlyOwner();
     if (owner === null) return errorResponse("Complete setup before writing a step", 409);
     const step = await writeStep(store, clock, new UlidGenerator(), {
@@ -45,7 +45,7 @@ export async function handlePatchStep(request: Request, injectedStore?: Store): 
   const parsed = await parseUpdateRequest(request);
   if (parsed instanceof Response) return parsed;
   try {
-    const store = injectedStore ?? runtimeStore();
+    const store = injectedStore ?? await runtimeStore();
     const owner = await store.getOnlyOwner();
     if (owner === null) return errorResponse("Complete setup before marking a step", 409);
 

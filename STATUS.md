@@ -10,9 +10,9 @@ Harness `0.9.0` · profile `team`
 |---|---|---|
 | [T-034](docs/tasks/T-034-the-week-through-the-contract.md) | `ready` | Put the week behind contracts and API routes, including the one piece the model deliberately |
 | [T-035](docs/tasks/T-035-the-week-screen.md) | `ready` | Build the one screen the week has been missing since the product began — the close, the |
-| [T-038](docs/tasks/T-038-the-second-store-behind-the-port.md) | `ready` | Build the store T-036 chose as a second adapter behind the existing port, so the core and |
 | [T-039](docs/tasks/T-039-d004-built-at-last.md) | `ready` | Build `D-004` as specified — a passkey per device, a password fallback, a stateless signed |
 | [T-040](docs/tasks/T-040-deploy-and-carry-the-data-across.md) | `ready` | Put Ritmo where the owner can reach it from a phone, move weeks of real use onto the new |
+| [T-038](docs/tasks/T-038-the-second-store-behind-the-port.md) | `review` | Build the store T-036 chose as a second adapter behind the existing port, so the core and |
 | [T-001](docs/tasks/T-001-skeleton-and-next-action.md) | `done` | Stand up the three-layer tree with every quality-gate command real and green, and prove it by |
 | [T-003](docs/tasks/T-003-loose-ends.md) | `done` | Close the six low-severity findings the T-001 review left open, so the schema states the |
 | [T-005](docs/tasks/T-005-first-loop-back.md) | `done` | Give the front two endpoints and the contracts behind them, so a real portfolio can be read |
@@ -50,7 +50,7 @@ Harness `0.9.0` · profile `team`
 
 ## Next
 
-**T-034** (`ready`) — Put the week behind contracts and API routes, including the one piece the model deliberately
+**T-038** (`review`) — Build the store T-036 chose as a second adapter behind the existing port, so the core and
 
 ## Open decisions
 
@@ -58,10 +58,10 @@ None. All decisions are accepted or superseded.
 
 ## Journal — last 5
 
+- 2026-09-23 | T-038 | done | a second store behind the port, and the export rebuilt for it | 34 files | unit 67/67, isolation, typecheck, dual build, integration 37 passed 39 skipped | D-036
+- 2026-09-23 | T-038 | review | explicit missing-sqld skips; dependency rationale ready for Planner; review findings retained | 8 files | unit 67/67, integration 76/76 with sqld or 37 passed/39 skipped without, types, isolation, dual builds | -
+- 2026-09-23 | T-038 | review | remote Store and complete SQLite export behind configuration; local adapter retained | 39 files | unit 67/67, integration 76/76, isolation, typecheck, dual builds, workerd API/export smoke | -
 - 2026-09-22 | T-041 | done | FR-14's Monday stops being a promise the rule breaks | 9 files | unit 67/67, isolation, typecheck, build, integration 36/36 | -
 - 2026-09-22 | T-041 | review | local Monday permits project rotation after a closed week; other days retain the refusal | 9 files | unit 67/67 in two timezones, integration 36/36, isolation, typecheck, build; API 200 Monday/422 Wednesday | -
-- 2026-09-22 | T-033 | done | the week in the model: local Mondays, reserves as events, and no debt | 16 files | unit 63/63, isolation, typecheck, build, integration 36/36 | -
-- 2026-09-22 | T-033 | review | week rules, atomic rollover, commitments with units and reserve events; migration rehearsed then applied | 16 files | unit 63/63, integration 36/36, isolation, typecheck, build; browser check pending | -
-- 2026-09-22 | T-036 | done | hosting returns to Workers, the data goes to Turso, and four foundations move | 14 files | no code; harness lint clean, gates unchanged | D-031, D-032, D-033, D-034
 
 Full history: [`JOURNAL.md`](JOURNAL.md) · decisions: [`docs/decisions/`](docs/decisions/README.md)

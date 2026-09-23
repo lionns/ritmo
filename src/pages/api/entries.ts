@@ -1,6 +1,6 @@
 import type { APIRoute } from "astro";
 
-import { runtimeStore } from "../../../adapters/sqlite/store.ts";
+import { runtimeStore } from "../../../adapters/runtime.ts";
 import { UlidGenerator } from "../../../adapters/ulid.ts";
 import type { Clock } from "../../../core/ports/clock.ts";
 import type { Store } from "../../../core/ports/store.ts";
@@ -18,7 +18,7 @@ export async function handlePostEntry(request: Request, injectedStore?: Store): 
   if (parsed instanceof Response) return parsed;
 
   try {
-    const store = injectedStore ?? runtimeStore();
+    const store = injectedStore ?? await runtimeStore();
     const owner = await store.getOnlyOwner();
     if (owner === null) {
       return errorResponse("Complete setup before recording progress", 409);

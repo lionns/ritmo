@@ -1,6 +1,6 @@
 import type { APIRoute } from "astro";
 
-import { runtimeStore } from "../../../adapters/sqlite/store.ts";
+import { runtimeStore } from "../../../adapters/runtime.ts";
 import { UlidGenerator } from "../../../adapters/ulid.ts";
 import type { Store } from "../../../core/ports/store.ts";
 import type {
@@ -16,7 +16,7 @@ export async function handlePostArea(request: Request, injectedStore?: Store): P
   if (parsed instanceof Response) return parsed;
 
   try {
-    const store = injectedStore ?? runtimeStore();
+    const store = injectedStore ?? await runtimeStore();
     const owner = await store.getOnlyOwner();
     if (owner === null) return errorResponse("Complete setup before creating an area", 409);
     const area = {

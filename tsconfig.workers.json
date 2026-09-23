@@ -1,0 +1,11 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": { "lib": ["ES2022"], "types": [] },
+  "include": [
+    "worker-configuration.d.ts",
+    "adapters/modules.d.ts",
+    "adapters/runtime.workers.ts",
+    "adapters/libsql/wasm.workers.ts"
+  ],
+  "exclude": []
+}

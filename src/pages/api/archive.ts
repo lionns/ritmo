@@ -1,6 +1,6 @@
 import type { APIRoute } from "astro";
 
-import { runtimeStore } from "../../../adapters/sqlite/store.ts";
+import { runtimeStore } from "../../../adapters/runtime.ts";
 import type { Store } from "../../../core/ports/store.ts";
 import { readArchive, type ArchivedProject } from "../../../core/rules/archive.ts";
 import type {
@@ -13,7 +13,7 @@ const responseHeaders = { "Cache-Control": "no-store" };
 
 export async function handleGetArchive(injectedStore?: Store): Promise<Response> {
   try {
-    const store = injectedStore ?? runtimeStore();
+    const store = injectedStore ?? await runtimeStore();
     const owner = await store.getOnlyOwner();
     // Before setup there is nothing to archive, and an empty page is truer than an error.
     if (owner === null) {

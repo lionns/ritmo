@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import type { APIRoute } from "astro";
 
-import { exportDatabase } from "../../../adapters/sqlite/export.ts";
+import { exportDatabase } from "../../../adapters/runtime.ts";
 
 export async function handleGetExport(): Promise<Response> {
   try {

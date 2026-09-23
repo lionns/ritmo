@@ -26,7 +26,7 @@ rather than editing. Template in `../sdd/TEMPLATES.md`.
 | [D-019](D-019-data-local-sqlite.md) | 2026-09-02 | SQLite in the process, and the durability that comes back with it | `superseded` | D-002 |
 | [D-020](D-020-deploy-local-on-demand.md) | 2026-09-02 | No deploy: the owner starts it to use it | `superseded` | D-005 |
 | [D-021](D-021-interface-astro-node-adapter.md) | 2026-09-02 | The same Astro, on the Node adapter | `superseded` | D-008 |
-| [D-022](D-022-tests-four-dev-dependencies.md) | 2026-09-02 | Four dev dependencies after the platform test harness leaves | `accepted` | D-014 |
+| [D-022](D-022-tests-four-dev-dependencies.md) | 2026-09-02 | Four dev dependencies after the platform test harness leaves | `superseded` | D-014 |
 | [D-023](D-023-boundary-check-drops-the-vendor-clause.md) | 2026-09-02 | The boundary check stops naming a vendor the project left | `accepted` | none |
 | [D-024](D-024-steps-and-the-day-list.md) | 2026-09-21 | Steps and a day list replace the if–then trigger | `accepted` | none |
 | [D-025](D-025-finishing-a-project.md) | 2026-09-21 | Finishing a project, as a timestamp rather than a state | `accepted` | none |
@@ -40,3 +40,4 @@ rather than editing. Template in `../sdd/TEMPLATES.md`.
 | [D-033](D-033-runtime-workers.md) | 2026-09-22 | The runtime is the Workers runtime | `accepted` | D-018 |
 | [D-034](D-034-interface-astro-cloudflare-adapter.md) | 2026-09-22 | Astro keeps the interface, on the Cloudflare adapter | `accepted` | D-021 |
 | [D-035](D-035-the-proposal-reads-the-reserve.md) | 2026-09-22 | The proposal reads the reserve, not the median | `accepted` | D-030 (§2 only; everything else in it stands) |
+| [D-036](D-036-seven-runtime-six-dev.md) | 2026-09-23 | Seven runtime and six dev dependencies, and why `sql.js` is among them | `accepted` | D-022 |

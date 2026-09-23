@@ -1,14 +1,14 @@
 ---
 id: T-038
 title: The second store behind the port
-status: ready
+status: review
 profile: team
 harness: 0.9.0
 role: Backend Implementer
 goal: Build the store T-036 chose as a second adapter behind the existing port, so the core and
   every rule above it are untouched, and so the local SQLite adapter keeps working for development
   and for the owner's own copy of the data.
-decisions: []
+decisions: [D-036]
 implements: [NFR-3, NFR-4]
 ---
 
@@ -49,15 +49,15 @@ implements: [NFR-3, NFR-4]
 
 ## Acceptance Criteria
 
-- [ ] Every port method is implemented, and the integration suite passes against both adapters
-- [ ] **The export works against the new store** and returns a file that opens, with every table
+- [x] Every port method is implemented, and the integration suite passes against both adapters
+- [x] **The export works against the new store** and returns a file that opens, with every table
       and row — `FR-21` survives the move rather than lapsing with it
-- [ ] The chosen client package is named in the task's Outcome with the reason, including what its
+- [x] The chosen client package is named in the task's Outcome with the reason, including what its
       documentation said about maturity on the day it was checked
-- [ ] `npm run check:core` stays clean — no vendor SDK, no platform global, no SQL in `core/`
-- [ ] Migrations run on a fresh store in the same order and record the same ledger
-- [ ] Nothing in `core/`, `contracts/` or `src/` names the vendor
-- [ ] Switching between the two stores is configuration, not a code change
+- [x] `npm run check:core` stays clean — no vendor SDK, no platform global, no SQL in `core/`
+- [x] Migrations run on a fresh store in the same order and record the same ledger
+- [x] Nothing in `core/`, `contracts/` or `src/` names the vendor
+- [x] Switching between the two stores is configuration, not a code change
 
 ## Verification
 
@@ -81,22 +81,62 @@ implements: [NFR-3, NFR-4]
 
 ## Outcome
 
-Filled in as the task progresses; overwritten, not appended.
-
-- Changes:
-- Files:
-- Baseline result:
-- Final result:
-- Decisions recorded:
-- Follow-up:
+- Changes: complete remote Store, ordered transactional migrations, configuration-based selection,
+  remote SQLite download, Node/Workers builds and one shared Store/API suite for both adapters.
+- Client: `@libsql/client` 0.18.0 through `/web`; live documentation checked 2026-09-22.
+  The [maintainer](https://github.com/tursodatabase/libsql-client-ts) describes it as battle-tested;
+  the [serverless announcement](https://turso.tech/blog/introducing-turso-serverless-javascript-driver)
+  still calls the alternative experimental. The web entry supports interactive transactions and
+  rejects local file URLs, making it suitable for Workers and preventing native fallback.
+- Files: adapter/runtime, ten API imports, shared integration suites, build/type configuration,
+  dependencies, development guide and harness records. Core, contracts and migration SQL unchanged.
+- Baseline result: unit 67/67, integration 36/36, isolation, typecheck, Node build and harness clean.
+- Final result: unit 67/67, integration 76/76 (33 shared cases per adapter plus 10 export cases),
+  isolation, typecheck, both builds and diff checks pass. Node 26.9.0 used; engine pin unchanged.
+  Harness regenerated and linted. Three existing type hints; build warns of unprovisioned secrets.
+- Composition: real libSQL v0.24.32; remote suite forbids node:sqlite; constraints and rollback pass.
+  Prior workerd smoke: downloaded SQLite matches all 11 source tables; integrity/FKs clean.
+- Export: database `/dump` reconstructed with sql.js WASM; preserves all tables, BLOBs and 64-bit
+  integers, excludes uncommitted writes. In-memory reconstruction rejects SQL dumps over 16 MiB;
+  this limitation must be revisited before that size. Local native export remains unchanged.
+- Decisions: D-022 replacement pending Planner; final dependency set and export alternatives are
+  documented in `docs/development.md` under Dependency decision handoff. No decision self-approved.
+- Review fix: missing sqld now reports 37 passed / 39 skipped and names untested remote coverage.
+  Explicit invalid RITMO_SQLD_BINARY still fails; with the binary, all 76 pass. No assertions removed.
+- Follow-up: Planner formalizes dependency decision, then independent Reviewer validates (D-029).
+  Hosted validation/deployment/data migration remain T-040; no owner database mutation.
 
 ## Review
 
-- Severity · `file:line` · issue · impact · recommendation
+Reviewer: Claude Code, on work it did not write. Returned once under `D-029` §1; both findings
+answered.
+
+- **Returned · resolved** · The integration gate was red from a clean checkout — 39 failed of 76
+  without `sqld`, so the whole remote adapter and the rebuilt export were unverifiable off the
+  implementer's machine. It now passes at 37 passed / 39 skipped, exit 0, printing exactly which
+  coverage is missing. Re-verified: an explicitly configured but missing `RITMO_SQLD_BINARY` still
+  exits 1, so the skip cannot be used as an escape hatch.
+- **Returned · resolved** · `D-022` was breached with no decision recording it. The implementer
+  wrote the rationale into `docs/development.md` and explicitly did not self-approve. `D-036`
+  supersedes it: seven runtime, six dev.
+- Medium · `docs/development.md` § Export · **`FR-21` has a 16 MiB ceiling now.** The remote export
+  rebuilds a SQLite image in memory and fails explicitly above it — honest, but the one thing
+  behind `NFR-4` now has a size at which it stops. 176 KB today; recorded in `D-036`, not a task.
+- **Open · the remote half is verified by the implementer alone.** `sqld` is not on this machine,
+  so the 39 remote cases — the libSQL Store, its migrations, its constraints and the export that
+  `FR-21` depends on — I have not run. Closing on the local gate, the dual build, the bundle
+  measurement and the returned-finding checks. This is the weakest part of this review and it is
+  the store about to hold the owner's data.
+- Note · `@libsql/client/web` over the still-experimental `@tursodatabase/serverless`, checked
+  against live sources; `@astrojs/cloudflare` 14.3.3 tested and rejected against the Astro pin,
+  with the reason recorded. Both are what `D-032` asked for.
+
+Verified: unit 67/67, isolation, typecheck 0 errors, both builds, integration exit 0 with the skip
+notice, lint clean. Workers bundle 1.8 MB uncompressed, 644 KB of it WASM.
+
+Approved.
 
 ## Validation
 
-`team` only — required before `done`, and linted.
-
-- Validated by:
-- Date:
+- Validated by: pending independent Reviewer (D-029)
+- Date: pending

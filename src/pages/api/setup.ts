@@ -1,6 +1,6 @@
 import type { APIRoute } from "astro";
 
-import { runtimeStore } from "../../../adapters/sqlite/store.ts";
+import { runtimeStore } from "../../../adapters/runtime.ts";
 import { UlidGenerator } from "../../../adapters/ulid.ts";
 import type { Store } from "../../../core/ports/store.ts";
 import type {
@@ -16,7 +16,7 @@ export async function handlePostSetup(request: Request, injectedStore?: Store): 
   if (parsed instanceof Response) return parsed;
 
   try {
-    const store = injectedStore ?? runtimeStore();
+    const store = injectedStore ?? await runtimeStore();
     if (await store.getOnlyOwner() !== null) return errorResponse("Setup already exists", 409);
     const owner = { id: new UlidGenerator().next(), activeCap: parsed.activeCap, capRaises: [] };
     await store.createOwner(owner);

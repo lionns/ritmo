@@ -1,6 +1,6 @@
 import type { APIRoute } from "astro";
 
-import { runtimeStore } from "../../../../adapters/sqlite/store.ts";
+import { runtimeStore } from "../../../../adapters/runtime.ts";
 import type { Clock } from "../../../../core/ports/clock.ts";
 import type { Store } from "../../../../core/ports/store.ts";
 import {
@@ -24,7 +24,7 @@ export async function handleGetProjectDetail(
   injectedStore?: Store,
 ): Promise<Response> {
   try {
-    const store = injectedStore ?? runtimeStore();
+    const store = injectedStore ?? await runtimeStore();
     const owner = await store.getOnlyOwner();
     if (owner === null) return errorResponse("Complete setup first", 409);
     const [detail, calibration] = await Promise.all([

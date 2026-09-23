@@ -8,25 +8,32 @@
   },
   "scripts": {
     "dev": "astro dev",
-    "start": "node ./dist/server/entry.mjs",
+    "start": "node ./dist/node/server/entry.mjs",
     "test": "node --test test/core/*.test.ts",
     "check:core": "node scripts/check-core-isolation.mjs",
-    "typecheck": "astro check && tsc --noEmit && tsc --noEmit -p tsconfig.core.json",
-    "build": "astro build",
+    "typecheck": "astro check && tsc --noEmit && tsc --noEmit -p tsconfig.core.json && tsc --noEmit -p tsconfig.workers.json",
+    "build": "npm run build:node && npm run build:workers",
     "test:integration": "vitest run --config vitest.config.ts",
     "db:reset": "node scripts/reset-local.mjs",
-    "seed": "node scripts/seed-local.mjs"
+    "seed": "node scripts/seed-local.mjs",
+    "build:node": "astro build",
+    "build:workers": "RITMO_TARGET=workers astro build"
   },
   "dependencies": {
     "@astrojs/node": "11.1.5",
     "@tailwindcss/vite": "4.3.3",
     "astro": "7.2.9",
-    "tailwindcss": "4.3.3"
+    "tailwindcss": "4.3.3",
+    "@astrojs/cloudflare": "14.2.6",
+    "@libsql/client": "0.18.0",
+    "sql.js": "1.14.2"
   },
   "devDependencies": {
     "@astrojs/check": "0.9.10",
     "@types/node": "24.13.3",
     "typescript": "6.0.3",
-    "vitest": "4.1.11"
+    "vitest": "4.1.11",
+    "@types/sql.js": "1.4.11",
+    "wrangler": "4.136.3"
   }
 }

@@ -1,6 +1,6 @@
 # D-022 — Four dev dependencies after the platform test harness leaves
 
-- Status: accepted
+- Status: superseded
 - Date: 2026-09-02
 - Supersedes: D-014
 - Tasks: T-011

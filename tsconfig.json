@@ -17,5 +17,10 @@
     "src/**/*.astro",
     "test/**/*.ts",
     "vitest.config.ts"
+  ],
+  "exclude": [
+    "adapters/runtime.workers.ts",
+    "adapters/libsql/wasm.workers.ts",
+    "worker-configuration.d.ts"
   ]
 }

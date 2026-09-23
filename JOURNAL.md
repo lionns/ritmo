@@ -42,3 +42,6 @@
 2026-09-22 | T-033 | done | the week in the model: local Mondays, reserves as events, and no debt | 16 files | unit 63/63, isolation, typecheck, build, integration 36/36 | -
 2026-09-22 | T-041 | review | local Monday permits project rotation after a closed week; other days retain the refusal | 9 files | unit 67/67 in two timezones, integration 36/36, isolation, typecheck, build; API 200 Monday/422 Wednesday | -
 2026-09-22 | T-041 | done | FR-14's Monday stops being a promise the rule breaks | 9 files | unit 67/67, isolation, typecheck, build, integration 36/36 | -
+2026-09-23 | T-038 | review | remote Store and complete SQLite export behind configuration; local adapter retained | 39 files | unit 67/67, integration 76/76, isolation, typecheck, dual builds, workerd API/export smoke | -
+2026-09-23 | T-038 | review | explicit missing-sqld skips; dependency rationale ready for Planner; review findings retained | 8 files | unit 67/67, integration 76/76 with sqld or 37 passed/39 skipped without, types, isolation, dual builds | -
+2026-09-23 | T-038 | done | a second store behind the port, and the export rebuilt for it | 34 files | unit 67/67, isolation, typecheck, dual build, integration 37 passed 39 skipped | D-036
