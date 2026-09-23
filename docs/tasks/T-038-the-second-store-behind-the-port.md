@@ -1,7 +1,7 @@
 ---
 id: T-038
 title: The second store behind the port
-status: review
+status: done
 profile: team
 harness: 0.9.0
 role: Backend Implementer
@@ -137,5 +137,5 @@ Approved.
 
 ## Validation
 
-- Validated by: pending independent Reviewer (D-029)
-- Date: pending
+- Validated by: Claude Code, as Reviewer (`D-029`)
+- Date: 2026-09-23
