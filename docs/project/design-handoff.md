@@ -392,6 +392,10 @@ Six routes, three levels deep. Settled with the owner on 2026-08-30 after drawin
 | `/ajustes` | Capacity cap (US-1), areas, projects, tags, **export** (FR-21), passkey. | A footer link beside the archive. |
 | `/entrar` | Passkey sign-in (D-004). | Only without a session. |
 
+**A third state arrived with `D-030`:** a week that closed itself last Monday, unlabelled. The
+screen opens onto it already closed, and must not read as something the owner failed to do — no
+prompt to complete it, no empty slot, `NFR-8`.
+
 **`/semana` is one route with two states, not two routes.** Opening the week and closing it are the
 same ritual at different moments; splitting them creates two places the owner has to remember to
 visit.

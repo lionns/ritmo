@@ -8,7 +8,6 @@ Harness `0.9.0` · profile `team`
 
 | Task | State | Goal |
 |---|---|---|
-| [T-032](docs/tasks/T-032-the-week-in-the-spec.md) | `ready` | Settle the five things the week's requirements leave open — where a week begins, what a |
 | [T-033](docs/tasks/T-033-the-week-in-the-model.md) | `ready` | Give the week rules, ports and tests of its own — a commitment with a target and a reserve, |
 | [T-034](docs/tasks/T-034-the-week-through-the-contract.md) | `ready` | Put the week behind contracts and API routes, including the one piece the model deliberately |
 | [T-035](docs/tasks/T-035-the-week-screen.md) | `ready` | Build the one screen the week has been missing since the product began — the close, the |
@@ -44,12 +43,13 @@ Harness `0.9.0` · profile `team`
 | [T-029](docs/tasks/T-029-the-calibration-signal.md) | `done` | Finish `FR-20` — say how the owner's estimates have actually gone, under the field where the |
 | [T-030](docs/tasks/T-030-the-project-screen-after-use.md) | `done` | Put archiving and finishing behind one "más acciones" disclosure instead of two buttons that |
 | [T-031](docs/tasks/T-031-the-schema-drops-what-nothing-reads.md) | `done` | Remove `next_actions` from the schema, so the database describes the product that exists |
+| [T-032](docs/tasks/T-032-the-week-in-the-spec.md) | `done` | Settle the five things the week's requirements leave open — where a week begins, what a |
 | [T-037](docs/tasks/T-037-the-owner-holds-a-copy.md) | `done` | Let the owner download their entire database as a SQLite file on demand, so that the only |
 | [T-010](docs/tasks/T-010-passkey-and-the-signed-cookie.md) | `superseded` | Build `D-004` as specified — a passkey registered per device, verified with Web Crypto and no |
 
 ## Next
 
-**T-032** (`ready`) — Settle the five things the week's requirements leave open — where a week begins, what a
+**T-033** (`ready`) — Give the week rules, ports and tests of its own — a commitment with a target and a reserve,
 
 ## Open decisions
 
@@ -57,10 +57,10 @@ None. All decisions are accepted or superseded.
 
 ## Journal — last 5
 
+- 2026-09-22 | T-032 | done | the week's boundary, its proposal, and the one it never closes | 10 files | no code; harness lint clean, gates unchanged | D-030
 - 2026-09-22 | T-037 | done | the owner holds a complete copy of their own record, one click away | 8 files | unit 55/55, isolation, typecheck, build, integration 30/30 | D-029
 - 2026-09-22 | T-037 | review | complete SQLite download from settings with consistent snapshot and temporary-file cleanup | 8 files | unit 55/55, isolation, typecheck, build, integration 30/30, compiled HTTP download verified | -
 - 2026-09-22 | T-031 | done | the retired next action leaves the schema, with the owner's word on the rows | 9 files | unit 55/55, isolation, typecheck, build, integration 26/26 | D-028
 - 2026-09-22 | T-031 | review | owner authorized discarding test actions; 0005 verified on fresh DB, backup copy and local DB | 9 files | unit 55/55, isolation, typecheck, build, integration 26/26; preservation and idempotency verified | D-028
-- 2026-09-22 | T-031 | blocked | backup preflight found one closed action never carried to steps; no drop applied | 4 files | baseline unit 55/55, isolation, harness lint, typecheck, build, integration 26/26; backup integrity ok | -
 
 Full history: [`JOURNAL.md`](JOURNAL.md) · decisions: [`docs/decisions/`](docs/decisions/README.md)

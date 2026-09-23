@@ -39,7 +39,7 @@
     {
       "id": "FR-7",
       "title": "Weekly commitment with reserve",
-      "statement": "A commitment shall be expressed as a frequency or volume over a week as target plus reserve, where the reserve defaults to ceil(0.30 x target) with a minimum of 1, and shall never be expressed as a recurring clock slot.",
+      "statement": "A commitment shall be expressed as a frequency or volume over a week as target plus reserve, where the reserve defaults to ceil(0.30 x target) with a minimum of 1, and shall never be expressed as a recurring clock slot. Each commitment shall carry the unit its target is counted in, times or minutes (D-030).",
       "source": "research.md §2, §8"
     },
     {
@@ -57,13 +57,13 @@
     {
       "id": "FR-10",
       "title": "Adaptive weekly proposal",
-      "statement": "The system shall derive the next week's targets from logged history rather than from a target set once, shall present them as an editable proposal, and shall retain what was proposed alongside what the owner accepted as an internal calibration signal.",
+      "statement": "The system shall derive the next week's targets from logged history rather than from a target set once, shall present them as an editable proposal, and shall retain what was proposed alongside what the owner accepted as an internal calibration signal. The proposal is the median of what was achieved in the last four closed weeks, per commitment and in that commitment's unit; with fewer than four it is the median of what exists, and with none there is no proposal and the field opens empty (D-030). The four is a starting value with no evidence behind it.",
       "source": "research.md §9"
     },
     {
       "id": "FR-11",
       "title": "Weekly close",
-      "statement": "The weekly close shall offer three fields, of which two are optional: the capacity label, what took the week, and a short written reflection.",
+      "statement": "The weekly close shall offer three fields, of which two are optional: the capacity label, what took the week, and a short written reflection. A week the owner never closes shall close itself when the next Monday arrives, with no capacity label, no tag and no reflection, and the next week shall open in the same movement (D-030).",
       "source": "research.md §16, §17"
     },
     {
@@ -81,7 +81,7 @@
     {
       "id": "FR-14",
       "title": "Weekly rotation",
-      "statement": "What is active shall be changeable every Monday at no cost and shall be fixed within the week.",
+      "statement": "What is active shall be changeable every Monday at no cost and shall be fixed within the week. A week starts Monday on the local calendar, and an entry belongs to the week holding its local date (D-030).",
       "source": "brief.md § Scope"
     },
     {

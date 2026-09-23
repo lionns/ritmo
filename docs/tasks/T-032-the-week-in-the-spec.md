@@ -1,7 +1,7 @@
 ---
 id: T-032
 title: The week in the spec — the boundary, the commitment, and what a close proposes
-status: ready
+status: done
 profile: team
 harness: 0.9.0
 role: Planner
@@ -9,7 +9,7 @@ goal: Settle the five things the week's requirements leave open — where a week
   commitment is attached to, how the next week's targets are derived, what happens to a week the
   owner never closes, and whether a week rolls over by itself — and record them as a decision
   candidate the owner accepts before any of T-033…T-035 is started.
-decisions: []
+decisions: [D-030]
 implements: [FR-7, FR-9, FR-10, FR-11, FR-12, FR-14, FR-19]
 ---
 
@@ -75,14 +75,14 @@ say so, as `core/rules/calibration.ts` does for its own two constants.
 
 ## Acceptance Criteria
 
-- [ ] Each of the five open questions has a written answer with the reasoning that produced it
-- [ ] Every number introduced is labelled as a starting value with no evidence behind it, unless
+- [x] Each of the five open questions has a written answer with the reasoning that produced it
+- [x] Every number introduced is labelled as a starting value with no evidence behind it, unless
       `research.md` supports it, in which case the finding is cited by section
-- [ ] No answer contradicts `NFR-8`: no week attribution on the landing surface, never red, never
+- [x] No answer contradicts `NFR-8`: no week attribution on the landing surface, never red, never
       accumulated across weeks, never the word "lost"
-- [ ] `docs/project/requirements.json`, `data-model.md` and `design-handoff.md` state the same
+- [x] `docs/project/requirements.json`, `data-model.md` and `design-handoff.md` state the same
       week, with no section left describing a week nobody decided
-- [ ] The decision is proposed to the owner and **accepted by them** before it is written as
+- [x] The decision is proposed to the owner and **accepted by them** before it is written as
       `accepted`. A decision file is immutable once accepted; writing one before the owner has
       answered pre-empts a call that is theirs.
 
@@ -106,22 +106,35 @@ say so, as `core/rules/calibration.ts` does for its own two constants.
 
 ## Outcome
 
-Filled in as the task progresses; overwritten, not appended.
-
-- Changes:
-- Files:
-- Baseline result:
-- Final result:
-- Decisions recorded:
-- Follow-up:
+- Changes: `D-030` records the four things that were genuinely open — Monday on the local calendar,
+  `FR-10`'s median of the last 4 closed weeks, a week that closes itself unlabelled, and a `unit`
+  on `Commitment`. `FR-7`, `FR-10`, `FR-11` and `FR-14` restated to match; `data-model.md` carries
+  the boundary, the self-close and the new column; `design-handoff.md` gains the third state of
+  `/semana` that `D-030` created.
+- Files: `D-030`, `requirements.json`, `data-model.md`, `design-handoff.md`, `T-033`, task, trace,
+  journal, generated status and decision index.
+- Baseline and final: no code touched; harness-lint clean, five gates unchanged.
+- Decisions recorded: `D-030`.
+- Follow-up: T-033 now names the `unit` migration and the idempotent self-close explicitly.
 
 ## Review
 
-- Severity · `file:line` · issue · impact · recommendation
+Reviewer: Claude Code. Planning has no second agent, which `agent-config.md` names as a risk.
+
+- Medium · this task file · **It was over-scoped and I wrote it.** Three of its five "open"
+  questions were settled in `data-model.md` on 2026-08-30 — where a commitment hangs, frequency or
+  volume, and `proposedTarget` beside `target`. I put them to the owner anyway because I planned
+  from the requirements without reading the model closely. Their answers confirmed all three; the
+  cost was their time, not the design.
+- Low · `FR-15` was listed as an open question and is not one: it governs the active cap, which
+  `core/rules/project.ts:224` already implements through `Area.countsAgainstCap`.
+- Note · Reading the model closely is what found the real gap — `Commitment` had no `unit`, so
+  `target` was an integer nothing could interpret. The over-scoping and the catch came from the
+  same pass.
+- Note · The 4 in `FR-10` is mine and has nothing behind it. `D-030` says so in bold so that when
+  the proposal looks wrong in two months, its origin is on the record.
 
 ## Validation
 
-`team` only — required before `done`, and linted.
-
-- Validated by:
-- Date:
+- Validated by: Claude Code, as Reviewer (`D-029`)
+- Date: 2026-09-22

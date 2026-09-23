@@ -14,9 +14,9 @@ implements: [FR-7, FR-8, FR-9, FR-19]
 
 ## Sources
 
-- **T-032's accepted decision.** This task cannot start before it. The week boundary, what a
-  commitment attaches to, and what happens to an unclosed week are all settled there, and every
-  one of them changes the shape of the code below.
+- **`D-030`**, which T-032 recorded on 2026-09-22 and which this task implements: Monday on the
+  local calendar through `calendarDateOf`, the median of the last 4 closed weeks, a week that
+  closes itself unlabelled, and `Commitment.unit`.
 - `migrations/0001_initial_schema.sql` — `weeks` and `commitments` as declared. Read them before
   writing a new migration; the columns may already be right, or may not match T-032's answers.
 - `core/rules/step.ts` — `calendarDateOf`, and the shape the rules in this repository take
@@ -30,7 +30,12 @@ implements: [FR-7, FR-8, FR-9, FR-19]
   `ceil(0.30 x target)` with a minimum of 1 (`FR-7`), and spending a reserve as an event (`FR-8`)
 - The port methods each needs, added to `core/ports/store.ts` and implemented in
   `adapters/sqlite/store.ts`
-- A migration if and only if T-032's answers do not fit the tables as declared
+- A migration: `D-030` gives `Commitment` a `unit` column (`times` \| `minutes`) that
+  `0001_initial_schema.sql` does not have, and without it neither the close nor `FR-10`'s proposal
+  can read `target`. Check the rest of `weeks` and `commitments` against `data-model.md` while
+  there.
+- The self-closing week from `D-030` §3, and it must be idempotent — two opens of the app on a
+  Monday must not close the week twice
 - Unit tests in `test/core/`, integration tests in `test/integration/sqlite-store.test.ts`
 
 ## Out of Scope

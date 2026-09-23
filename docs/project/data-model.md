@@ -131,6 +131,7 @@ requires.
 | projectId | string | yes | |
 | weekId | string | yes | |
 | target | integer | yes | Frequency or volume over the week. Never a clock slot (FR-7). |
+| unit | enum | yes | `times` \| `minutes` — which of the two `target` counts. Without it neither the close nor FR-10's proposal can read the number (D-030). |
 | proposedTarget | integer | no | What the adaptive proposal suggested, kept beside what the owner accepted (FR-10). Internal calibration signal only — never rendered as a comparison the owner has to answer for. |
 | reserve | integer | yes | Defaults to `ceil(0.30 × target)`, minimum 1. |
 | reserveSpent | derived | — | Count of `reserve_spend` entries in the week. |
@@ -180,11 +181,11 @@ and closes — and closing carries nothing forward.*
 | Field | Type | Required | Notes |
 | --- | --- | --- | --- |
 | id | string | yes | |
-| startsOn | date | yes | The week is the only period. The close writes the three fields below (FR-11). |
+| startsOn | date | yes | A Monday on the **local** calendar, through `calendarDateOf` — one idea of what day it is, shared with the day list. An entry belongs to the week holding its local `occurredAt` date, so one written at 00:30 on Monday about Sunday's work belongs to the new week (D-030). The close writes the three fields below (FR-11). |
 | capacityLabel | enum | no | `light` \| `normal` \| `heavy`, applied retroactively at close (FR-9). Absent is valid and still trains on inference. |
 | tagId | string | no | What took the week (FR-12). One optional tap. |
 | reflection | text | no | Short and written (research §17). |
-| closedAt | timestamp | no | Null until closed. |
+| closedAt | timestamp | no | Null until closed. A week the owner never closes closes itself when the next Monday arrives, leaving `capacityLabel`, `tagId` and `reflection` null — NFR-8 already holds an untagged week as complete, so nothing is owed (FR-19, D-030). Whatever performs it must be idempotent: two opens of the app on a Monday must not close the week twice. |
 
 ### Tag
 
