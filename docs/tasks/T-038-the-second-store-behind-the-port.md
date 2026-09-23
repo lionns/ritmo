@@ -122,11 +122,10 @@ answered.
 - Medium · `docs/development.md` § Export · **`FR-21` has a 16 MiB ceiling now.** The remote export
   rebuilds a SQLite image in memory and fails explicitly above it — honest, but the one thing
   behind `NFR-4` now has a size at which it stops. 176 KB today; recorded in `D-036`, not a task.
-- **Open · the remote half is verified by the implementer alone.** `sqld` is not on this machine,
-  so the 39 remote cases — the libSQL Store, its migrations, its constraints and the export that
-  `FR-21` depends on — I have not run. Closing on the local gate, the dual build, the bundle
-  measurement and the returned-finding checks. This is the weakest part of this review and it is
-  the store about to hold the owner's data.
+- **Open · the remote half is verified by the implementer alone.** `sqld` is absent here, so the
+  39 remote cases — the libSQL Store, its migrations and the export `FR-21` depends on — I have
+  not run. Closing on the local gate, the dual build, the bundle measurement and the
+  returned-finding checks. The weakest part of this review, on the store about to hold the data.
 - Note · `@libsql/client/web` over the still-experimental `@tursodatabase/serverless`, checked
   against live sources; `@astrojs/cloudflare` 14.3.3 tested and rejected against the Astro pin,
   with the reason recorded. Both are what `D-032` asked for.
