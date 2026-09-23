@@ -13,7 +13,6 @@ Harness `0.9.0` · profile `team`
 | [T-038](docs/tasks/T-038-the-second-store-behind-the-port.md) | `ready` | Build the store T-036 chose as a second adapter behind the existing port, so the core and |
 | [T-039](docs/tasks/T-039-d004-built-at-last.md) | `ready` | Build `D-004` as specified — a passkey per device, a password fallback, a stateless signed |
 | [T-040](docs/tasks/T-040-deploy-and-carry-the-data-across.md) | `ready` | Put Ritmo where the owner can reach it from a phone, move weeks of real use onto the new |
-| [T-041](docs/tasks/T-041-the-monday-that-fr14-promises.md) | `ready` | Make `changeProjectState` refuse only *within* a week and allow the rotation on Monday, so |
 | [T-001](docs/tasks/T-001-skeleton-and-next-action.md) | `done` | Stand up the three-layer tree with every quality-gate command real and green, and prove it by |
 | [T-003](docs/tasks/T-003-loose-ends.md) | `done` | Close the six low-severity findings the T-001 review left open, so the schema states the |
 | [T-005](docs/tasks/T-005-first-loop-back.md) | `done` | Give the front two endpoints and the contracts behind them, so a real portfolio can be read |
@@ -46,6 +45,7 @@ Harness `0.9.0` · profile `team`
 | [T-033](docs/tasks/T-033-the-week-in-the-model.md) | `done` | Give the week rules, ports and tests of its own — a commitment with a target and a reserve, |
 | [T-036](docs/tasks/T-036-where-the-deploy-returns-to.md) | `done` | Settle where Ritmo runs now that the owner needs it from anywhere, what holds the data once |
 | [T-037](docs/tasks/T-037-the-owner-holds-a-copy.md) | `done` | Let the owner download their entire database as a SQLite file on demand, so that the only |
+| [T-041](docs/tasks/T-041-the-monday-that-fr14-promises.md) | `done` | Make `changeProjectState` refuse only *within* a week and allow the rotation on Monday, so |
 | [T-010](docs/tasks/T-010-passkey-and-the-signed-cookie.md) | `superseded` | Build `D-004` as specified — a passkey registered per device, verified with Web Crypto and no |
 
 ## Next
@@ -58,10 +58,10 @@ None. All decisions are accepted or superseded.
 
 ## Journal — last 5
 
+- 2026-09-22 | T-041 | done | FR-14's Monday stops being a promise the rule breaks | 9 files | unit 67/67, isolation, typecheck, build, integration 36/36 | -
+- 2026-09-22 | T-041 | review | local Monday permits project rotation after a closed week; other days retain the refusal | 9 files | unit 67/67 in two timezones, integration 36/36, isolation, typecheck, build; API 200 Monday/422 Wednesday | -
 - 2026-09-22 | T-033 | done | the week in the model: local Mondays, reserves as events, and no debt | 16 files | unit 63/63, isolation, typecheck, build, integration 36/36 | -
 - 2026-09-22 | T-033 | review | week rules, atomic rollover, commitments with units and reserve events; migration rehearsed then applied | 16 files | unit 63/63, integration 36/36, isolation, typecheck, build; browser check pending | -
 - 2026-09-22 | T-036 | done | hosting returns to Workers, the data goes to Turso, and four foundations move | 14 files | no code; harness lint clean, gates unchanged | D-031, D-032, D-033, D-034
-- 2026-09-22 | T-032 | done | the week's boundary, its proposal, and the one it never closes | 10 files | no code; harness lint clean, gates unchanged | D-030
-- 2026-09-22 | T-037 | done | the owner holds a complete copy of their own record, one click away | 8 files | unit 55/55, isolation, typecheck, build, integration 30/30 | D-029
 
 Full history: [`JOURNAL.md`](JOURNAL.md) · decisions: [`docs/decisions/`](docs/decisions/README.md)

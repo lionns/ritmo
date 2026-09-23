@@ -3,6 +3,7 @@ import type { Clock } from "../ports/clock.ts";
 import type { IdGen } from "../ports/id-gen.ts";
 import type { Store } from "../ports/store.ts";
 import { buildStep, type StepFields } from "./step.ts";
+import { isWeekStart } from "./week.ts";
 
 export interface NewProject {
   ownerId: string;
@@ -150,6 +151,7 @@ async function recount(
 
 export async function changeProjectState(
   store: Store,
+  clock: Clock,
   ownerId: string,
   projectId: string,
   state: Project["state"],
@@ -172,7 +174,7 @@ export async function changeProjectState(
   }
   const currentCount = countCappedActiveProjects(projects, areas);
   if (project.state === state) return capResult(project, area, owner, currentCount);
-  if (await store.hasClosedWeek(ownerId)) {
+  if (await store.hasClosedWeek(ownerId) && !isWeekStart(clock.now())) {
     throw new ProjectRuleError("Project state changes belong to a week boundary");
   }
   if (state === "active" && area.countsAgainstCap && currentCount >= owner.activeCap) {

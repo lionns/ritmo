@@ -15,6 +15,11 @@ export function weekStartsOn(moment: Date): string {
   return calendarDateOf(monday);
 }
 
+/** FR-14 permits rotation throughout the local calendar day that starts the week. */
+export function isWeekStart(moment: Date): boolean {
+  return calendarDateOf(moment) === weekStartsOn(moment);
+}
+
 export function weekBounds(startsOn: string): { startsAt: string; endsAt: string } {
   const start = new Date(`${startsOn}T00:00:00`);
   const end = new Date(start.getTime());

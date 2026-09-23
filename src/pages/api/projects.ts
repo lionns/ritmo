@@ -60,7 +60,11 @@ export async function handlePostProject(request: Request, injectedStore?: Store)
   }
 }
 
-export async function handlePatchProject(request: Request, injectedStore?: Store): Promise<Response> {
+export async function handlePatchProject(
+  request: Request,
+  injectedStore?: Store,
+  injectedClock: Clock = clock,
+): Promise<Response> {
   const parsed = await parseStateRequest(request);
   if (parsed instanceof Response) return parsed;
   try {
@@ -68,9 +72,9 @@ export async function handlePatchProject(request: Request, injectedStore?: Store
     const owner = await store.getOnlyOwner();
     if (owner === null) return errorResponse("Complete setup first", 409);
     const result = parsed.state !== undefined
-      ? await changeProjectState(store, owner.id, parsed.id, parsed.state)
+      ? await changeProjectState(store, injectedClock, owner.id, parsed.id, parsed.state)
       : parsed.finished === true
-        ? await finishProject(store, clock, owner.id, parsed.id)
+        ? await finishProject(store, injectedClock, owner.id, parsed.id)
         : await unfinishProject(store, owner.id, parsed.id);
     return Response.json(toResponse(result), { headers: responseHeaders });
   } catch (error) {

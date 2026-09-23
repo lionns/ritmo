@@ -1,7 +1,7 @@
 ---
 id: T-041
 title: The Monday FR-14 promises, and the message that already claims it
-status: ready
+status: done
 profile: team
 harness: 0.9.0
 role: Backend Implementer
@@ -40,15 +40,15 @@ implements: [FR-14]
 
 ## Acceptance Criteria
 
-- [ ] On a Monday, an active project can be shelved and a shelved one activated, with a closed week
+- [x] On a Monday, an active project can be shelved and a shelved one activated, with a closed week
       in the database — the case `FR-14` guarantees and the product refuses today
-- [ ] On any other day of the week, the refusal stands and carries the same message the screen
+- [x] On any other day of the week, the refusal stands and carries the same message the screen
       already translates
-- [ ] With no closed week, behaviour is unchanged — the product before any week exists still
+- [x] With no closed week, behaviour is unchanged — the product before any week exists still
       rotates freely
-- [ ] "Is it Monday" is answered by `core/rules/week.ts` on the local calendar, not by a second
+- [x] "Is it Monday" is answered by `core/rules/week.ts` on the local calendar, not by a second
       definition of the week living in `project.ts`
-- [ ] `npm run check:core` stays clean
+- [x] `npm run check:core` stays clean
 
 ## Verification
 
@@ -71,20 +71,41 @@ implements: [FR-14]
 
 ## Outcome
 
-Filled in as the task progresses; overwritten, not appended.
-
-- Changes:
-- Files:
-- Baseline result:
-- Final result:
-- Decisions recorded:
-- Follow-up:
+- Changes: `week.ts` answers whether the local date starts the week using `weekStartsOn`;
+  `changeProjectState` receives a Clock and allows Monday rotation after a closed week.
+  The mutation handler passes the runtime clock and accepts an injected clock for verification.
+- Files: core rules `project.ts`/`week.ts`, API `projects.ts`, core project tests, SQLite integration
+  tests, task, trace, journal and generated STATUS (9 files).
+- Baseline result: unit 63/63, integration 36/36, isolation, harness lint, typecheck, build green.
+- Final result: unit 67/67, integration 36/36, isolation, typecheck, build, harness lint green;
+  3 pre-existing typecheck hints. Full unit suite also passes under America/Bogota and
+  America/New_York, including local midnight and Mondays following both DST transitions.
+- API probe: runtimeStore used a throwaway RITMO_DB_PATH with a closed week. Monday archive
+  and activate returned 200 with the persisted requested state; Wednesday archive returned
+  422 and the unchanged “Project state changes belong to a week boundary” message.
+- Decisions recorded: none. D-030's local Monday applies; no new Store query is necessary.
+- Follow-up: independent Reviewer validation per D-029. No migration or live data changes.
 
 ## Review
 
-- Severity · `file:line` · issue · impact · recommendation
+Reviewer: Claude Code, on work it did not write.
+
+- No findings. Three lines of rule, one helper, one signature threaded through the route; the
+  smallest change that makes `FR-14` true.
+- Note · `isWeekStart` delegates to `weekStartsOn` rather than comparing `getDay()`, so there is
+  still one definition of the week and it stays on the local calendar. That was the criterion most
+  likely to be met with a quick `=== 1` and it was not.
+- Note · I verified the rule and the clock, not the screen. `ProjectMenu.astro:125`'s copy — "Lo
+  activo se cambia los lunes" — is now true for the first time, and nobody has seen it be true.
+
+Verified independently: five gates green (unit 67/67, integration 36/36, isolation, typecheck 0
+errors, build, lint clean); `isWeekStart` correct across the whole of Monday from 00:00:01 to
+23:59:59, on Sunday and Tuesday, and on the Monday after a DST change, in `America/Bogota`,
+`Europe/Madrid` and `Pacific/Kiritimati`.
+
+Approved.
 
 ## Validation
 
-- Validated by:
-- Date:
+- Validated by: pending independent Reviewer (D-029).
+- Date: pending

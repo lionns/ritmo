@@ -23,6 +23,7 @@ import type { StepErrorResponse, StepResponse } from "../../contracts/steps.ts";
 import type { ArchiveResponse } from "../../contracts/archive.ts";
 import type { ProjectDetailResponse } from "../../contracts/project.ts";
 import type { PortfolioResponse } from "../../contracts/portfolio.ts";
+import { handlePatchProject } from "../../src/pages/api/projects.ts";
 import { handlePostEntry } from "../../src/pages/api/entries.ts";
 import { handleGetPortfolio } from "../../src/pages/api/portfolio.ts";
 import { testApplication } from "./worker.ts";
@@ -1237,16 +1238,26 @@ describe("weeks and commitments in real SQLite", () => {
     expect((await readWeekEntries(weeks, next)).map(e => e.id)).toEqual(["monday", "written-later"]);
   });
 
-  it("exposes the existing project-rotation gap after a real week closes", async () => {
+  it("allows Monday API rotation after a close and refuses Wednesday with the existing message", async () => {
     const week = await openWeek(weeks, clock, ids, owner.id);
     await closeWeek(weeks, clock, { ownerId: owner.id, weekId: week.id, capacityLabel: null, tagId: null, reflection: null });
     const app = testApplication(weeks);
     expect((await app(new Request("http://example.test/api/portfolio"))).status).toBe(200);
     expect((await app(new Request(`http://example.test/api/project/${project.id}`))).status).toBe(200);
-    const response = await app(new Request("http://example.test/api/projects", {
+    const response = await handlePatchProject(new Request("http://example.test/api/projects", {
       method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: project.id, state: "shelved" }),
-    }));
+    }), weeks, clock);
     expect(response.status).toBe(422);
-    expect(await response.text()).toContain("week boundary");
+    expect(await response.json()).toEqual({ error: "Project state changes belong to a week boundary" });
+    moment = new Date(2026, 8, 28, 0, 30);
+    for (const state of ["shelved", "active"] as const) {
+      const monday = await handlePatchProject(new Request("http://example.test/api/projects", {
+        method: "PATCH", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: project.id, state }),
+      }), weeks, clock);
+      expect(monday.status).toBe(200);
+      expect(await monday.json()).toMatchObject({ project: { id: project.id, state } });
+      expect((await weeks.getProject(project.id))?.state).toBe(state);
+    }
   });
 });

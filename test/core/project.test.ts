@@ -64,23 +64,24 @@ describe("the active project cap", () => {
   });
 
   it("allows setup-time state changes only while they respect the cap and no week is closed", async () => {
+    const clock = { now: () => new Date(2026, 8, 23, 12) };
     const store = populatedStore();
     store.projects.set("active", project("active", cappedArea.id, "active"));
     store.projects.set("shelved", project("shelved", cappedArea.id, "shelved"));
 
-    const promoted = await changeProjectState(store, owner.id, "shelved", "active");
+    const promoted = await changeProjectState(store, clock, owner.id, "shelved", "active");
     assert.equal(promoted.project.state, "active");
     assert.equal(promoted.activeCount, 2);
 
     store.projects.set("third", project("third", cappedArea.id, "shelved"));
     await assert.rejects(
-      changeProjectState(store, owner.id, "third", "active"),
+      changeProjectState(store, clock, owner.id, "third", "active"),
       /2 of 2 capped projects are active/,
     );
 
     store.closedWeek = true;
     await assert.rejects(
-      changeProjectState(store, owner.id, "active", "shelved"),
+      changeProjectState(store, clock, owner.id, "active", "shelved"),
       /week boundary/,
     );
   });
@@ -262,8 +263,69 @@ describe("finishing a project", () => {
     await finishProject(store, clock, owner.id, created.project.id);
 
     await assert.rejects(
-      changeProjectState(store, owner.id, created.project.id, "shelved"),
+      changeProjectState(store, clock, owner.id, created.project.id, "shelved"),
       /is finished/,
     );
+  });
+});
+
+
+describe("Monday project rotation", () => {
+  const at = (date: Date) => ({ now: () => date });
+
+  it("allows both directions all Monday after a closed week, including after DST changes", async () => {
+    for (const date of [new Date(2026, 8, 28, 0), new Date(2026, 8, 28, 23, 59),
+      new Date(2026, 2, 9, 0), new Date(2026, 10, 2, 23, 59)]) {
+      const store = populatedStore();
+      store.closedWeek = true;
+      store.projects.set("p", project("p", cappedArea.id, "active"));
+      const shelved = await changeProjectState(store, at(date), owner.id, "p", "shelved");
+      assert.equal(shelved.project.state, "shelved");
+      assert.equal(shelved.activeCount, 0);
+      const active = await changeProjectState(store, at(date), owner.id, "p", "active");
+      assert.equal(active.project.state, "active");
+      assert.equal(active.activeCount, 1);
+    }
+  });
+
+  it("refuses both directions Tuesday through Sunday with the same message", async () => {
+    for (const date of [new Date(2026, 8, 29, 0), new Date(2026, 8, 30, 12),
+      new Date(2026, 9, 1, 12), new Date(2026, 9, 2, 12), new Date(2026, 9, 3, 12),
+      new Date(2026, 9, 4, 23, 59)]) {
+      for (const state of ["active", "shelved"] as const) {
+        const store = populatedStore();
+        store.closedWeek = true;
+        store.projects.set("p", project("p", cappedArea.id, state));
+        await assert.rejects(changeProjectState(store, at(date), owner.id, "p",
+          state === "active" ? "shelved" : "active"),
+        { message: "Project state changes belong to a week boundary" });
+        assert.equal(store.projects.get("p")?.state, state);
+        // A no-op is not a rotation and remains idempotent.
+        assert.equal((await changeProjectState(store, at(date), owner.id, "p", state)).project.state, state);
+      }
+    }
+  });
+
+  it("rotates freely on every day before any week closes", async () => {
+    for (let day = 21; day <= 27; day++) {
+      const store = populatedStore();
+      store.projects.set("p", project("p", cappedArea.id, "active"));
+      const clock = at(new Date(2026, 8, day, 12));
+      assert.equal((await changeProjectState(store, clock, owner.id, "p", "shelved")).project.state, "shelved");
+      assert.equal((await changeProjectState(store, clock, owner.id, "p", "active")).project.state, "active");
+    }
+  });
+
+  it("still enforces the active cap on Monday and exempts fixed-job projects", async () => {
+    const store = populatedStore();
+    store.closedWeek = true;
+    const clock = at(new Date(2026, 8, 28, 12));
+    for (const id of ["a", "b"]) store.projects.set(id, project(id, cappedArea.id, "active"));
+    store.projects.set("c", project("c", cappedArea.id, "shelved"));
+    store.projects.set("job", project("job", fixedArea.id, "shelved"));
+    await assert.rejects(changeProjectState(store, clock, owner.id, "c", "active"), /2 of 2 capped projects are active/);
+    assert.equal((await changeProjectState(store, clock, owner.id, "job", "active")).activeCount, 2);
+    await changeProjectState(store, clock, owner.id, "a", "shelved");
+    assert.equal((await changeProjectState(store, clock, owner.id, "c", "active")).activeCount, 2);
   });
 });
