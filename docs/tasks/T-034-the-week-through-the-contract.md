@@ -14,8 +14,9 @@ implements: [FR-10, FR-11, FR-12]
 
 ## Sources
 
-- **T-032's accepted decision** for the derivation in `FR-10`, and **T-033** for the model it
-  reads. Neither can be worked around here.
+- **`D-035`** for the derivation in `FR-10` — the reserve over the last two closed weeks, not a
+  median. `D-030` §2 proposed a median and was withdrawn; do not implement it. **T-033** for the
+  model this reads. Neither can be worked around here.
 - `contracts/portfolio.ts` and `contracts/capture.ts` — the shape contracts take in this repository
 - `src/pages/api/project/[id].ts` — how a route validates, calls a rule, and answers
 - `core/rules/calibration.ts` — the product's existing example of a signal with no evidence behind
@@ -26,8 +27,12 @@ implements: [FR-10, FR-11, FR-12]
 
 - `contracts/week.ts` — the week, its commitments, the close, and the proposal
 - Routes for reading the current week, closing it, defining a tag, and spending a reserve
-- `FR-10`'s derivation: next week's targets computed from logged history, returned as an
-  **editable proposal**, with both the proposed value and the accepted value stored
+- `FR-10`'s derivation per `D-035`: reserve untouched across both of the last two closed weeks
+  proposes `target + 1`, exhausted in both proposes `target - 1`, anything else repeats the target,
+  never below 1 — returned as an **editable proposal**, with both the proposed and the accepted
+  value stored
+- **Wiring the week's boundary**: `core/rules/week.ts`'s `openWeek` performs `D-030` §3's rollover
+  and nothing calls it. Until something does, weeks never open, never close, and `FR-19` is dead.
 - `FR-12`'s tag: one optional tag at close, from tags the owner defines, and the pattern across
   roughly eight weeks — **with no duration recorded anywhere**
 
@@ -43,6 +48,10 @@ implements: [FR-10, FR-11, FR-12]
       capacity label is as complete as one closed with all three (`FR-11`, `NFR-8`)
 - [ ] Next week's targets arrive as a proposal the owner can edit, and both numbers survive the
       edit — what was proposed and what was accepted (`FR-10`)
+- [ ] With fewer than two closed weeks there is no proposal, and the field opens empty rather than
+      showing a number derived from nothing
+- [ ] Opening the application on a Monday rolls the week over exactly once, however many times it
+      is opened (`D-030` §3)
 - [ ] The proposal is never presented as a target already set. A route that returns it says it is
       a proposal.
 - [ ] A tag can be defined, attached at close, and read back across eight weeks, and **no duration
@@ -63,8 +72,8 @@ implements: [FR-10, FR-11, FR-12]
 
 ## Assumptions
 
-- T-032 answered how the derivation works. If it did not, this task stops rather than inventing
-  one, per `NFR-10`.
+- `D-035` settles the derivation. If anything here needs a number it does not give, this task
+  stops rather than inventing one, per `NFR-10`.
 
 ## Risks
 

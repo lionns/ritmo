@@ -39,3 +39,4 @@ rather than editing. Template in `../sdd/TEMPLATES.md`.
 | [D-032](D-032-data-turso-libsql.md) | 2026-09-22 | The data moves to Turso, which is still SQLite | `accepted` | D-019 |
 | [D-033](D-033-runtime-workers.md) | 2026-09-22 | The runtime is the Workers runtime | `accepted` | D-018 |
 | [D-034](D-034-interface-astro-cloudflare-adapter.md) | 2026-09-22 | Astro keeps the interface, on the Cloudflare adapter | `accepted` | D-021 |
+| [D-035](D-035-the-proposal-reads-the-reserve.md) | 2026-09-22 | The proposal reads the reserve, not the median | `accepted` | D-030 (§2 only; everything else in it stands) |

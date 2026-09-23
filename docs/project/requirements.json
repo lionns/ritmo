@@ -57,7 +57,7 @@
     {
       "id": "FR-10",
       "title": "Adaptive weekly proposal",
-      "statement": "The system shall derive the next week's targets from logged history rather than from a target set once, shall present them as an editable proposal, and shall retain what was proposed alongside what the owner accepted as an internal calibration signal. The proposal is the median of what was achieved in the last four closed weeks, per commitment and in that commitment's unit; with fewer than four it is the median of what exists, and with none there is no proposal and the field opens empty (D-030). The four is a starting value with no evidence behind it.",
+      "statement": "The system shall derive the next week's targets from logged history rather than from a target set once, shall present them as an editable proposal, and shall retain what was proposed alongside what the owner accepted as an internal calibration signal. The proposal reads the reserve over the last two closed weeks: untouched in both proposes target + 1, exhausted in both proposes target - 1, anything else repeats the target, never below 1 (data-model.md § Derived values, confirmed by the owner 2026-08-30; D-035).",
       "source": "research.md §9"
     },
     {
