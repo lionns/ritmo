@@ -8,7 +8,9 @@ Ritmo cambia planificar por registrar. El acto diario es anotar lo que de verdad
 cuando puedes abrirlo después de una mala semana y ver progreso acumulado en vez de deuda acumulada,
 y por eso lo sigues abriendo.
 
-Corre **en tu máquina**. Tus datos son un archivo tuyo. No hay cuenta, no hay nube, no hay nadie más.
+Corre **donde tú lo pongas** — en tu máquina, o desplegado para abrirlo desde el teléfono. Sirve a
+**una sola persona**: no hay registro, no hay equipos, no hay permisos, no hay nadie más. Y bajas tu
+base entera cuando quieras, así que los datos siguen siendo tuyos aunque vivan en otra parte.
 
 ---
 
@@ -25,11 +27,16 @@ npm run dev          # http://localhost:4321
 Para usarlo de verdad, la versión compilada arranca más rápido:
 
 ```sh
-npm run build
+npm run build        # compila las dos versiones: Node y Workers
 npm start            # http://localhost:4321
 ```
 
 Eso es todo. `db:reset` **borra** la base y la recrea, así que se corre una vez al principio.
+
+**Ritmo pide acceso desde el primer arranque**, incluso en local, así que necesita su configuración
+o responde `503`. Son cuatro variables —origen, dueño, secreto de sesión y hash de contraseña— y
+están explicadas en [`docs/authentication.md`](docs/authentication.md). En local el origen puede ser
+`http://localhost:PUERTO`; fuera de ahí Ritmo exige HTTPS y redirige solo si llega por HTTP.
 
 > Si quieres datos de ejemplo para mirar antes de meter los tuyos, `npm run seed` llena la base con
 > un portafolio ficticio. No lo corras sobre tus datos reales.
@@ -164,9 +171,10 @@ ofrece, porque decidiste no tocarlo. Está todo ahí, esperando.
 Si el cupo está lleno, activar te dice cuántos tienes y no cambia nada. Sin regaños y sin rojo:
 **archiva otro primero.**
 
-> **Ojo:** `FR-14` dice que lo activo se cambia *los lunes* y queda fijo dentro de la semana. Hoy
-> puedes cambiarlo cualquier día, porque las semanas no existen todavía (`/semana` está sin
-> construir). Cuando existan, esto empezará a pedirte que esperes al lunes.
+> **Ojo:** `FR-14` dice que lo activo se cambia *los lunes* y queda fijo dentro de la semana. La
+> regla ya existe y el lunes ya está exento — pero como ninguna semana se ha cerrado todavía
+> (`/semana` está sin construir, así que las semanas no ruedan), hoy puedes cambiarlo cualquier
+> día. En cuanto exista `/semana`, esto empezará a pedirte que esperes al lunes.
 
 ### El archivo
 
@@ -179,6 +187,25 @@ Si el cupo está lleno, activar te dice cuántos tienes y no cambia nada. Sin re
   lo que `FR-17` promete.
 
 Sin conteos, sin rojo, sin nada que reclame. Se llega por un toque deliberado, nunca al abrir.
+
+### El acceso
+
+Ritmo sirve a una sola persona, y entra de dos maneras.
+
+**Con un passkey** — la huella o la cara del dispositivo. Registras uno por aparato desde Ajustes,
+con el nombre que quieras darle («iPhone», «el portátil»), y desde ahí entras sin escribir nada.
+Perder un aparato se arregla **borrando su fila**: ese dispositivo deja de entrar en el acto, y los
+demás siguen intactos.
+
+**Con una contraseña**, que es el respaldo y lo que usas la primera vez, antes de tener ningún
+passkey registrado. No hay «entrar con Google» ni ningún tercero que sepa quién eres.
+
+La sesión dura **30 minutos** y no se renueva sola. No hay tabla de sesiones que consultar: la
+cookie va firmada, así que cerrar sesión borra la copia del navegador pero el token sigue siendo
+válido hasta que caduca. Si necesitas cortar todo de golpe, **rotar el secreto de firma invalida
+todas las sesiones al instante**.
+
+---
 
 ## Lo que Ritmo no hace, a propósito
 
@@ -195,11 +222,16 @@ Sin conteos, sin rojo, sin nada que reclame. Se llega por un toque deliberado, n
 
 ## Tus datos
 
-Viven en **`data/ritmo.sqlite`**, un archivo SQLite tuyo. Está en `.gitignore`, así que nunca sale
-del repositorio.
+En local viven en **`data/ritmo.sqlite`**, un archivo SQLite tuyo. Está en `.gitignore`, así que
+nunca sale del repositorio. Desplegado viven en una base remota, que también es SQLite.
+
+**En Ajustes hay un botón: «Descargar copia completa».** Te da tu base entera como un archivo
+`.sqlite` que abres con cualquier herramienta, hoy y dentro de diez años, sin Ritmo y sin una clave.
+Ese es el respaldo, y es lo que hace cierta la promesa de que nunca quedas encerrada en un
+proveedor. **Bájalo cada tanto y guárdalo fuera de la máquina.**
 
 > **Copiar el archivo en caliente no es un respaldo.** Con la app corriendo, un `cp` puede producir
-> una copia corrupta. Para respaldar de verdad: detén el servidor, o usa `VACUUM INTO`.
+> una copia corrupta. Usa el botón, que toma la copia de forma consistente.
 
 Para trabajar contra otra base sin tocar la tuya:
 
@@ -217,10 +249,9 @@ Ritmo está en construcción y estas piezas están especificadas pero sin constr
 | | |
 |---|---|
 | `/semana` | el ritual semanal: propuesta al abrir la semana, cierre al terminarla |
+| Compromisos | lo que te propones por semana, con reserva. El modelo está construido y probado; falta la pantalla que lo use |
 | Objetivos | el nivel sobre los proyectos, y su estado latente |
-| Compromisos | lo que te propones por semana, con reserva |
-| Calibración | comparar lo estimado contra lo registrado |
-| Autenticación | diseñada (`D-004`), sin construir — por eso corre solo en local |
+| Acreditar a otra área | que una entrada cuente para un objetivo de otra área (`FR-5`) |
 
 
 ---
@@ -240,7 +271,7 @@ Mientras siga en `0.x`, la forma todavía puede cambiar:
 |---|---|
 | `0.1.1` | arreglos sobre lo que ya existe |
 | `0.2.0` | una pieza nueva — `/semana`, `/p/:id`, objetivos |
-| `1.0.0` | cuando esté **desplegado y con autenticación**. Hoy `D-020` lo deja corriendo solo en la máquina del dueño, y eso es una etapa declarada, no un final |
+| `1.0.0` | cuando esté **desplegado y con autenticación**. Ambas cosas ya existen desde el 2026-09-24 (`D-031`…`D-034`, `D-004`); el número no se ha movido todavía porque eso lo decide el dueño, no el despliegue |
 
 ## Para desarrollar
 
@@ -250,11 +281,15 @@ El proyecto sigue un arnés de desarrollo guiado por especificación. Empieza po
 ```sh
 npm test                  # reglas del dominio, sin dependencias
 npm run check:core        # la frontera entre capas, verificada
-npm run typecheck         # astro check + tsc
-npm run build             # compilación
-npm run test:integration  # store y API contra un SQLite real
+npm run typecheck         # astro check + tsc, incluida la configuración de Workers
+npm run build             # compila Node y Workers
+npm run test:integration  # store y API contra los dos adaptadores reales
 node scripts/harness-lint.mjs   # presupuestos y forma de los registros
 ```
 
-Las cinco primeras son las puertas de calidad de `docs/project/quality-gates.md`. Cuatro
-dependencias de runtime y cuatro de desarrollo, cada una justificada en `docs/decisions/`.
+Las cinco primeras son las puertas de calidad de `docs/project/quality-gates.md`. Siete
+dependencias de runtime y seis de desarrollo, cada una justificada en `docs/decisions/` (`D-036`).
+
+> `test:integration` corre el **mismo** suite contra los dos adaptadores. Sin `sqld` instalado salta
+> la mitad remota y **dice en pantalla qué no probó**, en vez de fingir que pasó. Para la compuerta
+> completa, [`docs/development.md`](docs/development.md) explica cómo instalarlo.
