@@ -1,6 +1,9 @@
 import { get } from 'node:https';
 
-const origin = process.env.RITMO_ORIGIN ?? 'https://ritmo.juan-account.workers.dev';
+// The origin comes from the environment and nowhere else: this repository is public, and a
+// hard-coded default goes stale the day the deployment moves, which it did in T-042.
+const origin = process.env.RITMO_ORIGIN;
+if (!origin) throw new Error('Set RITMO_ORIGIN to the deployed origin, e.g. https://ritmo.example.com');
 const httpOrigin = origin.replace(/^https:/, 'http:');
 const http = await fetch(`${httpOrigin}/entrar?from=manual`, { redirect: 'manual' });
 if (http.status !== 308) throw new Error(`Expected HTTP 308, got ${http.status}`);

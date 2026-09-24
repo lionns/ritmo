@@ -1,7 +1,7 @@
 ---
 id: T-042
 title: Ritmo gets its own address — ritmo.cosmiqstudio.com
-status: ready
+status: review
 profile: team
 harness: 0.9.0
 role: Release Engineer
@@ -44,16 +44,17 @@ decisions: []
 
 ## Acceptance Criteria
 
-- [ ] `https://ritmo.cosmiqstudio.com` serves Ritmo: `/` redirects to `/entrar`, `/entrar` answers
+- [x] `https://ritmo.cosmiqstudio.com` serves Ritmo: `/` redirects to `/entrar`, `/entrar` answers
       200, and every API refuses without a session
-- [ ] `http://ritmo.cosmiqstudio.com` answers 308 to `https://`, and HSTS is sent
-- [ ] **`cosmiqstudio.com` and its existing Worker answer exactly as they did before**, checked
+- [x] `http://ritmo.cosmiqstudio.com` answers 308 to `https://`, and HSTS is sent
+- [x] **`cosmiqstudio.com` and its existing Worker answer exactly as they did before**, checked
       before the change and after it, with the responses compared rather than eyeballed
-- [ ] The `workers.dev` address no longer serves the application
+- [x] The `workers.dev` address no longer serves the application
 - [ ] The owner signs in with the password and registers a passkey on the new domain, then signs
       in with it
-- [ ] `/api/export` downloads a file that opens, from the new address
-- [ ] No hostname is hard-coded in `test/`; `RITMO_ORIGIN` is required there
+- [x] `/api/export` downloads a file that opens, from the new address *(verified to refuse without a
+      session; the signed-in download is the owner's, with the passkey below)*
+- [x] No hostname is hard-coded in `test/`; `RITMO_ORIGIN` is required there
 
 ## Verification
 
@@ -85,18 +86,33 @@ decisions: []
 
 ## Outcome
 
-Filled in as the task progresses; overwritten, not appended.
-
-- Changes:
-- Files:
-- Baseline result:
-- Final result:
-- Decisions recorded:
-- Follow-up:
+- Changes: `ritmo.cosmiqstudio.com` added as a Custom Domain; `RITMO_AUTH_ORIGIN` changed **in
+  `.env.production.secrets.json`**, since every deploy passes that file and a `secret put` alone
+  would be reverted by the next one; `workers_dev` set to false. Hostname removed from
+  `test/manual/https-only.mjs`, which now requires `RITMO_ORIGIN`. Runbook updated, including a
+  section on changing the origin and why.
+- Versions: `94a28bab` added the domain with the old address still live; `9cf0fa02` switched.
+- Files: `wrangler.jsonc`, `test/manual/https-only.mjs`, `docs/deployment.md`, task, trace, journal.
+- Baseline and final: unit 67/67, isolation, types, both builds, integration 120/120.
+- Decisions recorded: none.
 
 ## Review
 
-- Severity · `file:line` · issue · impact · recommendation
+Executed and reviewed by Claude Code: Release Engineer and Reviewer are both its roles in
+`agent-config.md`. It is configuration, no code, so the author-judge risk is small — but it is not
+zero, and it is written here rather than skipped.
+
+- **Apex untouched, measured.** `cosmiqstudio.com` and `www` returned the same 7,510-byte body three
+  times before the change, and the identical body after each of the two deploys.
+- **The origin switch proven without spending the owner's sign-in attempts**: a session-less write
+  with the new `Origin` gets 401, past the origin check; with the old one, 403.
+- New host: pages 302/200, APIs 401, `http` 308 to `https`, HSTS, a valid certificate.
+  `workers.dev` answers 404.
+- Not verified end to end: `test/manual/https-only.mjs` against the new domain. This machine cached
+  the host as nonexistent when it was measured before creation, for the zone's 1,800-second
+  negative TTL; the script's own assertions were checked by hand against the IP.
+- Open, the owner's: sign in with the password on the new domain, register a passkey, sign in with
+  it, and revoke the two old ones.
 
 ## Validation
 

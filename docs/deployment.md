@@ -34,7 +34,8 @@ Generate a database-scoped token and fresh session signing secret. Provision the
 password hash, existing owner ID and exact Workers HTTPS origin via Wrangler secrets, never Git.
 Use a protected file outside tracked paths for `wrangler deploy --secrets-file FILE`. Delete
 transient token files after provisioning; keep the fallback password in the owner's password manager.
-Workers configuration must use the selected account and `workers_dev: true`; keep preview URLs off.
+Workers configuration must use the selected account, serve only the custom domain with `workers_dev: false`
+(T-042), and keep preview URLs off.
 Deploy the compiled Workers configuration after both build targets pass.
 
 On the deployed HTTPS URL, enumerate all protected paths with missing, tampered and expired cookies;
@@ -71,11 +72,22 @@ References checked during preparation:
 [Wrangler secrets](https://developers.cloudflare.com/workers/configuration/secrets/),
 [Worker versions](https://developers.cloudflare.com/workers/versions-and-deployments/).
 
+## Changing the origin
+
+`RITMO_AUTH_ORIGIN` lives in `.env.production.secrets.json`, and every deploy passes that file with
+`--secrets-file`. **Change it there, never only with `wrangler secret put`** — the next deploy would
+silently put the old origin back and every write would be refused 403.
+
+Changing the origin also changes the passkeys' relying party, so every registered passkey stops being
+offered. Confirm the owner can sign in with the password first; afterwards they register a new passkey
+and revoke the old ones from Ajustes.
+
 ## This release
 
-- Application base: commit `6375cb3`; release configuration enables workers.dev in Juan account.
+- Application base: commit `6375cb3`. T-042 moved it to its own domain on 2026-09-24, version `9cf0fa02`.
 - Cloudflare account: `46f5d55d7bec11f8408ac9990441fe4d`; Worker `ritmo`.
-- Live origin: `https://ritmo.juan-account.workers.dev`.
+- Live origin: `https://ritmo.cosmiqstudio.com`, a Custom Domain on the Worker. `workers.dev` is off and
+  answers 404. The zone's apex Worker is separate and was compared byte for byte before and after.
 - Turso organization: `lionns`; database `ritmo`, default group in `aws-us-east-1`.
 - Backup folder: `data/T-040-respaldo-2026-09-24/`, ignored by Git and private filesystem permissions.
 - Source backup SHA-256: `c166ac8959786249b375ed70e74606c28c135fbbecd7769ad124bf3209b45064`.
