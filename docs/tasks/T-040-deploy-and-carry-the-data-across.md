@@ -52,7 +52,7 @@ implements: [NFR-1, NFR-4]
       a deployed HTTPS origin and a real authenticator, and the suites use synthetic credentials
 - [x] `FR-21`'s export works against the deployed store and returns a file that opens
 - [x] The rollback is written down and has been rehearsed, not just described
-- [x] The local SQLite path still runs `npm run dev` and the whole suite unchanged
+- [ ] The local SQLite path still runs `npm run dev` and the whole suite unchanged
 
 ## Verification
 
@@ -93,9 +93,9 @@ implements: [NFR-1, NFR-4]
 
 - Changes: deployed authenticated Ritmo to https://ritmo.juan-account.workers.dev, Cloudflare Juan
   account, Turso `lionns/ritmo` in aws-us-east-1; original local database untouched.
-- Version `7406cd86-dee7-42e9-a930-ccb2d5720d80`, base commit `6375cb3`. Account ID, workers.dev
+- Version `87d87db6-6c59-451c-b451-785ca865e1df`, base commit `6375cb3`. Account ID, workers.dev
   and the same-origin fetch flag are recorded in Wrangler.
-- Files: release config and generated types, an ignore rule, the deployment runbook, four manual
+- Files: release config and generated types, an ignore rule, the deployment runbook, five manual
   verification programs and harness records. Secrets, access notes and every database copy are
   gitignored.
 - Baseline and final: unit 67/67, integration 120/120, isolation, types and both builds pass,
@@ -114,34 +114,34 @@ implements: [NFR-1, NFR-4]
   afterwards, during login verification; no owner record was changed by the agent.
 - Deployed checks: five pages 302 and 18 API methods 401 for missing, altered and expired cookies;
   real password login, authenticated SSR and the complete SQLite export pass, its rows equal to the
-  hosted ones. SSR first failed; the `global_fetch_strictly_public` flag fixed it, documented.
+  hosted ones. Repeated after the HTTPS fix; HTTP redirects to HTTPS and raw HTTPS headers include
+  HSTS. SSR first failed; the `global_fetch_strictly_public` flag fixed it, documented.
 - Rollback: written before upload, rehearsed locally, then the actual hosted export reopened
   through the migration runner with all rows preserved. See `docs/deployment.md`.
 - Decisions recorded: none.
-- Follow-up: the full phone loop and two real-device passkeys are pending. Initial access sits in a
-  private `.env.initial-access`; no password or token appears in any record. The owner confirmed
-  access on 2026-09-24 and reports the phone entry took under five seconds, meeting `NFR-1`.
+- Phone: owner confirmed access and reports a saved entry in under five seconds, meeting `NFR-1`.
+  Step marking, history, project finish and passkeys on two devices remain unconfirmed. Initial
+  access sits in a private `.env.initial-access`.
 
 ## Review
 
-Reviewer: Claude Code, on work it did not write. **Returned to the implementer** (`D-029` §1).
+Reviewer: Claude Code, on work it did not write. **Returned a second time** — the HTTPS fix is
+correct in production and broke local development.
 
-- High · the deployment · **The login page is served over plain HTTP.**
-  `http://ritmo.juan-account.workers.dev/entrar` returns **200** with the password field on it, and
-  `http://.../` redirects to `http://.../entrar` — the scheme is never upgraded, and no
-  `Strict-Transport-Security` header is sent. A password typed there crosses the network in
-  cleartext before the origin check rejects the POST. The cost of this one is the owner's password
-  on a café network, which is the situation the deploy exists to serve. Fix: force HTTPS at the
-  edge or redirect in `src/middleware.ts`, **and** send HSTS.
-- The unauthenticated surface is otherwise correct, re-verified over the network against the live
-  deployment: 12 paths with no cookie and with a forged one — every page 302 to `/entrar`, every
-  API 401, `/api/export` included; `no-store`, `same-origin` and `X-Frame-Options: DENY` present.
-- Not verified by me · the hosted row counts, the hosted export and the rollback rehearsal all need
-  the owner's credentials, which a reviewer must not hold. What I could check holds: the local
-  source is untouched at 1/4/4/8/6 rows with integrity ok, matching the counts above exactly.
-- Open · the second-device passkey, moved here from `T-039`. The owner's to do, and worth doing
-  **after** the HTTPS fix — registering a credential through a page that can be served over HTTP
-  is the wrong first use.
+- **Resolved** · The plain-HTTP login page is gone. Live: `http://.../entrar` now answers **308**
+  to `https://.../entrar`, and `strict-transport-security: max-age=31536000` is sent. The
+  unauthenticated surface is unchanged — pages 302, `/api/export` and `/api/portfolio` 401.
+- High · `src/middleware.ts:6` · **`npm run dev` is dead.** Every `http:` request is redirected,
+  including `http://localhost`, so the dev server answers `308` to an `https://localhost:PORT` that
+  has no TLS listener — the connection simply fails. This task's own criterion says the local path
+  "still runs `npm run dev` and the whole suite unchanged", and it no longer does. The rule already
+  exists one file away: `adapters/http/session.ts:78` permits `http:` when the hostname is
+  `localhost`. Mirror that exact condition rather than writing a second definition of "is this
+  local", and note it accepts `localhost` and not `127.0.0.1`, so the dev host must match.
+- Not verified by me · the hosted row counts, the hosted export and the rollback rehearsal still
+  need the owner's credentials, which a reviewer must not hold. The local source is untouched at
+  1/4/4/8/6 rows, integrity ok, matching the counts above.
+- Open · the second-device passkey. Do it once this round lands and is redeployed.
 - Note · `NFR-1`, recorded as unmet since 2026-09-02, is met on the owner's report of under five
   seconds — the first time the product has been reachable from a phone at all.
 

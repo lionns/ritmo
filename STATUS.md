@@ -58,10 +58,10 @@ None. All decisions are accepted or superseded.
 
 ## Journal — last 5
 
+- 2026-09-24 | T-040 | doing | deployed HTTPS redirect and HSTS fix; phone passkeys and full loop still pending | 7 files | unit 67/67, integration 120/120, typecheck, isolation, dual builds, deployed HTTPS/auth/export | -
 - 2026-09-24 | T-040 | doing | owner reports phone entry in under 5 seconds; NFR-1 met, remaining real-device checks pending | 4 record files | harness lint and diff check | -
 - 2026-09-24 | T-040 | doing | owner confirmed access works; timed phone loop and two-device passkeys remain pending | 4 record files | owner report; harness lint and diff check | -
 - 2026-09-24 | T-040 | doing | deployed authenticated Worker, verified Turso rows and export; phone acceptance pending | 12 files | unit 67/67, integration 120/120, types, isolation, dual builds, hosted auth/export and rollback | -
 - 2026-09-23 | T-039 | done | the owner stops being whoever asks — D-004 built | 42 files | unit 67/67, isolation, typecheck, dual build, integration 120/120 | -
-- 2026-09-23 | T-039 | review | passkeys and password, signed sessions and guards; real-phone check pending | 46 files | unit 67/67, integration 120/120, isolation, types, dual builds, Node/workerd HTTP matrix | D-004
 
 Full history: [`JOURNAL.md`](JOURNAL.md) · decisions: [`docs/decisions/`](docs/decisions/README.md)
