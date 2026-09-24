@@ -10,7 +10,7 @@ rather than editing. Template in `../sdd/TEMPLATES.md`.
 | [D-001](D-001-runtime-typescript.md) | 2026-08-29 | TypeScript end to end, on the Workers runtime | `superseded` | none |
 | [D-002](D-002-data-sqlite.md) | 2026-08-29 | D1, which is SQLite | `superseded` | none |
 | [D-003](D-003-boundaries-ports-adapters.md) | 2026-08-29 | A pure core behind ports, enforced by a check | `superseded` | none |
-| [D-004](D-004-identity-single-owner.md) | 2026-08-29 | One owner, session cookie, no third party | `accepted` | none |
+| [D-004](D-004-identity-single-owner.md) | 2026-08-29 | One owner, session cookie, no third party | `superseded` | none |
 | [D-005](D-005-deploy-cloudflare-workers.md) | 2026-08-29 | Cloudflare Workers, and the privacy constraint reversed | `superseded` | none |
 | [D-006](D-006-tests-node-runner.md) | 2026-08-29 | node --test, zero dependencies | `superseded` | none |
 | [D-007](D-007-interface-server-rendered.md) | 2026-08-29 | Server-rendered HTML, and NFR-6 narrowed | `superseded` | none |
@@ -41,3 +41,4 @@ rather than editing. Template in `../sdd/TEMPLATES.md`.
 | [D-034](D-034-interface-astro-cloudflare-adapter.md) | 2026-09-22 | Astro keeps the interface, on the Cloudflare adapter | `accepted` | D-021 |
 | [D-035](D-035-the-proposal-reads-the-reserve.md) | 2026-09-22 | The proposal reads the reserve, not the median | `accepted` | D-030 (§2 only; everything else in it stands) |
 | [D-036](D-036-seven-runtime-six-dev.md) | 2026-09-23 | Seven runtime and six dev dependencies, and why `sql.js` is among them | `accepted` | D-022 |
+| [D-037](D-037-several-people-each-their-own.md) | 2026-09-24 | Several people, each their own Ritmo, by invitation | `accepted` | D-004 (its single-owner and no-account clauses only; the rest of it stands) |

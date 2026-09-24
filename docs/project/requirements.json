@@ -137,6 +137,18 @@
       "title": "Finishing a project",
       "statement": "A project shall be markable as finished on any day, carrying the moment it was finished rather than a third state; finishing shall free its slot against the active cap at once, shall be reversible by returning the project to shelved, and shall be rendered without congratulation or any reward language.",
       "source": "research.md §4, §11, §12, §14 · brief.md § Success Measures · D-025"
+    },
+    {
+      "id": "FR-24",
+      "title": "Accounts by invitation",
+      "statement": "An account shall be created only by redeeming a single-use invitation that expires, choosing a password and registering a passkey; the system shall offer no open registration and shall never disclose whether an address already has an account (D-037).",
+      "source": "D-037"
+    },
+    {
+      "id": "FR-25",
+      "title": "Nothing crosses between people",
+      "statement": "No surface shall aggregate, rank or compare across accounts, and no read shall return another account's rows — including FR-21's export, which is per person (D-037, NFR-7).",
+      "source": "D-037"
     }
   ],
   "nonFunctional": [
@@ -149,7 +161,7 @@
     {
       "id": "NFR-2",
       "title": "Single user",
-      "statement": "The system shall serve exactly one owner and shall build no accounts, sharing, teams, permissions or comments.",
+      "statement": "The system shall serve several people, each seeing only their own portfolio, and shall build no sharing, teams, permissions or comments between them (D-037). Accounts are created by single-use invitation only; there is no open registration. It served exactly one owner until 2026-09-24, which is why NFR-3 required ownership to be modelled from the first migration.",
       "source": "brief.md § Out of Scope"
     },
     {

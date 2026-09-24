@@ -1,6 +1,6 @@
 # D-004 — One owner, session cookie, no third party
 
-- Status: accepted
+- Status: superseded
 - Date: 2026-08-29
 - Supersedes: none
 - Tasks: none
