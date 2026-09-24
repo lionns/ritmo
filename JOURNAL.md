@@ -54,3 +54,4 @@
 2026-09-24 | T-040 | doing | localhost dev exception fixed and redeployed; owner device checks and external backup pending | 6 files | unit 67/67, integration 120/120, typecheck, isolation, dual builds, local HTTP smoke, deployed HTTPS/auth/export | -
 2026-09-24 | T-040 | done | Ritmo reachable from a phone, authenticated, with the records carried across | 12 files | unit 67/67, isolation, typecheck, dual build, integration 120/120 | -
 2026-09-24 | T-042 | review | ritmo.cosmiqstudio.com live, workers.dev off, apex untouched | 6 files | unit 67/67, isolation, typecheck, dual build, integration 120/120 | -
+2026-09-24 | T-042 | done | Ritmo lives at ritmo.cosmiqstudio.com, apex untouched, old address off | 6 files | unit 67/67, isolation, typecheck, dual build, integration 120/120 | -

