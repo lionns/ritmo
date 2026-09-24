@@ -10,7 +10,7 @@ Harness `0.9.0` · profile `team`
 |---|---|---|
 | [T-034](docs/tasks/T-034-the-week-through-the-contract.md) | `ready` | Put the week behind contracts and API routes, including the one piece the model deliberately |
 | [T-035](docs/tasks/T-035-the-week-screen.md) | `ready` | Build the one screen the week has been missing since the product began — the close, the |
-| [T-040](docs/tasks/T-040-deploy-and-carry-the-data-across.md) | `doing` | Put Ritmo where the owner can reach it from a phone, move weeks of real use onto the new |
+| [T-040](docs/tasks/T-040-deploy-and-carry-the-data-across.md) | `review` | Put Ritmo where the owner can reach it from a phone, move weeks of real use onto the new |
 | [T-001](docs/tasks/T-001-skeleton-and-next-action.md) | `done` | Stand up the three-layer tree with every quality-gate command real and green, and prove it by |
 | [T-003](docs/tasks/T-003-loose-ends.md) | `done` | Close the six low-severity findings the T-001 review left open, so the schema states the |
 | [T-005](docs/tasks/T-005-first-loop-back.md) | `done` | Give the front two endpoints and the contracts behind them, so a real portfolio can be read |
@@ -50,7 +50,7 @@ Harness `0.9.0` · profile `team`
 
 ## Next
 
-**T-040** (`doing`) — Put Ritmo where the owner can reach it from a phone, move weeks of real use onto the new
+**T-040** (`review`) — Put Ritmo where the owner can reach it from a phone, move weeks of real use onto the new
 
 ## Open decisions
 
@@ -58,10 +58,10 @@ None. All decisions are accepted or superseded.
 
 ## Journal — last 5
 
+- 2026-09-24 | T-040 | doing | localhost dev exception fixed and redeployed; owner device checks and external backup pending | 6 files | unit 67/67, integration 120/120, typecheck, isolation, dual builds, local HTTP smoke, deployed HTTPS/auth/export | -
 - 2026-09-24 | T-040 | doing | deployed HTTPS redirect and HSTS fix; phone passkeys and full loop still pending | 7 files | unit 67/67, integration 120/120, typecheck, isolation, dual builds, deployed HTTPS/auth/export | -
 - 2026-09-24 | T-040 | doing | owner reports phone entry in under 5 seconds; NFR-1 met, remaining real-device checks pending | 4 record files | harness lint and diff check | -
 - 2026-09-24 | T-040 | doing | owner confirmed access works; timed phone loop and two-device passkeys remain pending | 4 record files | owner report; harness lint and diff check | -
 - 2026-09-24 | T-040 | doing | deployed authenticated Worker, verified Turso rows and export; phone acceptance pending | 12 files | unit 67/67, integration 120/120, types, isolation, dual builds, hosted auth/export and rollback | -
-- 2026-09-23 | T-039 | done | the owner stops being whoever asks — D-004 built | 42 files | unit 67/67, isolation, typecheck, dual build, integration 120/120 | -
 
 Full history: [`JOURNAL.md`](JOURNAL.md) · decisions: [`docs/decisions/`](docs/decisions/README.md)

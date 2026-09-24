@@ -16,10 +16,10 @@
     Dump import initially lacked referenced tables; create-all-schema-first fixed the rehearsal.
   - cloud: CLI file upload produced empty schema; stopped exposure, imported atomically into empty
     destination and compared every row. No existing database overwritten. Hosted integrity/FKs clean.
-  - deploy: version 7406cd86-dee7-42e9-a930-ccb2d5720d80 on ritmo.juan-account.workers.dev.
-    SSR initially failed; documented global_fetch_strictly_public flag fixed same-origin routing.
+  - deploy: version e822deb6-92e9-4867-ac62-e45d2ebc8a71 on ritmo.juan-account.workers.dev.
+    HTTP→HTTPS 308/HSTS and localhost HTTP exception verified; independent re-review pending.
   - hosted: all 23 protected page/API methods tested with missing/altered/expired cookies; login,
-    private screens and complete export pass. Actual export restored locally, all rows preserved.
-  - final: unit 67/67, integration 120/120, isolation, types, dual builds; local dev copy verified.
+    private screens and complete export pass again after HTTPS fix; export restored locally, rows preserved.
+  - final: unit 67/67, integration 120/120, isolation, typecheck and dual builds; local dev verified.
   - owner: reports saved phone entry took <5 seconds; NFR-1 met. Full loop and second-device
     passkey results remain pending.

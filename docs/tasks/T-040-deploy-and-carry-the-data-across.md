@@ -1,7 +1,7 @@
 ---
 id: T-040
 title: Deploy, and carry the data across
-status: doing
+status: review
 profile: team
 harness: 0.9.0
 role: Release Engineer
@@ -52,7 +52,7 @@ implements: [NFR-1, NFR-4]
       a deployed HTTPS origin and a real authenticator, and the suites use synthetic credentials
 - [x] `FR-21`'s export works against the deployed store and returns a file that opens
 - [x] The rollback is written down and has been rehearsed, not just described
-- [ ] The local SQLite path still runs `npm run dev` and the whole suite unchanged
+- [x] The local SQLite path still runs `npm run dev` and the whole suite unchanged
 
 ## Verification
 
@@ -93,13 +93,14 @@ implements: [NFR-1, NFR-4]
 
 - Changes: deployed authenticated Ritmo to https://ritmo.juan-account.workers.dev, Cloudflare Juan
   account, Turso `lionns/ritmo` in aws-us-east-1; original local database untouched.
-- Version `87d87db6-6c59-451c-b451-785ca865e1df`, base commit `6375cb3`. Account ID, workers.dev
+- Version `e822deb6-92e9-4867-ac62-e45d2ebc8a71`, base commit `6375cb3`. Account ID, workers.dev
   and the same-origin fetch flag are recorded in Wrangler.
 - Files: release config and generated types, an ignore rule, the deployment runbook, five manual
   verification programs and harness records. Secrets, access notes and every database copy are
   gitignored.
 - Baseline and final: unit 67/67, integration 120/120, isolation, types and both builds pass,
-  harness clean. `npm run dev` still served a temporary local SQLite copy, portfolio and export.
+  harness clean. After the localhost exception, `npm run dev` served a disposable SQLite copy:
+  `/entrar` returned 200 and `/` redirected to `/entrar` over HTTP.
 - Backup: `data/T-040-respaldo-2026-09-24/` via the SQLite backup API, integrity and FKs clean,
   export SHA-256 `c166ac89…b45064`. The owner asked to copy this folder to an external device
   themselves, so **off-machine retention is not verified**. No source writer was running.
@@ -125,25 +126,24 @@ implements: [NFR-1, NFR-4]
 
 ## Review
 
-Reviewer: Claude Code, on work it did not write. **Returned a second time** — the HTTPS fix is
-correct in production and broke local development.
+Reviewer: Claude Code. Two rounds returned, both resolved; one criterion left, the owner's to do.
 
-- **Resolved** · The plain-HTTP login page is gone. Live: `http://.../entrar` now answers **308**
-  to `https://.../entrar`, and `strict-transport-security: max-age=31536000` is sent. The
-  unauthenticated surface is unchanged — pages 302, `/api/export` and `/api/portfolio` 401.
-- High · `src/middleware.ts:6` · **`npm run dev` is dead.** Every `http:` request is redirected,
-  including `http://localhost`, so the dev server answers `308` to an `https://localhost:PORT` that
-  has no TLS listener — the connection simply fails. This task's own criterion says the local path
-  "still runs `npm run dev` and the whole suite unchanged", and it no longer does. The rule already
-  exists one file away: `adapters/http/session.ts:78` permits `http:` when the hostname is
-  `localhost`. Mirror that exact condition rather than writing a second definition of "is this
-  local", and note it accepts `localhost` and not `127.0.0.1`, so the dev host must match.
-- Not verified by me · the hosted row counts, the hosted export and the rollback rehearsal still
-  need the owner's credentials, which a reviewer must not hold. The local source is untouched at
-  1/4/4/8/6 rows, integrity ok, matching the counts above.
-- Open · the second-device passkey. Do it once this round lands and is redeployed.
+- **Resolved** · Plain HTTP is gone. Live on `e822deb6`: `http://.../entrar` → **308** to
+  `https://`, `strict-transport-security: max-age=31536000` sent, unauthenticated surface
+  unchanged — pages 302, `/api/export` and `/api/portfolio` 401.
+- **Resolved** · `npm run dev` works again, over plain `http://localhost`: `/` → 302 to `/entrar`,
+  `/entrar` → 200, no upgrade attempted. Keyed on the hostname exactly as `session.ts:78` keys it.
+- Low · `src/middleware.ts:6` · "is this local" now exists twice, here and in `session.ts:78`; they
+  agree today and diverge the day one learns about `127.0.0.1`. Recorded, not returned.
+- Not verified by me · the hosted row counts, the hosted export and the rollback rehearsal need
+  the owner's credentials, which a reviewer must not hold. The local source is untouched at
+  1/4/4/8/6 rows, matching the counts above.
+- **Open, and only the owner can close it** · a passkey on the phone and a second on another
+  device. It needs a real authenticator; the suites use synthetic credentials.
 - Note · `NFR-1`, recorded as unmet since 2026-09-02, is met on the owner's report of under five
   seconds — the first time the product has been reachable from a phone at all.
+
+Gates: unit 67/67, isolation, types, both builds, integration **120/120**, lint clean.
 
 ## Validation
 

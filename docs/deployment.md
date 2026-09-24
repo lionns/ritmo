@@ -41,6 +41,11 @@ On the deployed HTTPS URL, enumerate all protected paths with missing, tampered 
 expect pages to redirect and APIs to refuse, including export. Authenticate and verify screens and
 download a SQLite export; open it and compare with the remote database. Do not log cookie/token values.
 Record the URL, Worker version, database name, source hash and per-table counts in the task.
+The Worker redirects HTTP requests to the same HTTPS URL before authentication and adds
+`Strict-Transport-Security: max-age=31536000` to every HTTPS response. Verify both after each deploy
+with `node test/manual/https-only.mjs`, which inspects HSTS in raw HTTPS response headers.
+The redirect excludes `localhost`, matching the auth origin rule in `adapters/http/session.ts`;
+the local Node dev server has no TLS listener. Keep its host set to `localhost` (not `127.0.0.1`).
 
 The owner then registers a real phone passkey and a second device, preserving the first; walks the
 step/log/history/finish loop; and measures opening-to-saved-entry time. Record the actual duration.
@@ -86,11 +91,11 @@ References checked during preparation:
 
 ## Hosted verification result — 2026-09-24
 
-Current Worker version: `7406cd86-dee7-42e9-a930-ccb2d5720d80`.
+Current Worker version: `e822deb6-92e9-4867-ac62-e45d2ebc8a71`.
 The first version authenticated correctly but SSR's same-origin API fetch did not route back into
 Workers. Adding `global_fetch_strictly_public` fixed the deployed-only failure, as documented in
 [Cloudflare's fetch behavior](https://developers.cloudflare.com/workers/configuration/compatibility-flags/).
-No application code or product behavior was changed.
+The current middleware also redirects HTTP before auth and applies HSTS to HTTPS responses.
 
 `node test/manual/deployed-auth.mjs` passed against the HTTPS origin: five private pages redirect,
 18 API methods return 401 for missing/altered/expired cookies, password sign-in succeeds, private
@@ -100,9 +105,16 @@ operational rate-counter rows after the pre-write comparison; no owner project/s
 The hosted export was then reopened locally through the migration runner with every row preserved,
 completing a second rollback rehearsal against the actual provider's export.
 
+The initial independent review found that HTTP served the password page. The Worker now redirects
+HTTP to HTTPS before auth and adds HSTS; `node test/manual/https-only.mjs` passed against the new
+release. Fetch filtered HSTS from script-visible response headers, so the check reads raw HTTPS.
+`node test/manual/deployed-auth.mjs` was repeated on this version: all 23 protected methods kept
+their expected 302/401 results, password login and private screens passed, and the complete export
+still matched hosted rows.
 The final gates passed: 67 unit tests, 120 integration tests, isolation, typecheck and both builds.
 `npm run dev` also served authenticated portfolio and export using a disposable local SQLite copy.
-The owner's real phone timings, second-device passkeys and full interaction loop are still pending.
+The owner reports the phone entry took under five seconds. Two-device passkeys and the rest of the
+step/log/history/finish loop are still pending.
 
 Repeat deploy after gates with:
 
