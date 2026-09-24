@@ -10,7 +10,6 @@ Harness `0.9.0` · profile `team`
 |---|---|---|
 | [T-034](docs/tasks/T-034-the-week-through-the-contract.md) | `ready` | Put the week behind contracts and API routes, including the one piece the model deliberately |
 | [T-035](docs/tasks/T-035-the-week-screen.md) | `ready` | Build the one screen the week has been missing since the product began — the close, the |
-| [T-040](docs/tasks/T-040-deploy-and-carry-the-data-across.md) | `review` | Put Ritmo where the owner can reach it from a phone, move weeks of real use onto the new |
 | [T-001](docs/tasks/T-001-skeleton-and-next-action.md) | `done` | Stand up the three-layer tree with every quality-gate command real and green, and prove it by |
 | [T-003](docs/tasks/T-003-loose-ends.md) | `done` | Close the six low-severity findings the T-001 review left open, so the schema states the |
 | [T-005](docs/tasks/T-005-first-loop-back.md) | `done` | Give the front two endpoints and the contracts behind them, so a real portfolio can be read |
@@ -45,12 +44,13 @@ Harness `0.9.0` · profile `team`
 | [T-037](docs/tasks/T-037-the-owner-holds-a-copy.md) | `done` | Let the owner download their entire database as a SQLite file on demand, so that the only |
 | [T-038](docs/tasks/T-038-the-second-store-behind-the-port.md) | `done` | Build the store T-036 chose as a second adapter behind the existing port, so the core and |
 | [T-039](docs/tasks/T-039-d004-built-at-last.md) | `done` | Build `D-004` as specified — a passkey per device, a password fallback, a stateless signed |
+| [T-040](docs/tasks/T-040-deploy-and-carry-the-data-across.md) | `done` | Put Ritmo where the owner can reach it from a phone, move weeks of real use onto the new |
 | [T-041](docs/tasks/T-041-the-monday-that-fr14-promises.md) | `done` | Make `changeProjectState` refuse only *within* a week and allow the rotation on Monday, so |
 | [T-010](docs/tasks/T-010-passkey-and-the-signed-cookie.md) | `superseded` | Build `D-004` as specified — a passkey registered per device, verified with Web Crypto and no |
 
 ## Next
 
-**T-040** (`review`) — Put Ritmo where the owner can reach it from a phone, move weeks of real use onto the new
+**T-034** (`ready`) — Put the week behind contracts and API routes, including the one piece the model deliberately
 
 ## Open decisions
 
@@ -58,10 +58,10 @@ None. All decisions are accepted or superseded.
 
 ## Journal — last 5
 
+- 2026-09-24 | T-040 | done | Ritmo reachable from a phone, authenticated, with the records carried across | 12 files | unit 67/67, isolation, typecheck, dual build, integration 120/120 | -
 - 2026-09-24 | T-040 | doing | localhost dev exception fixed and redeployed; owner device checks and external backup pending | 6 files | unit 67/67, integration 120/120, typecheck, isolation, dual builds, local HTTP smoke, deployed HTTPS/auth/export | -
 - 2026-09-24 | T-040 | doing | deployed HTTPS redirect and HSTS fix; phone passkeys and full loop still pending | 7 files | unit 67/67, integration 120/120, typecheck, isolation, dual builds, deployed HTTPS/auth/export | -
 - 2026-09-24 | T-040 | doing | owner reports phone entry in under 5 seconds; NFR-1 met, remaining real-device checks pending | 4 record files | harness lint and diff check | -
 - 2026-09-24 | T-040 | doing | owner confirmed access works; timed phone loop and two-device passkeys remain pending | 4 record files | owner report; harness lint and diff check | -
-- 2026-09-24 | T-040 | doing | deployed authenticated Worker, verified Turso rows and export; phone acceptance pending | 12 files | unit 67/67, integration 120/120, types, isolation, dual builds, hosted auth/export and rollback | -
 
 Full history: [`JOURNAL.md`](JOURNAL.md) · decisions: [`docs/decisions/`](docs/decisions/README.md)

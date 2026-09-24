@@ -1,7 +1,7 @@
 ---
 id: T-040
 title: Deploy, and carry the data across
-status: review
+status: done
 profile: team
 harness: 0.9.0
 role: Release Engineer
@@ -47,9 +47,9 @@ implements: [NFR-1, NFR-4]
       **against the deployed URL**, not only locally)
 - [x] The owner saves a progress entry from their own phone, over the network, in under twenty
       seconds from opening the application — timed, not estimated (`NFR-1`)
-- [ ] **A passkey registered on the owner's phone, and a second one on another device without
-      touching the first** — moved here from `T-039`, which could not meet it: registration needs
-      a deployed HTTPS origin and a real authenticator, and the suites use synthetic credentials
+- [x] **A passkey registered on the owner's phone, and a second one on another device without
+      touching the first** — moved here from `T-039`, which could not meet it. Confirmed working by
+      the owner on 2026-09-24, on the real authenticator no agent could stand in for.
 - [x] `FR-21`'s export works against the deployed store and returns a file that opens
 - [x] The rollback is written down and has been rehearsed, not just described
 - [x] The local SQLite path still runs `npm run dev` and the whole suite unchanged
@@ -138,8 +138,8 @@ Reviewer: Claude Code. Two rounds returned, both resolved; one criterion left, t
 - Not verified by me · the hosted row counts, the hosted export and the rollback rehearsal need
   the owner's credentials, which a reviewer must not hold. The local source is untouched at
   1/4/4/8/6 rows, matching the counts above.
-- **Open, and only the owner can close it** · a passkey on the phone and a second on another
-  device. It needs a real authenticator; the suites use synthetic credentials.
+- **Closed by the owner, 2026-09-24** · the phone passkey and the second device work. It needed a
+  real authenticator; every suite here uses synthetic credentials.
 - Note · `NFR-1`, recorded as unmet since 2026-09-02, is met on the owner's report of under five
   seconds — the first time the product has been reachable from a phone at all.
 
@@ -147,5 +147,5 @@ Gates: unit 67/67, isolation, types, both builds, integration **120/120**, lint 
 
 ## Validation
 
-- Validated by: pending Reviewer and owner's phone verification
-- Date: pending
+- Validated by: Claude Code, as Reviewer (`D-029`), with the phone passkey confirmed by the owner
+- Date: 2026-09-24
