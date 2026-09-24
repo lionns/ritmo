@@ -1,10 +1,11 @@
 {
   "$schema": "./node_modules/wrangler/config-schema.json",
   "name": "ritmo",
+  "account_id": "46f5d55d7bec11f8408ac9990441fe4d",
   "main": "@astrojs/cloudflare/entrypoints/server",
   "compatibility_date": "2026-09-22",
-  "compatibility_flags": ["nodejs_compat"],
-  "workers_dev": false,
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "workers_dev": true,
   "preview_urls": false,
   "observability": { "enabled": true, "head_sampling_rate": 1 },
   "secrets": { "required": ["RITMO_DATABASE_URL", "RITMO_DATABASE_TOKEN", "RITMO_SESSION_SECRET", "RITMO_PASSWORD_HASH", "RITMO_OWNER_ID", "RITMO_AUTH_ORIGIN"] },

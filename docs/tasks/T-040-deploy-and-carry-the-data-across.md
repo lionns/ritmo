@@ -1,7 +1,7 @@
 ---
 id: T-040
 title: Deploy, and carry the data across
-status: ready
+status: doing
 profile: team
 harness: 0.9.0
 role: Release Engineer
@@ -41,18 +41,18 @@ implements: [NFR-1, NFR-4]
 
 ## Acceptance Criteria
 
-- [ ] Every table's row count on the new store equals the source, checked table by table and
+- [x] Every table's row count on the new store equals the source, checked table by table and
       written into the Outcome
-- [ ] The deployed application refuses every request without a valid session (T-039, re-verified
+- [x] The deployed application refuses every request without a valid session (T-039, re-verified
       **against the deployed URL**, not only locally)
-- [ ] The owner saves a progress entry from their own phone, over the network, in under twenty
+- [x] The owner saves a progress entry from their own phone, over the network, in under twenty
       seconds from opening the application — timed, not estimated (`NFR-1`)
 - [ ] **A passkey registered on the owner's phone, and a second one on another device without
       touching the first** — moved here from `T-039`, which could not meet it: registration needs
       a deployed HTTPS origin and a real authenticator, and the suites use synthetic credentials
-- [ ] `FR-21`'s export works against the deployed store and returns a file that opens
-- [ ] The rollback is written down and has been rehearsed, not just described
-- [ ] The local SQLite path still runs `npm run dev` and the whole suite unchanged
+- [x] `FR-21`'s export works against the deployed store and returns a file that opens
+- [x] The rollback is written down and has been rehearsed, not just described
+- [x] The local SQLite path still runs `npm run dev` and the whole suite unchanged
 
 ## Verification
 
@@ -91,22 +91,61 @@ implements: [NFR-1, NFR-4]
 
 ## Outcome
 
-Filled in as the task progresses; overwritten, not appended.
-
-- Changes:
-- Files:
-- Baseline result:
-- Final result:
-- Decisions recorded:
-- Follow-up:
+- Changes: deployed authenticated Ritmo to https://ritmo.juan-account.workers.dev, Cloudflare Juan
+  account, Turso `lionns/ritmo` in aws-us-east-1; original local database untouched.
+- Version `7406cd86-dee7-42e9-a930-ccb2d5720d80`, base commit `6375cb3`. Account ID, workers.dev
+  and the same-origin fetch flag are recorded in Wrangler.
+- Files: release config and generated types, an ignore rule, the deployment runbook, four manual
+  verification programs and harness records. Secrets, access notes and every database copy are
+  gitignored.
+- Baseline and final: unit 67/67, integration 120/120, isolation, types and both builds pass,
+  harness clean. `npm run dev` still served a temporary local SQLite copy, portfolio and export.
+- Backup: `data/T-040-respaldo-2026-09-24/` via the SQLite backup API, integrity and FKs clean,
+  export SHA-256 `c166ac89…b45064`. The owner asked to copy this folder to an external device
+  themselves, so **off-machine retention is not verified**. No source writer was running.
+- Migration: 0007 rehearsed on a copy with existing rows unchanged, and the destination verified
+  empty first. **The CLI file upload reported success and created no tables** — caught before
+  exposure; an atomic SQL import replaced it, every row compared before commit, ledger order kept.
+- Counts before application writes, original / hosted, **every one equal**: areas 4, projects 4,
+  steps 8, entries 6, owners 1; commitments, credentials, objectives, tags and weeks 0; the ledger
+  6 → 7 for migration 0007, and `auth_attempts` and `auth_challenges` new and empty.
+- Contents: all rows equal, oldest and newest entry, step and project by ID included, kept in a
+  protected hosted-comparison.json; integrity and FKs clean. Only authentication counters changed
+  afterwards, during login verification; no owner record was changed by the agent.
+- Deployed checks: five pages 302 and 18 API methods 401 for missing, altered and expired cookies;
+  real password login, authenticated SSR and the complete SQLite export pass, its rows equal to the
+  hosted ones. SSR first failed; the `global_fetch_strictly_public` flag fixed it, documented.
+- Rollback: written before upload, rehearsed locally, then the actual hosted export reopened
+  through the migration runner with all rows preserved. See `docs/deployment.md`.
+- Decisions recorded: none.
+- Follow-up: the full phone loop and two real-device passkeys are pending. Initial access sits in a
+  private `.env.initial-access`; no password or token appears in any record. The owner confirmed
+  access on 2026-09-24 and reports the phone entry took under five seconds, meeting `NFR-1`.
 
 ## Review
 
-- Severity · `file:line` · issue · impact · recommendation
+Reviewer: Claude Code, on work it did not write. **Returned to the implementer** (`D-029` §1).
+
+- High · the deployment · **The login page is served over plain HTTP.**
+  `http://ritmo.juan-account.workers.dev/entrar` returns **200** with the password field on it, and
+  `http://.../` redirects to `http://.../entrar` — the scheme is never upgraded, and no
+  `Strict-Transport-Security` header is sent. A password typed there crosses the network in
+  cleartext before the origin check rejects the POST. The cost of this one is the owner's password
+  on a café network, which is the situation the deploy exists to serve. Fix: force HTTPS at the
+  edge or redirect in `src/middleware.ts`, **and** send HSTS.
+- The unauthenticated surface is otherwise correct, re-verified over the network against the live
+  deployment: 12 paths with no cookie and with a forged one — every page 302 to `/entrar`, every
+  API 401, `/api/export` included; `no-store`, `same-origin` and `X-Frame-Options: DENY` present.
+- Not verified by me · the hosted row counts, the hosted export and the rollback rehearsal all need
+  the owner's credentials, which a reviewer must not hold. What I could check holds: the local
+  source is untouched at 1/4/4/8/6 rows with integrity ok, matching the counts above exactly.
+- Open · the second-device passkey, moved here from `T-039`. The owner's to do, and worth doing
+  **after** the HTTPS fix — registering a credential through a page that can be served over HTTP
+  is the wrong first use.
+- Note · `NFR-1`, recorded as unmet since 2026-09-02, is met on the owner's report of under five
+  seconds — the first time the product has been reachable from a phone at all.
 
 ## Validation
 
-`team` only — required before `done`, and linted.
-
-- Validated by:
-- Date:
+- Validated by: pending Reviewer and owner's phone verification
+- Date: pending
