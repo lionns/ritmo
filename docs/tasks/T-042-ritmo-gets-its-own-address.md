@@ -108,9 +108,9 @@ zero, and it is written here rather than skipped.
   with the new `Origin` gets 401, past the origin check; with the old one, 403.
 - New host: pages 302/200, APIs 401, `http` 308 to `https`, HSTS, a valid certificate.
   `workers.dev` answers 404.
-- Not verified end to end: `test/manual/https-only.mjs` against the new domain. This machine cached
-  the host as nonexistent when it was measured before creation, for the zone's 1,800-second
-  negative TTL; the script's own assertions were checked by hand against the IP.
+- `test/manual/https-only.mjs` passes end to end against the new domain, once this machine's
+  router let go of the "does not exist" it cached when the host was measured before creation —
+  the zone's 1,800-second negative TTL. That cache was the reviewer's doing, not the deployment's.
 - Open, the owner's: sign in with the password on the new domain, register a passkey, sign in with
   it, and revoke the two old ones.
 
