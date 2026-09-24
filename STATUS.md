@@ -10,6 +10,7 @@ Harness `0.9.0` · profile `team`
 |---|---|---|
 | [T-034](docs/tasks/T-034-the-week-through-the-contract.md) | `ready` | Put the week behind contracts and API routes, including the one piece the model deliberately |
 | [T-035](docs/tasks/T-035-the-week-screen.md) | `ready` | Build the one screen the week has been missing since the product began — the close, the |
+| [T-042](docs/tasks/T-042-ritmo-gets-its-own-address.md) | `ready` | Move the deployment to `ritmo.cosmiqstudio.com`, a subdomain of a zone the owner already |
 | [T-001](docs/tasks/T-001-skeleton-and-next-action.md) | `done` | Stand up the three-layer tree with every quality-gate command real and green, and prove it by |
 | [T-003](docs/tasks/T-003-loose-ends.md) | `done` | Close the six low-severity findings the T-001 review left open, so the schema states the |
 | [T-005](docs/tasks/T-005-first-loop-back.md) | `done` | Give the front two endpoints and the contracts behind them, so a real portfolio can be read |
