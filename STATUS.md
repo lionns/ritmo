@@ -13,6 +13,7 @@ Harness `0.9.0` · profile `team`
 | [T-043](docs/tasks/T-043-identity-moves-into-the-database.md) | `ready` | Make the session resolve *who is asking* from their own credential rather than from |
 | [T-044](docs/tasks/T-044-invitations.md) | `ready` | Let an account issue a single-use invitation that expires, and let whoever holds it create |
 | [T-045](docs/tasks/T-045-the-screens-learn-there-are-others.md) | `ready` | Give the three surfaces multiple accounts need — a sign-in that does not know who is coming, |
+| [T-046](docs/tasks/T-046-the-day-is-the-owners-not-the-servers.md) | `ready` | Make "today", the week's Monday and every day boundary follow the owner's own time zone rather |
 | [T-001](docs/tasks/T-001-skeleton-and-next-action.md) | `done` | Stand up the three-layer tree with every quality-gate command real and green, and prove it by |
 | [T-003](docs/tasks/T-003-loose-ends.md) | `done` | Close the six low-severity findings the T-001 review left open, so the schema states the |
 | [T-005](docs/tasks/T-005-first-loop-back.md) | `done` | Give the front two endpoints and the contracts behind them, so a real portfolio can be read |
