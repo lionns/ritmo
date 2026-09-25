@@ -55,3 +55,6 @@
 2026-09-24 | T-040 | done | Ritmo reachable from a phone, authenticated, with the records carried across | 12 files | unit 67/67, isolation, typecheck, dual build, integration 120/120 | -
 2026-09-24 | T-042 | review | ritmo.cosmiqstudio.com live, workers.dev off, apex untouched | 6 files | unit 67/67, isolation, typecheck, dual build, integration 120/120 | -
 2026-09-24 | T-042 | done | Ritmo lives at ritmo.cosmiqstudio.com, apex untouched, old address off | 6 files | unit 67/67, isolation, typecheck, dual build, integration 120/120 | -
+2026-09-24 | T-046 | doing | baseline green; implementing account-zone calendar boundaries before multi-account identity | 3 files | unit 67/67, integration 120/120, isolation, typecheck, dual build, harness lint | D-030
+2026-09-24 | T-046 | doing | owner-zone calendar implemented and all local gates green; live check awaits external backup confirmation | 31 files | TZ=UTC/unit 73/73, integration 120/120, isolation, typecheck, dual build, harness lint | D-030
+2026-09-24 | T-046 | done | owner-local dates shipped; production kept the 24 September mark visible after 19:00 Bogotá | 36 files | TZ=UTC/unit 74/74, integration 120/120, isolation, typecheck, dual build, deployed HTTPS/auth/export and mark/reload, harness lint | D-030

@@ -9,7 +9,7 @@ import {
   ProjectDetailRuleError,
   type ProjectDetail,
 } from "../../../../core/rules/project-detail.ts";
-import { calendarDateOf } from "../../../../core/rules/step.ts";
+import { calendarDateOf, effectiveTimeZone } from "../../../../core/rules/step.ts";
 import { readCalibration, type Calibration } from "../../../../core/rules/calibration.ts";
 import type {
   ProjectDetailErrorResponse,
@@ -32,7 +32,7 @@ export async function handleGetProjectDetail(
       readProjectDetail(store, owner.id, id),
       readCalibration(store, owner.id),
     ]);
-    return Response.json(toResponse(detail, calibration), { headers: responseHeaders });
+    return Response.json(toResponse(detail, calibration, effectiveTimeZone(owner.timeZone)), { headers: responseHeaders });
   } catch (error) {
     // A project that does not exist is a 404, not a 500: the id came from a URL someone typed.
     if (error instanceof ProjectDetailRuleError) return errorResponse(error.message, 404);
@@ -46,7 +46,7 @@ export async function handleGetProjectDetail(
 
 export const GET: APIRoute = ({ params }) => handleGetProjectDetail(params.id ?? "");
 
-function toResponse(detail: ProjectDetail, calibration: Calibration | null): ProjectDetailResponse {
+function toResponse(detail: ProjectDetail, calibration: Calibration | null, timeZone: string): ProjectDetailResponse {
   const { project, area, openSteps, recentEntries } = detail;
   // Counted since the oldest open step was written — the anchor the portfolio row uses (`D-024`).
   const openedAt = openSteps[0]?.createdAt ?? null;
@@ -56,7 +56,7 @@ function toResponse(detail: ProjectDetail, calibration: Calibration | null): Pro
     areaName: area.name,
     state: project.state,
     finishedAt: project.finishedAt,
-    today: calendarDateOf(clock.now()),
+    today: calendarDateOf(clock.now(), timeZone),
     openSteps: openSteps.map((step) => ({
       id: step.id,
       title: step.title,

@@ -50,7 +50,7 @@ describe.skipIf(!remoteTestsAvailable())("complete remote database export (requi
     source = await libsqlDriver.open(join(directory, "server"));
     restore = await source.configureRuntime();
     await source.exec(`
-      INSERT INTO owners VALUES ('o', 2, '[]');
+      INSERT INTO owners (id, active_cap, cap_raises) VALUES ('o', 2, '[]');
       INSERT INTO credentials VALUES ('c', 'o', 'Device', 'credential', 'key', 0, '2026-09-22', NULL);
       INSERT INTO areas VALUES ('a', 'o', 'Studio', 1);
       INSERT INTO objectives VALUES ('obj', 'o', 'a', 'Learn', 'learning', NULL, 'Practice');

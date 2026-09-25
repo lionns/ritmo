@@ -6,6 +6,7 @@ import { handlePostArea } from "../../src/pages/api/areas.ts";
 import { handlePostProject, handlePatchProject } from "../../src/pages/api/projects.ts";
 import { handleGetSettings, handlePatchSettings } from "../../src/pages/api/settings.ts";
 import { handlePostSetup } from "../../src/pages/api/setup.ts";
+import { handlePostTimeZone } from "../../src/pages/api/time-zone.ts";
 import { handlePatchStep, handlePostStep } from "../../src/pages/api/steps.ts";
 import type { Store } from "../../core/ports/store.ts";
 
@@ -26,6 +27,9 @@ export function testApplication(store: Store) {
     }
     if (pathname === "/api/setup" && request.method === "POST") {
       return handlePostSetup(request, store);
+    }
+    if (pathname === "/api/time-zone" && request.method === "POST") {
+      return handlePostTimeZone(request, store);
     }
     if (pathname === "/api/areas" && request.method === "POST") {
       return handlePostArea(request, store);

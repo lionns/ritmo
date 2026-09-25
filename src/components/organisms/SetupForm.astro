@@ -65,7 +65,10 @@ import FieldError from "../atoms/FieldError.astro";
       const response = await fetch("/api/setup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ activeCap: Number(field.value) }),
+        body: JSON.stringify({
+          activeCap: Number(field.value),
+          timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        }),
       });
       const body: unknown = await response.json();
       if (!response.ok) {

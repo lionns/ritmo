@@ -21,7 +21,7 @@ const origin = `http://localhost:${port}`;
 const password = randomBytes(24).toString("base64url");
 const config = { origin, ownerId: "owner", secret: randomBytes(32).toString("hex"), passwordHash: await hashPassword(password) };
 const db = await driver.open(path);
-await db.exec(`INSERT INTO owners VALUES ('owner', 2, '[]'); INSERT INTO areas VALUES ('a', 'owner', 'Private area', 1);
+await db.exec(`INSERT INTO owners (id, active_cap, cap_raises) VALUES ('owner', 2, '[]'); INSERT INTO areas VALUES ('a', 'owner', 'Private area', 1);
 INSERT INTO projects VALUES ('project', 'owner', 'a', NULL, 'Private project', 'active', NULL, NULL, NULL);`);
 const restore = await db.configureRuntime();
 const child = spawn(process.execPath, (workers ? [resolve("node_modules/wrangler/bin/wrangler.js"), "dev", "--config", "dist/workers/server/wrangler.json", "--port", String(port), "--ip", "127.0.0.1", "--log-level", "error"] : [resolve("dist/node/server/entry.mjs")]), { env: { ...process.env, HOST: "127.0.0.1", PORT: String(port), RITMO_STORE: workers ? "remote" : "sqlite", RITMO_DB_PATH: path, RITMO_DATABASE_TOKEN: "local-test",

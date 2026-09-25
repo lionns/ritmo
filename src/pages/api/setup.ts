@@ -2,6 +2,7 @@ import { currentOwnerId } from "../../../adapters/http/session.ts";
 import type { APIRoute } from "astro";
 
 import { runtimeStore } from "../../../adapters/runtime.ts";
+import { normalizeTimeZone } from "../../../core/rules/step.ts";
 import type { Store } from "../../../core/ports/store.ts";
 import type {
   CaptureErrorResponse,
@@ -18,7 +19,9 @@ export async function handlePostSetup(request: Request, injectedStore?: Store): 
   try {
     const store = injectedStore ?? await runtimeStore();
     if (await store.getOwner(currentOwnerId()) !== null) return errorResponse("Setup already exists", 409);
-    const owner = { id: currentOwnerId(), activeCap: parsed.activeCap, capRaises: [] };
+    const owner = {
+      id: currentOwnerId(), activeCap: parsed.activeCap, capRaises: [], timeZone: parsed.timeZone,
+    };
     await store.createOwner(owner);
     return Response.json(
       { ownerId: owner.id, activeCap: owner.activeCap } satisfies SetupResponse,
@@ -39,8 +42,10 @@ async function parseRequest(request: Request): Promise<SetupRequest | Response> 
   const body = await readObject(request);
   if (body instanceof Response) return body;
   const activeCap = "activeCap" in body ? body.activeCap : undefined;
+  const timeZone = normalizeTimeZone("timeZone" in body ? body.timeZone : undefined);
   if (!isPositiveInteger(activeCap)) return errorResponse("activeCap must be a positive integer", 400);
-  return { activeCap };
+  if (timeZone === null) return errorResponse("timeZone must be a valid IANA time zone", 400);
+  return { activeCap, timeZone };
 }
 
 async function readObject(request: Request): Promise<Record<string, unknown> | Response> {

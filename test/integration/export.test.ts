@@ -46,7 +46,7 @@ describe("downloading the complete SQLite database", () => {
     process.env.RITMO_DB_PATH = path;
     source = openDatabase(path);
     source.exec(`
-      INSERT INTO owners VALUES ('o', 2, '[]');
+      INSERT INTO owners (id, active_cap, cap_raises) VALUES ('o', 2, '[]');
       INSERT INTO credentials VALUES ('c', 'o', 'Device', 'credential', 'key', 0, '2026-09-22', NULL);
       INSERT INTO areas VALUES ('a', 'o', 'Studio', 1);
       INSERT INTO objectives VALUES ('obj', 'o', 'a', 'Learn', 'learning', NULL, 'Practice');

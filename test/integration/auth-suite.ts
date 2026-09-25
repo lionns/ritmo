@@ -19,7 +19,7 @@ export function runAuthSuite(driver: StoreDriver) {
   });
   beforeEach(async () => {
     directory = mkdtempSync(join(tmpdir(), "ritmo-auth-")); db = await driver.open(join(directory, "db"));
-    await db.store.createOwner({ id: "owner", activeCap: 2, capRaises: [] });
+    await db.store.createOwner({ id: "owner", activeCap: 2, capRaises: [], timeZone: null });
   });
   afterEach(async () => { db.close(); await driver.cleanup(); rmSync(directory, { recursive: true, force: true }); });
   afterAll(() => driver.cleanup());

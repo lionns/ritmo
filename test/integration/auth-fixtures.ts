@@ -3,7 +3,7 @@ import { encode, utf8 } from "../../adapters/http/session.ts";
 export const protectedRoutes: [string, string][] = [
   ["GET", "/"], ["GET", "/registrar"], ["GET", "/ajustes"], ["GET", "/archivo"], ["GET", "/p/project"],
   ["GET", "/api/portfolio"], ["GET", "/api/archive"], ["GET", "/api/settings"], ["GET", "/api/project/project"],
-  ["GET", "/api/export"], ["POST", "/api/entries"], ["POST", "/api/setup"], ["POST", "/api/areas"],
+  ["GET", "/api/export"], ["POST", "/api/entries"], ["POST", "/api/setup"], ["POST", "/api/time-zone"], ["POST", "/api/areas"],
   ["POST", "/api/projects"], ["PATCH", "/api/projects"], ["PATCH", "/api/settings"],
   ["POST", "/api/steps"], ["PATCH", "/api/steps"], ["GET", "/api/auth/credentials"],
   ["DELETE", "/api/auth/credentials"], ["POST", "/api/auth/register/begin"],
@@ -35,4 +35,3 @@ export function passkeyFixture() {
     },
   };
 }
-

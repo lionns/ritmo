@@ -130,15 +130,45 @@ export async function readDayList(
   return store.readStepsMarkedFor(ownerId, today);
 }
 
-/**
- * Today, in the owner's own calendar. The runtime is their machine (`D-020`), so the server's local
- * date is theirs; a UTC date would roll the day over mid-evening for anyone west of Greenwich.
- */
-export function calendarDateOf(moment: Date): string {
-  const year = moment.getFullYear();
-  const month = `${moment.getMonth() + 1}`.padStart(2, "0");
-  const day = `${moment.getDate()}`.padStart(2, "0");
-  return `${year}-${month}-${day}`;
+/** Today in the named calendar. Callers must make the owner's zone explicit. */
+export function calendarDateOf(moment: Date, timeZone: string): string {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone,
+    calendar: "gregory",
+    numberingSystem: "latn",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(moment);
+  const part = (type: Intl.DateTimeFormatPartTypes) => parts.find((item) => item.type === type)?.value;
+  const year = part("year");
+  const month = part("month");
+  const day = part("day");
+  if (year === undefined || month === undefined || day === undefined) {
+    throw new RangeError("Could not read the calendar date in the owner's time zone");
+  }
+  return `${year.padStart(4, "0")}-${month}-${day}`;
+}
+
+/** Validate and canonicalize a browser-supplied IANA time zone. */
+export function normalizeTimeZone(value: unknown): string | null {
+  if (typeof value !== "string" || value.trim() === "") return null;
+  try {
+    return new Intl.DateTimeFormat("en-US", { timeZone: value }).resolvedOptions().timeZone;
+  } catch {
+    return null;
+  }
+}
+
+/** Before the browser has supplied a zone, preserve this runtime's existing calendar behavior. */
+export function runtimeTimeZone(): string {
+  const timeZone = new Intl.DateTimeFormat().resolvedOptions().timeZone;
+  if (!timeZone) throw new Error("This runtime did not report a time zone");
+  return timeZone;
+}
+
+export function effectiveTimeZone(timeZone: string | null): string {
+  return timeZone ?? runtimeTimeZone();
 }
 
 async function readOpenStep(store: Store, id: string, ownerId: string): Promise<Step> {

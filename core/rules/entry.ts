@@ -6,6 +6,7 @@ import { calendarDateOf } from "./step.ts";
 
 export interface NewProgressEntry {
   ownerId: string;
+  timeZone: string;
   projectId: string;
   what: string;
   effortMinutes: number | null;
@@ -58,7 +59,7 @@ async function attributeToStep(
   input: NewProgressEntry,
   occurredAt: Date,
 ): Promise<string | null> {
-  const marked = await store.readStepsMarkedFor(input.ownerId, calendarDateOf(occurredAt));
+  const marked = await store.readStepsMarkedFor(input.ownerId, calendarDateOf(occurredAt, input.timeZone));
   const mine = marked.filter((step) => step.projectId === input.projectId);
   return mine.length === 1 ? mine[0].id : null;
 }

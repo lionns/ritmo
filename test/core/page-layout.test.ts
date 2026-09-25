@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { describe, it } from "node:test";
+import { runInNewContext } from "node:vm";
 
 import { PROGRESS_MARK_CAP, countProgressMarks, readAsSentence } from "../../src/lib/project-row.ts";
 
@@ -9,6 +10,31 @@ const source = (path: string) =>
   readFileSync(new URL(`../../${path}`, import.meta.url), "utf8");
 
 describe("the first-loop page composition", () => {
+  it("captures the browser time zone on first load and reloads after saving a change", async () => {
+    const shell = source("src/layouts/AppShell.astro");
+    const script = shell.match(/<script is:inline>([\s\S]*?)<\/script>/)?.[1];
+    assert.ok(script, "the shared shell must capture the browser zone without a prompt");
+
+    const calls: Array<{ path: string; method?: string; headers?: Record<string, string>; body?: string }> = [];
+    let reloads = 0;
+    runInNewContext(script, {
+      Intl: { DateTimeFormat: () => ({ resolvedOptions: () => ({ timeZone: "America/Bogota" }) }) },
+      fetch: (path: string, options: { method?: string; body?: string }) => {
+        calls.push({ path, ...options });
+        return Promise.resolve({ ok: true, json: async () => ({ changed: true }) });
+      },
+      window: { location: { reload: () => { reloads += 1; } } },
+    });
+    await new Promise<void>((resolve) => setImmediate(resolve));
+
+    assert.equal(calls.length, 1);
+    assert.equal(calls[0].path, "/api/time-zone");
+    assert.equal(calls[0].method, "POST");
+    assert.equal(calls[0].headers?.["Content-Type"], "application/json");
+    assert.equal(calls[0].body, JSON.stringify({ timeZone: "America/Bogota" }));
+    assert.equal(reloads, 1, "the first screen is fetched again after the zone changes");
+  });
+
   it("centres both columns while keeping the chart in document flow", () => {
     const stage = source("src/components/organisms/PageStage.astro");
     const mainClass = stage.match(/"stage-main ([^"]+)"/)?.[1];

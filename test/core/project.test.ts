@@ -101,7 +101,7 @@ describe("the active project cap", () => {
   });
 });
 
-const owner: Owner = { id: "owner-1", activeCap: 2, capRaises: [] };
+const owner: Owner = { id: "owner-1", activeCap: 2, capRaises: [], timeZone: null };
 const cappedArea: Area = {
   id: "area-capped",
   ownerId: owner.id,
@@ -168,6 +168,7 @@ class MemoryStore implements Store {
     const value = this.owners.get(id);
     if (value !== undefined) this.owners.set(id, { ...value, activeCap, capRaises });
   }
+  async updateOwnerTimeZone(_id: string, _timeZone: string) { throw new Error("not used"); }
   async createArea(value: Area) { this.areas.set(value.id, value); }
   async getArea(id: string) { return this.areas.get(id) ?? null; }
   async listAreas(ownerId: string) {

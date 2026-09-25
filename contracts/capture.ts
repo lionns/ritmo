@@ -2,6 +2,7 @@ import type { StepContract } from "./steps.ts";
 
 export interface SetupRequest {
   activeCap: number;
+  timeZone: string;
 }
 
 export interface SetupResponse {

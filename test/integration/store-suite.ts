@@ -15,7 +15,7 @@ import { LOCAL_OWNER_ID } from "../../adapters/local-owner.ts";
 import type { Area, Entry, Owner, Project, Step } from "../../core/model/entities.ts";
 import { openWeek, closeWeek, readWeekEntries } from "../../core/rules/week.ts";
 import { writeCommitment, spendReserve } from "../../core/rules/commitment.ts";
-import { calendarDateOf } from "../../core/rules/step.ts";
+import { calendarDateOf, runtimeTimeZone } from "../../core/rules/step.ts";
 import type {
   CreateAreaResponse,
   CreateProjectResponse,
@@ -30,6 +30,7 @@ import type { ProjectDetailResponse } from "../../contracts/project.ts";
 import type { PortfolioResponse } from "../../contracts/portfolio.ts";
 import { handlePatchProject } from "../../src/pages/api/projects.ts";
 import { handlePostEntry } from "../../src/pages/api/entries.ts";
+import { handlePostTimeZone } from "../../src/pages/api/time-zone.ts";
 import { handleGetPortfolio } from "../../src/pages/api/portfolio.ts";
 import { testApplication } from "./worker.ts";
 
@@ -76,7 +77,7 @@ describe(`${driver.name} with the step rules`, () => {
       shelved: [],
     }));
 
-    const setupResponse = await postJson("/api/setup", { activeCap: 2 });
+    const setupResponse = await postJson("/api/setup", { activeCap: 2, timeZone: "UTC" });
     expect(setupResponse.status).toBe(201);
     const setup = (await setupResponse.json()) as SetupResponse;
     expect(setup.activeCap).toBe(2);
@@ -84,7 +85,19 @@ describe(`${driver.name} with the step rules`, () => {
       id: setup.ownerId,
       activeCap: 2,
       capRaises: [],
+      timeZone: "UTC",
     });
+
+    const zoneRequest = (timeZone: string) => new Request("http://localhost/api/time-zone", {
+      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ timeZone }),
+    });
+    const zoneCapture = await handlePostTimeZone(zoneRequest("America/Bogota"), store);
+    expect(zoneCapture.status).toBe(200);
+    expect(await zoneCapture.json()).toEqual({ changed: true, timeZone: "America/Bogota" });
+    expect((await store.getOwner(setup.ownerId))?.timeZone).toBe("America/Bogota");
+    const invalidZone = await handlePostTimeZone(zoneRequest("Not/AZone"), store);
+    expect(invalidZone.status).toBe(400);
+    expect((await store.getOwner(setup.ownerId))?.timeZone).toBe("America/Bogota");
 
     const cappedAreaResponse = await postJson("/api/areas", {
       name: "Studio",
@@ -372,6 +385,7 @@ describe(`${driver.name} with the step rules`, () => {
       { name: "0005_drop_next_actions.sql" },
       { name: "0006_commitment_unit.sql" },
       { name: "0007_auth_challenges.sql" },
+      { name: "0008_owner_time_zone.sql" },
     ]);
     expect(await database.prepare(
       "SELECT name FROM sqlite_master WHERE tbl_name = 'next_actions'",
@@ -504,7 +518,7 @@ describe("the steps routes and today's list in the portfolio", () => {
 
   /** What the row actually draws: only the steps marked for today (FR-22). */
   async function markedForToday() {
-    const today = calendarDateOf(new Date());
+    const today = calendarDateOf(new Date(), runtimeTimeZone());
     const seen = await projectInPortfolio();
     return (seen?.openSteps ?? []).filter((step) => step.markedFor === today);
   }
@@ -519,7 +533,7 @@ describe("the steps routes and today's list in the portfolio", () => {
     expect(step.markedFor).toBeNull();
     expect(step.title).toBe("Draft the empty state");
 
-    const today = calendarDateOf(new Date());
+    const today = calendarDateOf(new Date(), runtimeTimeZone());
     const marked = await send("/api/steps", "PATCH", { id: step.id, markedFor: today });
     expect(marked.status).toBe(200);
     expect(((await marked.json()) as StepResponse).step.markedFor).toBe(today);
@@ -536,7 +550,7 @@ describe("the steps routes and today's list in the portfolio", () => {
   });
 
   it("reads none of yesterday's marks, and puts no count in their place", async () => {
-    const yesterday = calendarDateOf(new Date(Date.now() - 24 * 60 * 60 * 1000));
+    const yesterday = calendarDateOf(new Date(Date.now() - 24 * 60 * 60 * 1000), runtimeTimeZone());
     const { step } = (await (await send("/api/steps", "POST", {
       projectId: project.id,
       title: "Yesterday's intention",
@@ -571,7 +585,7 @@ describe("the steps routes and today's list in the portfolio", () => {
     await stepsStore.setProjectState(project.id, owner.id, "shelved");
     const shelved = await send("/api/steps", "PATCH", {
       id: step.id,
-      markedFor: calendarDateOf(new Date()),
+      markedFor: calendarDateOf(new Date(), runtimeTimeZone()),
     });
     expect(shelved.status).toBe(422);
     expect(((await shelved.json()) as StepErrorResponse).error).toContain(project.id);
@@ -579,7 +593,7 @@ describe("the steps routes and today's list in the portfolio", () => {
   });
 
   it("completes a step, which drops it out of today without closing anything else", async () => {
-    const today = calendarDateOf(new Date());
+    const today = calendarDateOf(new Date(), runtimeTimeZone());
     const { step } = (await (await send("/api/steps", "POST", {
       projectId: project.id,
       title: "Finish the migration",
@@ -771,7 +785,7 @@ describe("finishing a project through the API", () => {
   });
 
   it("keeps a closed step in the history, with what it took when that is known", async () => {
-    const today = calendarDateOf(new Date());
+    const today = calendarDateOf(new Date(), runtimeTimeZone());
     await finishStore.createStep({
       id: "step-closing",
       ownerId: owner.id,
@@ -904,7 +918,7 @@ describe("attributing effort to a step as it is written", () => {
   afterEach(() => attrDatabase.close());
   afterAll(async () => { await driver.cleanup(); rmSync(attrDirectory, { recursive: true }); });
 
-  const today = () => calendarDateOf(new Date());
+  const today = () => calendarDateOf(new Date(), runtimeTimeZone());
 
   async function step(id: string, projectId = project.id, markedFor: string | null = null) {
     await attrStore.createStep({
@@ -1120,7 +1134,7 @@ describe("the 0002 carry-across, against a database written before it", () => {
   });
 });
 
-const owner: Owner = { id: LOCAL_OWNER_ID, activeCap: 3, capRaises: [] };
+const owner: Owner = { id: LOCAL_OWNER_ID, activeCap: 3, capRaises: [], timeZone: null };
 const area: Area = {
   id: "area-1",
   ownerId: owner.id,
@@ -1196,13 +1210,13 @@ describe(`${driver.name} weeks and commitments`, () => {
     const edited = await writeCommitment(weeks, clock, ids, { ...fields(week.id), target: 11, unit: "minutes", proposedTarget: 9 });
     expect(edited).toEqual({ ...original, target: 11, reserve: 4, unit: "minutes", proposedTarget: 9 });
     const event = await spendReserve(weeks, clock, ids, { ...fields(week.id), what: "Usé la reserva", note: "Una pausa" });
-    expect(await readWeekEntries(weeks, week)).toEqual([event]);
+    expect(await readWeekEntries(weeks, week, runtimeTimeZone())).toEqual([event]);
     expect(await weeks.listCommitments(week.id, owner.id)).toEqual([edited]);
     db.close();
     db = await openDatabase(join(directory, "test.sqlite"));
     weeks = db.store;
     expect(await weeks.listCommitments(week.id, owner.id)).toEqual([edited]);
-    expect(await readWeekEntries(weeks, week)).toEqual([event]);
+    expect(await readWeekEntries(weeks, week, runtimeTimeZone())).toEqual([event]);
   });
 
   it("closes missing work and opens an empty next week; concurrent opens preserve the first close", async () => {
@@ -1267,8 +1281,8 @@ describe(`${driver.name} weeks and commitments`, () => {
     }
     moment = new Date(2026, 8, 28, 1);
     const next = await openWeek(weeks, clock, ids, owner.id);
-    expect((await readWeekEntries(weeks, old)).map(e => e.id)).toEqual(["sunday"]);
-    expect((await readWeekEntries(weeks, next)).map(e => e.id)).toEqual(["monday", "written-later"]);
+    expect((await readWeekEntries(weeks, old, runtimeTimeZone())).map(e => e.id)).toEqual(["sunday"]);
+    expect((await readWeekEntries(weeks, next, runtimeTimeZone())).map(e => e.id)).toEqual(["monday", "written-later"]);
   });
 
   it("allows Monday API rotation after a close and refuses Wednesday with the existing message", async () => {

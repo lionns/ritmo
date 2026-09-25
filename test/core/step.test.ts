@@ -139,7 +139,7 @@ describe("the day list", () => {
   });
 });
 
-const owner: Owner = { id: "owner-1", activeCap: 2, capRaises: [] };
+const owner: Owner = { id: "owner-1", activeCap: 2, capRaises: [], timeZone: null };
 
 const project: Project = {
   id: "project-1",
@@ -183,6 +183,7 @@ class MemoryStore implements Store {
   async updateOwnerCap(_id: string, _activeCap: number, _capRaises: Owner["capRaises"]) {
     throw new Error("not used");
   }
+  async updateOwnerTimeZone(_id: string, _timeZone: string) { throw new Error("not used"); }
   async createArea(_value: Area) { throw new Error("not used"); }
   async getArea(_id: string) { return null; }
   async listAreas(_ownerId: string) { return []; }

@@ -2,7 +2,7 @@ import type { Area, Owner, Project, Step } from "../model/entities.ts";
 import type { Clock } from "../ports/clock.ts";
 import type { IdGen } from "../ports/id-gen.ts";
 import type { Store } from "../ports/store.ts";
-import { buildStep, type StepFields } from "./step.ts";
+import { buildStep, calendarDateOf, effectiveTimeZone, type StepFields } from "./step.ts";
 import { isWeekStart } from "./week.ts";
 
 export interface NewProject {
@@ -174,7 +174,7 @@ export async function changeProjectState(
   }
   const currentCount = countCappedActiveProjects(projects, areas);
   if (project.state === state) return capResult(project, area, owner, currentCount);
-  if (await store.hasClosedWeek(ownerId) && !isWeekStart(clock.now())) {
+  if (await store.hasClosedWeek(ownerId) && !isWeekStart(clock.now(), effectiveTimeZone(owner.timeZone))) {
     throw new ProjectRuleError("Project state changes belong to a week boundary");
   }
   if (state === "active" && area.countsAgainstCap && currentCount >= owner.activeCap) {
@@ -210,7 +210,10 @@ export async function updateActiveCap(
     activeCap,
     capRaises:
       activeCap > owner.activeCap
-        ? [...owner.capRaises, { amount: activeCap - owner.activeCap, raisedAt: clock.now().toISOString().slice(0, 10) }]
+        ? [...owner.capRaises, {
+            amount: activeCap - owner.activeCap,
+            raisedAt: calendarDateOf(clock.now(), effectiveTimeZone(owner.timeZone)),
+          }]
         : owner.capRaises,
   };
   await store.updateOwnerCap(owner.id, updated.activeCap, updated.capRaises);

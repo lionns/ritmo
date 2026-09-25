@@ -61,6 +61,7 @@ describe("the first portfolio loop", () => {
 
     const created = await createProgressEntry(store, clock, ids, {
       ownerId: owner.id,
+      timeZone: "UTC",
       projectId: activeProject.id,
       what: "Moved the first loop",
       effortMinutes: null,
@@ -74,6 +75,7 @@ describe("the first portfolio loop", () => {
     await assert.rejects(
       createProgressEntry(store, clock, ids, {
         ownerId: owner.id,
+        timeZone: "UTC",
         projectId: "missing-project",
         what: "Should not write",
         effortMinutes: null,
@@ -84,6 +86,7 @@ describe("the first portfolio loop", () => {
     await assert.rejects(
       createProgressEntry(store, clock, ids, {
         ownerId: owner.id,
+        timeZone: "UTC",
         projectId: shelvedProject.id,
         what: "Should not write",
         effortMinutes: null,
@@ -93,9 +96,25 @@ describe("the first portfolio loop", () => {
     );
     assert.equal(store.entries.size, count);
   });
+
+  it("attributes a 9pm Bogotá entry to the Bogotá day's marked step while the runtime is UTC", async () => {
+    const store = populatedStore();
+    const step = store.steps.get("step-project-active")!;
+    store.steps.set(step.id, { ...step, markedFor: "2026-09-24" });
+    const clock = { now: () => new Date("2026-09-25T02:00:00.000Z") };
+    const created = await createProgressEntry(store, clock, { next: () => "bogota-entry" }, {
+      ownerId: owner.id,
+      timeZone: "America/Bogota",
+      projectId: activeProject.id,
+      what: "Close the day",
+      effortMinutes: 10,
+      note: null,
+    });
+    assert.equal(created.stepId, step.id);
+  });
 });
 
-const owner: Owner = { id: "owner-1", activeCap: 3, capRaises: [] };
+const owner: Owner = { id: "owner-1", activeCap: 3, capRaises: [], timeZone: null };
 const area: Area = {
   id: "area-1",
   ownerId: owner.id,
@@ -196,6 +215,7 @@ class MemoryStore implements Store {
     const value = this.owners.get(id);
     if (value !== undefined) this.owners.set(id, { ...value, activeCap, capRaises });
   }
+  async updateOwnerTimeZone(_id: string, _timeZone: string) { throw new Error("not used"); }
   async createArea(value: Area) { this.areas.set(value.id, value); }
   async getArea(id: string) { return this.areas.get(id) ?? null; }
   async listAreas(ownerId: string) {
@@ -234,7 +254,9 @@ class MemoryStore implements Store {
   async createStep(_value: Step) { throw new Error("not used"); }
   async getStep(_id: string) { return null; }
   async listOpenSteps(_projectId: string) { return []; }
-  async readStepsMarkedFor(_ownerId: string, _date: string) { return []; }
+  async readStepsMarkedFor(_ownerId: string, date: string) {
+    return [...this.steps.values()].filter((value) => value.markedFor === date);
+  }
   async readOpenStepsWithProgress(projectIds: string[]) {
     return projectIds.flatMap((projectId) => {
       const steps = [...this.steps.values()]

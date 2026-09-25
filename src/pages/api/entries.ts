@@ -2,6 +2,7 @@ import { currentOwnerId } from "../../../adapters/http/session.ts";
 import type { APIRoute } from "astro";
 
 import { runtimeStore } from "../../../adapters/runtime.ts";
+import { effectiveTimeZone } from "../../../core/rules/step.ts";
 import { UlidGenerator } from "../../../adapters/ulid.ts";
 import type { Clock } from "../../../core/ports/clock.ts";
 import type { Store } from "../../../core/ports/store.ts";
@@ -28,6 +29,7 @@ export async function handlePostEntry(request: Request, injectedStore?: Store): 
     const clock: Clock = { now: () => new Date() };
     const entry = await createProgressEntry(store, clock, new UlidGenerator(clock), {
       ownerId: owner.id,
+      timeZone: effectiveTimeZone(owner.timeZone),
       projectId: parsed.projectId,
       what: parsed.what,
       effortMinutes: parsed.effortMinutes ?? null,

@@ -13,7 +13,6 @@ Harness `0.9.0` · profile `team`
 | [T-043](docs/tasks/T-043-identity-moves-into-the-database.md) | `ready` | Make the session resolve *who is asking* from their own credential rather than from |
 | [T-044](docs/tasks/T-044-invitations.md) | `ready` | Let an account issue a single-use invitation that expires, and let whoever holds it create |
 | [T-045](docs/tasks/T-045-the-screens-learn-there-are-others.md) | `ready` | Give the three surfaces multiple accounts need — a sign-in that does not know who is coming, |
-| [T-046](docs/tasks/T-046-the-day-is-the-owners-not-the-servers.md) | `ready` | Make "today", the week's Monday and every day boundary follow the owner's own time zone rather |
 | [T-001](docs/tasks/T-001-skeleton-and-next-action.md) | `done` | Stand up the three-layer tree with every quality-gate command real and green, and prove it by |
 | [T-003](docs/tasks/T-003-loose-ends.md) | `done` | Close the six low-severity findings the T-001 review left open, so the schema states the |
 | [T-005](docs/tasks/T-005-first-loop-back.md) | `done` | Give the front two endpoints and the contracts behind them, so a real portfolio can be read |
@@ -51,6 +50,7 @@ Harness `0.9.0` · profile `team`
 | [T-040](docs/tasks/T-040-deploy-and-carry-the-data-across.md) | `done` | Put Ritmo where the owner can reach it from a phone, move weeks of real use onto the new |
 | [T-041](docs/tasks/T-041-the-monday-that-fr14-promises.md) | `done` | Make `changeProjectState` refuse only *within* a week and allow the rotation on Monday, so |
 | [T-042](docs/tasks/T-042-ritmo-gets-its-own-address.md) | `done` | Move the deployment to `ritmo.cosmiqstudio.com`, a subdomain of a zone the owner already |
+| [T-046](docs/tasks/T-046-the-day-is-the-owners-not-the-servers.md) | `done` | Make "today", the week's Monday and every day boundary follow the owner's own time zone rather |
 | [T-010](docs/tasks/T-010-passkey-and-the-signed-cookie.md) | `superseded` | Build `D-004` as specified — a passkey registered per device, verified with Web Crypto and no |
 
 ## Next
@@ -63,10 +63,10 @@ None. All decisions are accepted or superseded.
 
 ## Journal — last 5
 
+- 2026-09-24 | T-046 | done | owner-local dates shipped; production kept the 24 September mark visible after 19:00 Bogotá | 36 files | TZ=UTC/unit 74/74, integration 120/120, isolation, typecheck, dual build, deployed HTTPS/auth/export and mark/reload, harness lint | D-030
+- 2026-09-24 | T-046 | doing | owner-zone calendar implemented and all local gates green; live check awaits external backup confirmation | 31 files | TZ=UTC/unit 73/73, integration 120/120, isolation, typecheck, dual build, harness lint | D-030
+- 2026-09-24 | T-046 | doing | baseline green; implementing account-zone calendar boundaries before multi-account identity | 3 files | unit 67/67, integration 120/120, isolation, typecheck, dual build, harness lint | D-030
 - 2026-09-24 | T-042 | done | Ritmo lives at ritmo.cosmiqstudio.com, apex untouched, old address off | 6 files | unit 67/67, isolation, typecheck, dual build, integration 120/120 | -
 - 2026-09-24 | T-042 | review | ritmo.cosmiqstudio.com live, workers.dev off, apex untouched | 6 files | unit 67/67, isolation, typecheck, dual build, integration 120/120 | -
-- 2026-09-24 | T-040 | done | Ritmo reachable from a phone, authenticated, with the records carried across | 12 files | unit 67/67, isolation, typecheck, dual build, integration 120/120 | -
-- 2026-09-24 | T-040 | doing | localhost dev exception fixed and redeployed; owner device checks and external backup pending | 6 files | unit 67/67, integration 120/120, typecheck, isolation, dual builds, local HTTP smoke, deployed HTTPS/auth/export | -
-- 2026-09-24 | T-040 | doing | deployed HTTPS redirect and HSTS fix; phone passkeys and full loop still pending | 7 files | unit 67/67, integration 120/120, typecheck, isolation, dual builds, deployed HTTPS/auth/export | -
 
 Full history: [`JOURNAL.md`](JOURNAL.md) · decisions: [`docs/decisions/`](docs/decisions/README.md)

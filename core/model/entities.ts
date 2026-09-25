@@ -10,6 +10,7 @@ export interface Owner {
   id: string;
   activeCap: number;
   capRaises: CapRaise[];
+  timeZone: string | null;
 }
 
 export interface Credential {

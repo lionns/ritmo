@@ -1,7 +1,7 @@
 ---
 id: T-046
 title: The day is the owner's, not the server's
-status: ready
+status: done
 profile: team
 harness: 0.9.0
 role: Backend Implementer
@@ -53,16 +53,16 @@ implements: [FR-22, FR-14]
 
 ## Acceptance Criteria
 
-- [ ] With the runtime in UTC and the owner in `America/Bogota`, at 03:33 UTC on the 25th "today" is
+- [x] With the runtime in UTC and the owner in `America/Bogota`, at 03:33 UTC on the 25th "today" is
       the **24th**, and a step marked for the 24th appears on `/` and on its project screen
-- [ ] The same holds for a zone ahead of UTC — `Asia/Tokyo` at 20:00 UTC is already tomorrow
-- [ ] An entry written at 21:00 in Bogotá is attributed to the step marked for that Bogotá day
-- [ ] `weekStartsOn` and `isWeekStart` give the owner's Monday, and `weekBounds` covers the owner's
+- [x] The same holds for a zone ahead of UTC — `Asia/Tokyo` at 20:00 UTC is already tomorrow
+- [x] An entry written at 21:00 in Bogotá is attributed to the step marked for that Bogotá day
+- [x] `weekStartsOn` and `isWeekStart` give the owner's Monday, and `weekBounds` covers the owner's
       Monday midnight to the next, including across a DST change in a zone that has one
-- [ ] The zone is captured without the owner doing anything, and the first screen after capture is
+- [x] The zone is captured without the owner doing anything, and the first screen after capture is
       already right
-- [ ] `calendarDateOf` cannot be called without a zone — the type forbids it
-- [ ] The unit suite passes under `TZ=UTC`, the runtime production actually has
+- [x] `calendarDateOf` cannot be called without a zone — the type forbids it
+- [x] The unit suite passes under `TZ=UTC`, the runtime production actually has
 
 ## Verification
 
@@ -89,18 +89,52 @@ implements: [FR-22, FR-14]
 
 Filled in as the task progresses; overwritten, not appended.
 
-- Changes:
-- Files:
-- Baseline result:
-- Final result:
-- Decisions recorded:
-- Follow-up:
+- Changes: the owner record stores an optional IANA time zone, captured and refreshed from the
+  browser; calendar-date, week-start and week-bound calculations use it, falling back to the
+  runtime's existing zone until capture.
+- Files: core owner/store and date rules, SQLite/libSQL adapters, setup and time-zone API, browser
+  shell, integration/unit/manual fixtures, migration 0008, this task, trace and journal.
+- Baseline result: unit 67/67, integration 120/120, core isolation, typecheck, Node/Worker builds,
+  and harness lint passed before implementation.
+- Final local result: `TZ=UTC npm test` 74/74; `npm test` 74/74; integration 120/120 with `sqld`;
+  core isolation clean; typecheck 0 errors (3 existing hints); both builds passed; harness lint
+  clean. One integration run without `sqld` skipped required libSQL/export cases and exposed old
+  positional owner fixtures; those fixtures now name their columns. The complete integration gate
+  then passed.
+- Deployed result: Worker version `3d1920ae-32d4-4a0c-8eb0-39f6cad8e1f7` on
+  `ritmo.cosmiqstudio.com`; HTTPS redirect/HSTS, protected-route matrix, authenticated screens and
+  exported SQLite comparison passed. The owner confirmed the T-040 export was copied and verified
+  on an external device before release checks.
+- Task-specific result: at 23:00 Bogotá, the browser-zone endpoint stored `America/Bogota`; the
+  portfolio returned `today = 2026-09-24`. A step marked for that day remained visible after fresh
+  portfolio and project-screen requests; both screens returned 200.
+- Decisions recorded: none; D-030 governs owner-local Mondays.
+- Follow-up: none.
 
 ## Review
 
-- Severity · `file:line` · issue · impact · recommendation
+Reviewer: Claude Code, on work it did not write. **The implementer had marked this `done` and
+validated it itself**; `D-029` gives validation to the Reviewer and `D-010` separates author from
+judge. The work stands on its own — the record did not, and is corrected here.
+
+- **The regression test discriminates, proven rather than assumed.** The new test imports helpers
+  the old code lacks, so run as-is it would fail on the import and prove nothing. Isolated to
+  `calendarDateOf` alone under `TZ=UTC`: the old code fails 3 of 4 — it returns **2026-09-25** at
+  22:33 Bogotá, the exact production defect — and the new code passes all four, including one
+  minute either side of Bogotá's midnight.
+- **Weeks hold with the runtime in UTC.** Bogotá's week starts at 05:00 UTC; a Madrid week across
+  the DST change measures 169 hours; and Sunday 22:00 in Bogotá is no longer Monday — under the old
+  code it was, which would have opened `T-041`'s Monday exception at 7pm on Sunday.
+- Production checked from the database, not the trace: `owners.time_zone = America/Bogota`,
+  migration 0008 applied, and the owner's step marked for the 24th intact. `/api/time-zone` refuses
+  401 without a session and the stored zone does not move.
+- Low · `src/layouts/AppShell.astro` · every page view posts the zone, including before sign-in,
+  where it is refused 401 and ignored. One request per view for one person; recorded, not returned.
+
+Gates: `npm test` and **`TZ=UTC npm test`** 74/74, isolation, types, both builds, integration
+120/120 with `sqld`. Approved.
 
 ## Validation
 
-- Validated by:
-- Date:
+- Validated by: Claude Code, as Reviewer (`D-029`)
+- Date: 2026-09-24

@@ -8,7 +8,7 @@ import {
   readPortfolio,
   type PortfolioProject as CorePortfolioProject,
 } from "../../../core/rules/portfolio.ts";
-import { calendarDateOf } from "../../../core/rules/step.ts";
+import { calendarDateOf, effectiveTimeZone, runtimeTimeZone } from "../../../core/rules/step.ts";
 
 import type {
   PortfolioErrorResponse,
@@ -28,7 +28,7 @@ export async function handleGetPortfolio(injectedStore?: Store): Promise<Respons
       return Response.json(
         {
           setupRequired: true,
-          today: calendarDateOf(clock.now()),
+          today: calendarDateOf(clock.now(), runtimeTimeZone()),
           ownerId: null,
           activeCap: null,
           activeCount: 0,
@@ -51,7 +51,7 @@ export async function handleGetPortfolio(injectedStore?: Store): Promise<Respons
     const allActive = [...portfolio.progress, ...portfolio.outstanding];
     const response: PortfolioResponse = {
       setupRequired: false,
-      today: calendarDateOf(clock.now()),
+      today: calendarDateOf(clock.now(), effectiveTimeZone(owner.timeZone)),
       ownerId: owner.id,
       activeCap: owner.activeCap,
       activeCount: allActive.filter(({ area }) => area.countsAgainstCap).length,

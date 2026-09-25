@@ -29,7 +29,7 @@ const after = snapshot(candidate);
 for(const [table,rows] of Object.entries(before)) {
   if(table==='_ritmo_migrations') {
     assert.deepEqual(after[table].slice(0,rows.length),rows);
-    assert.deepEqual(after[table].slice(rows.length).map(x=>x.name),['0007_auth_challenges.sql']);
+    assert.deepEqual(after[table].slice(rows.length).map(x=>x.name),['0007_auth_challenges.sql','0008_owner_time_zone.sql']);
   } else assert.deepEqual(after[table],rows,`migration preservation: ${table}`);
 }
 candidate.close();

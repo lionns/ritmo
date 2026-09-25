@@ -81,5 +81,19 @@ const { title, description, context, contextWide, pageScroll = false } = Astro.p
         </footer>
       </div>
     </div>
+    <script is:inline>
+      const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      if (timeZone) {
+        fetch("/api/time-zone", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ timeZone }),
+        }).then(async (response) => {
+          if (!response.ok) return;
+          const result = await response.json();
+          if (result.changed) window.location.reload();
+        }).catch(() => {});
+      }
+    </script>
   </body>
 </html>

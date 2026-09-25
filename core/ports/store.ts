@@ -22,6 +22,7 @@ export interface Store {
   getOwner(id: string): Promise<Owner | null>;
   getOnlyOwner(): Promise<Owner | null>;
   updateOwnerCap(id: string, activeCap: number, capRaises: Owner["capRaises"]): Promise<void>;
+  updateOwnerTimeZone(id: string, timeZone: string): Promise<void>;
   createArea(area: Area): Promise<void>;
   getArea(id: string): Promise<Area | null>;
   listAreas(ownerId: string): Promise<Area[]>;

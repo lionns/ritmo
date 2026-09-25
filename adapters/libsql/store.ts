@@ -18,6 +18,7 @@ interface OwnerRow {
   id: string;
   active_cap: number;
   cap_raises: string;
+  time_zone: string | null;
 }
 
 interface AreaRow {
@@ -137,8 +138,8 @@ export class LibsqlStore implements Store, AuthStore {
 
   async createOwner(owner: Owner): Promise<void> {
     await this.#database
-      .prepare("INSERT INTO owners (id, active_cap, cap_raises) VALUES (?, ?, ?)")
-      .run(owner.id, owner.activeCap, JSON.stringify(owner.capRaises));
+      .prepare("INSERT INTO owners (id, active_cap, cap_raises, time_zone) VALUES (?, ?, ?, ?)")
+      .run(owner.id, owner.activeCap, JSON.stringify(owner.capRaises), owner.timeZone);
   }
 
   async getOwner(id: string): Promise<Owner | null> {
@@ -160,6 +161,11 @@ export class LibsqlStore implements Store, AuthStore {
     const result = await this.#database
       .prepare("UPDATE owners SET active_cap = ?, cap_raises = ? WHERE id = ?")
       .run(activeCap, JSON.stringify(capRaises), id);
+    if (result.changes !== 1) throw new Error(`Owner ${id} does not exist`);
+  }
+
+  async updateOwnerTimeZone(id: string, timeZone: string): Promise<void> {
+    const result = await this.#database.prepare("UPDATE owners SET time_zone = ? WHERE id = ?").run(timeZone, id);
     if (result.changes !== 1) throw new Error(`Owner ${id} does not exist`);
   }
 
@@ -549,6 +555,7 @@ function toOwner(row: OwnerRow): Owner {
     id: row.id,
     activeCap: row.active_cap,
     capRaises: parseCapRaises(row.cap_raises),
+    timeZone: row.time_zone,
   };
 }
 

@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import type { Commitment, Entry, Week } from "../../core/model/entities.ts";
 import type { Store } from "../../core/ports/store.ts";
-import { closeWeek, openWeek, readCurrentWeek, weekBounds, weekStartsOn } from "../../core/rules/week.ts";
+import { closeWeek, isWeekStart, openWeek, readCurrentWeek, weekBounds, weekStartsOn } from "../../core/rules/week.ts";
 import { spendReserve, writeCommitment } from "../../core/rules/commitment.ts";
 
 function fixture() {
@@ -14,7 +14,7 @@ function fixture() {
   const commitments: Commitment[] = [];
   const entries: Entry[] = [];
   const store = {
-    getOwner: async (id: string) => id === "owner" ? { id, activeCap: 2, capRaises: [] } : null,
+    getOwner: async (id: string) => id === "owner" ? { id, activeCap: 2, capRaises: [], timeZone: null } : null,
     getProject: async (id: string) => id === "project" ? { id, ownerId: "owner" } : null,
     openWeek: async (week: Week, closedAt: string) => {
       for (const older of weeks) if (older.startsOn < week.startsOn && older.closedAt === null) older.closedAt = closedAt;
@@ -44,26 +44,26 @@ function fixture() {
 }
 
 describe("the week", () => {
-  it("uses local Monday through Sunday, across month and year boundaries", () => {
-    assert.equal(weekStartsOn(new Date(2026, 8, 27, 23, 59)), "2026-09-21");
-    assert.equal(weekStartsOn(new Date(2026, 8, 28, 0, 30)), "2026-09-28");
-    assert.equal(weekStartsOn(new Date(2027, 0, 1, 12)), "2026-12-28");
-    assert.equal(weekStartsOn(new Date(2024, 1, 29, 12)), "2024-02-26");
-    // These weeks cross DST changes when this suite runs in America/New_York.
-    for (const monday of ["2026-03-02", "2026-10-26"]) {
-      const dst = weekBounds(monday);
-      const start = new Date(dst.startsAt);
-      const end = new Date(dst.endsAt);
-      assert.equal(start.getHours(), 0);
-      assert.equal(end.getHours(), 0);
-      assert.equal(end.getDay(), 1);
-      const expected = new Date(start.getTime());
-      expected.setDate(expected.getDate() + 7);
-      assert.equal(end.getTime(), expected.getTime());
-    }
-    const bounds = weekBounds("2026-09-21");
-    assert.equal(new Date(bounds.startsAt).getHours(), 0);
-    assert.equal(new Date(bounds.endsAt).getDate(), 28);
+  it("uses the owner's Monday across UTC, Bogotá and Tokyo boundaries", () => {
+    assert.equal(weekStartsOn(new Date("2026-09-28T04:59:00Z"), "America/Bogota"), "2026-09-21");
+    assert.equal(weekStartsOn(new Date("2026-09-28T05:30:00Z"), "America/Bogota"), "2026-09-28");
+    assert.equal(weekStartsOn(new Date("2026-09-27T15:30:00Z"), "Asia/Tokyo"), "2026-09-28");
+    assert.equal(weekStartsOn(new Date("2027-01-01T12:00:00Z"), "UTC"), "2026-12-28");
+    assert.equal(weekStartsOn(new Date("2024-02-29T12:00:00Z"), "UTC"), "2024-02-26");
+    assert.equal(isWeekStart(new Date("2026-09-27T15:30:00Z"), "Asia/Tokyo"), true);
+    assert.equal(isWeekStart(new Date("2026-09-28T04:30:00Z"), "America/Bogota"), false);
+  });
+
+  it("bounds the owner's Monday midnights across daylight saving changes", () => {
+    assert.deepEqual(weekBounds("2026-03-02", "America/New_York"), {
+      startsAt: "2026-03-02T05:00:00.000Z", endsAt: "2026-03-09T04:00:00.000Z",
+    });
+    assert.deepEqual(weekBounds("2026-10-26", "America/New_York"), {
+      startsAt: "2026-10-26T04:00:00.000Z", endsAt: "2026-11-02T05:00:00.000Z",
+    });
+    assert.deepEqual(weekBounds("2026-09-21", "UTC"), {
+      startsAt: "2026-09-21T00:00:00.000Z", endsAt: "2026-09-28T00:00:00.000Z",
+    });
   });
 
   it("reads without creating and opens idempotently", async () => {

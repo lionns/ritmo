@@ -3,6 +3,7 @@ import type { Clock } from "../ports/clock.ts";
 import type { IdGen } from "../ports/id-gen.ts";
 import type { Store } from "../ports/store.ts";
 import { weekStartsOn } from "./week.ts";
+import { effectiveTimeZone } from "./step.ts";
 
 export class CommitmentRuleError extends Error {
   override readonly name = "CommitmentRuleError";
@@ -71,9 +72,10 @@ export async function spendReserve(
 }
 
 async function requireOpenWeek(store: Store, ownerId: string, weekId: string, now: Date): Promise<Week> {
-  const week = await store.getWeek(weekId, ownerId);
+  const [week, owner] = await Promise.all([store.getWeek(weekId, ownerId), store.getOwner(ownerId)]);
   if (week === null) throw new CommitmentRuleError(`Week ${weekId} does not exist`);
-  if (week.closedAt !== null || week.startsOn !== weekStartsOn(now)) {
+  if (owner === null) throw new CommitmentRuleError(`Owner ${ownerId} does not exist`);
+  if (week.closedAt !== null || week.startsOn !== weekStartsOn(now, effectiveTimeZone(owner.timeZone))) {
     throw new CommitmentRuleError("Commitments require the current open week");
   }
   return week;
